@@ -1,6 +1,8 @@
 import { getAuthSession } from '@/lib/auth';
 import { Settings, ShieldCheck, User, RefreshCw } from 'lucide-react';
 
+export const dynamic = 'force-dynamic';
+
 export default async function SettingsPage() {
   const session = await getAuthSession();
 

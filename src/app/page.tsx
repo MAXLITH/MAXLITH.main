@@ -17,6 +17,8 @@ import {
   Sparkles
 } from 'lucide-react';
 
+export const dynamic = 'force-dynamic';
+
 export default async function LandingPage() {
   const session = await getAuthSession();
   const instruments = getAllInstruments().slice(0, 6);

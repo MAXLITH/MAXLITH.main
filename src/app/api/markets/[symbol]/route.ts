@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { getInstrument, getInstrumentHistory } from '@/lib/market-data';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(
   request: Request,
   { params }: { params: Promise<{ symbol: string }> }

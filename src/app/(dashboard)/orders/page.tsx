@@ -2,6 +2,8 @@ import { getAuthSession } from '@/lib/auth';
 import { getUserOrders } from '@/lib/paper-trading';
 import { FileText, Clock, CheckCircle2, XCircle, AlertCircle } from 'lucide-react';
 
+export const dynamic = 'force-dynamic';
+
 export default async function OrdersPage() {
   const session = await getAuthSession();
   const orders = getUserOrders(session!.id);

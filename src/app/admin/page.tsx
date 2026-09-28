@@ -4,6 +4,8 @@ import db from '@/lib/db';
 import { getMarketSessionStatus } from '@/lib/market-data';
 import { ShieldAlert, Users, Database, Cpu, Activity, FileText, CheckCircle2, Lock } from 'lucide-react';
 
+export const dynamic = 'force-dynamic';
+
 export default async function AdminDashboardPage() {
   let session;
   try {

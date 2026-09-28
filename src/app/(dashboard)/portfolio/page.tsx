@@ -3,6 +3,8 @@ import { getAuthSession } from '@/lib/auth';
 import { getUserPortfolioSummary, getUserPositions } from '@/lib/paper-trading';
 import { Briefcase, Wallet, PieChart, TrendingUp, TrendingDown, ArrowRight } from 'lucide-react';
 
+export const dynamic = 'force-dynamic';
+
 export default async function PortfolioPage() {
   const session = await getAuthSession();
   const summary = getUserPortfolioSummary(session!.id);

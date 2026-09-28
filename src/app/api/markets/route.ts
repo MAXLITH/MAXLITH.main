@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { getAllInstruments, searchInstruments, getMarketSessionStatus } from '@/lib/market-data';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);

@@ -215,22 +215,20 @@ export function initDb() {
 function seedInitialData() {
   // 1. Seed Admin user if not exists
   const adminEmail = process.env.ADMIN_EMAIL || 'admin@maxlith.com';
-  const existingAdmin = db.prepare('SELECT id FROM users WHERE email = ?').get(adminEmail);
-  if (!existingAdmin) {
-    const adminPass = process.env.ADMIN_PASSWORD || 'AdminSecurePass2026!';
-    const passwordHash = bcrypt.hashSync(adminPass, 10);
-    db.prepare(`
-      INSERT INTO users (id, email, password_hash, full_name, role, virtual_cash)
-      VALUES (?, ?, ?, ?, ?, ?)
-    `).run(
-      'admin-root-001',
-      adminEmail,
-      passwordHash,
-      'MAXLITH Administrator',
-      'ADMIN',
-      5000000.0
-    );
-  }
+  const adminPass = process.env.ADMIN_PASSWORD || 'AdminSecurePass2026!';
+  const passwordHash = bcrypt.hashSync(adminPass, 10);
+  db.prepare(`
+    INSERT INTO users (id, email, password_hash, full_name, role, virtual_cash)
+    VALUES (?, ?, ?, ?, ?, ?)
+    ON CONFLICT(email) DO NOTHING
+  `).run(
+    'admin-root-001',
+    adminEmail,
+    passwordHash,
+    'MAXLITH Administrator',
+    'ADMIN',
+    5000000.0
+  );
 
   // 2. Seed Real Indian Market NIFTY 50 / Major Bluechip Instruments
   const initialInstruments = [
@@ -520,6 +518,7 @@ function seedInitialData() {
     const newsStmt = db.prepare(`
       INSERT INTO news (id, title, summary, source, url, symbol, sentiment, published_at)
       VALUES (@id, @title, @summary, @source, @url, @symbol, @sentiment, @published_at)
+      ON CONFLICT(id) DO NOTHING
     `);
     for (const n of sampleNews) {
       newsStmt.run(n);

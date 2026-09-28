@@ -1,6 +1,8 @@
 import db from '@/lib/db';
 import { Newspaper, ExternalLink, Sparkles } from 'lucide-react';
 
+export const dynamic = 'force-dynamic';
+
 export default function NewsPage() {
   const newsList = db.prepare('SELECT * FROM news ORDER BY published_at DESC').all() as any[];
 
