@@ -16,7 +16,6 @@ const db = new Database(dbPath, { timeout: 10000 });
 db.pragma('journal_mode = WAL');
 db.pragma('foreign_keys = ON');
 
-// Initialize database tables
 export function initDb() {
   db.exec(`
     CREATE TABLE IF NOT EXISTS users (
@@ -42,7 +41,7 @@ export function initDb() {
     CREATE TABLE IF NOT EXISTS instruments (
       symbol TEXT PRIMARY KEY,
       name TEXT NOT NULL,
-      exchange TEXT NOT NULL, -- NSE / BSE
+      exchange TEXT NOT NULL,
       sector TEXT,
       asset_type TEXT NOT NULL DEFAULT 'EQUITY',
       current_price REAL NOT NULL,
@@ -95,12 +94,12 @@ export function initDb() {
       id TEXT PRIMARY KEY,
       user_id TEXT NOT NULL,
       symbol TEXT NOT NULL,
-      side TEXT NOT NULL, -- BUY / SELL
-      order_type TEXT NOT NULL, -- MARKET / LIMIT
+      side TEXT NOT NULL,
+      order_type TEXT NOT NULL,
       quantity INTEGER NOT NULL,
-      price REAL NOT NULL, -- Specified limit price or market price at order
+      price REAL NOT NULL,
       executed_price REAL,
-      status TEXT NOT NULL, -- PENDING, EXECUTED, CANCELLED, REJECTED
+      status TEXT NOT NULL,
       rejection_reason TEXT,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       executed_at DATETIME,
@@ -126,7 +125,7 @@ export function initDb() {
       user_id TEXT NOT NULL,
       order_id TEXT,
       symbol TEXT NOT NULL,
-      type TEXT NOT NULL, -- BUY, SELL, DEPOSIT, WITHDRAWAL
+      type TEXT NOT NULL,
       amount REAL NOT NULL,
       quantity INTEGER DEFAULT 0,
       price REAL DEFAULT 0,
@@ -138,7 +137,7 @@ export function initDb() {
       id TEXT PRIMARY KEY,
       user_id TEXT NOT NULL,
       symbol TEXT NOT NULL,
-      condition TEXT NOT NULL, -- ABOVE, BELOW, CHANGE_PCT_ABOVE, CHANGE_PCT_BELOW
+      condition TEXT NOT NULL,
       target_value REAL NOT NULL,
       is_triggered INTEGER DEFAULT 0,
       triggered_at DATETIME,
@@ -154,7 +153,7 @@ export function initDb() {
       source TEXT NOT NULL,
       url TEXT,
       symbol TEXT,
-      sentiment TEXT NOT NULL DEFAULT 'NEUTRAL', -- POSITIVE, NEGATIVE, NEUTRAL
+      sentiment TEXT NOT NULL DEFAULT 'NEUTRAL',
       published_at DATETIME NOT NULL,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     );
@@ -171,9 +170,9 @@ export function initDb() {
     CREATE TABLE IF NOT EXISTS ai_messages (
       id TEXT PRIMARY KEY,
       conversation_id TEXT NOT NULL,
-      sender TEXT NOT NULL, -- USER, ASSISTANT, AGENT
+      sender TEXT NOT NULL,
       content TEXT NOT NULL,
-      agent_data TEXT, -- JSON blob for multi-agent evidence
+      agent_data TEXT,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (conversation_id) REFERENCES ai_conversations(id) ON DELETE CASCADE
     );
@@ -181,7 +180,7 @@ export function initDb() {
     CREATE TABLE IF NOT EXISTS ai_agent_runs (
       id TEXT PRIMARY KEY,
       user_id TEXT NOT NULL,
-      agent_name TEXT NOT NULL, -- TECH, NEWS, RISK, FUNDAMENTAL, INFO, ORCHESTRATOR
+      agent_name TEXT NOT NULL,
       prompt TEXT NOT NULL,
       output TEXT NOT NULL,
       tokens_used INTEGER NOT NULL DEFAULT 0,
@@ -200,7 +199,6 @@ export function initDb() {
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     );
 
-    -- Create essential indexes for performance
     CREATE INDEX IF NOT EXISTS idx_orders_user ON orders(user_id);
     CREATE INDEX IF NOT EXISTS idx_orders_symbol ON orders(symbol);
     CREATE INDEX IF NOT EXISTS idx_positions_user ON positions(user_id);
@@ -213,7 +211,6 @@ export function initDb() {
 }
 
 function seedInitialData() {
-  // 1. Seed Admin user if not exists
   const adminEmail = process.env.ADMIN_EMAIL || 'admin@maxlith.com';
   const adminPass = process.env.ADMIN_PASSWORD || 'AdminSecurePass2026!';
   const passwordHash = bcrypt.hashSync(adminPass, 10);
@@ -230,7 +227,6 @@ function seedInitialData() {
     5000000.0
   );
 
-  // 2. Seed Real Indian Market NIFTY 50 / Major Bluechip Instruments
   const initialInstruments = [
     {
       symbol: 'RELIANCE',
@@ -247,7 +243,7 @@ function seedInitialData() {
       volume: 4820150,
       high_52w: 3217.90,
       low_52w: 2220.30,
-      market_cap: 2019450, // Cr
+      market_cap: 2019450,
       pe_ratio: 28.4,
       pb_ratio: 2.6
     },
@@ -446,7 +442,6 @@ function seedInitialData() {
   });
   insertMany(initialInstruments);
 
-  // 3. Seed historical daily candles for charts
   const historyStmt = db.prepare(`
     INSERT INTO price_history (symbol, timestamp, open, high, low, close, volume)
     VALUES (?, ?, ?, ?, ?, ?, ?)
@@ -457,13 +452,11 @@ function seedInitialData() {
     const seedHistory = db.transaction(() => {
       const now = new Date();
       for (const inst of initialInstruments) {
-        let basePrice = inst.current_price * 0.85; // start 15% lower 30 days ago
+        let basePrice = inst.current_price * 0.85;
         for (let i = 30; i >= 0; i--) {
           const d = new Date(now);
           d.setDate(d.getDate() - i);
           const dateStr = d.toISOString().split('T')[0] + ' 15:30:00';
-          
-          // Deterministic realistic daily price motion
           const dayFactor = 1 + (Math.sin(i * 0.8 + inst.symbol.length) * 0.015);
           basePrice = basePrice * dayFactor;
           const open = basePrice * 0.998;
@@ -479,54 +472,49 @@ function seedInitialData() {
     seedHistory();
   }
 
-  // 4. Seed sample Financial News
-  const existingNews = db.prepare('SELECT COUNT(*) as count FROM news').get() as { count: number };
-  if (existingNews.count === 0) {
-    const sampleNews = [
-      {
-        id: 'news-001',
-        title: 'RBI Monetary Policy: Repo Rate Kept Unchanged at 6.5% with Focus on Inflation Control',
-        summary: 'The Reserve Bank of India MPC decided to keep benchmark repo rates steady, maintaining a neutral to hawkish stance amidst global market volatility.',
-        source: 'Moneycontrol / Economic Times',
-        url: 'https://economic-times.indiatimes.com',
-        symbol: 'BANKNIFTY',
-        sentiment: 'POSITIVE',
-        published_at: new Date(Date.now() - 3600000 * 2).toISOString()
-      },
-      {
-        id: 'news-002',
-        title: 'Reliance Industries Expands Clean Energy Capex with New Solar Gigafactory Roadmap',
-        summary: 'RIL announced accelerated milestones for its Jamnagar green energy complex, targeting commercial operationalization of solar cell manufacturing by Q4.',
-        source: 'LiveMint',
-        url: 'https://livemint.com',
-        symbol: 'RELIANCE',
-        sentiment: 'POSITIVE',
-        published_at: new Date(Date.now() - 3600000 * 5).toISOString()
-      },
-      {
-        id: 'news-003',
-        title: 'IT Sector Q2 Earnings Outlook: Digital Services Growth Moderates Amid US Enterprise Spending Review',
-        summary: 'Leading Tier-1 Indian IT companies including TCS and Infosys report steady deal wins, though client discretionary tech spending remains closely monitored.',
-        source: 'Business Standard',
-        url: 'https://business-standard.com',
-        symbol: 'TCS',
-        sentiment: 'NEUTRAL',
-        published_at: new Date(Date.now() - 3600000 * 12).toISOString()
-      }
-    ];
-
-    const newsStmt = db.prepare(`
-      INSERT INTO news (id, title, summary, source, url, symbol, sentiment, published_at)
-      VALUES (@id, @title, @summary, @source, @url, @symbol, @sentiment, @published_at)
-      ON CONFLICT(id) DO NOTHING
-    `);
-    for (const n of sampleNews) {
-      newsStmt.run(n);
+  const sampleNews = [
+    {
+      id: 'news-001',
+      title: 'RBI Monetary Policy: Repo Rate Kept Unchanged at 6.5% with Focus on Inflation Control',
+      summary: 'The Reserve Bank of India MPC decided to keep benchmark repo rates steady, maintaining a neutral to hawkish stance amidst global market volatility.',
+      source: 'Moneycontrol / Economic Times',
+      url: 'https://economic-times.indiatimes.com',
+      symbol: 'BANKNIFTY',
+      sentiment: 'POSITIVE',
+      published_at: new Date(Date.now() - 3600000 * 2).toISOString()
+    },
+    {
+      id: 'news-002',
+      title: 'Reliance Industries Expands Clean Energy Capex with New Solar Gigafactory Roadmap',
+      summary: 'RIL announced accelerated milestones for its Jamnagar green energy complex, targeting commercial operationalization of solar cell manufacturing by Q4.',
+      source: 'LiveMint',
+      url: 'https://livemint.com',
+      symbol: 'RELIANCE',
+      sentiment: 'POSITIVE',
+      published_at: new Date(Date.now() - 3600000 * 5).toISOString()
+    },
+    {
+      id: 'news-003',
+      title: 'IT Sector Q2 Earnings Outlook: Digital Services Growth Moderates Amid US Enterprise Spending Review',
+      summary: 'Leading Tier-1 Indian IT companies including TCS and Infosys report steady deal wins, though client discretionary tech spending remains closely monitored.',
+      source: 'Business Standard',
+      url: 'https://business-standard.com',
+      symbol: 'TCS',
+      sentiment: 'NEUTRAL',
+      published_at: new Date(Date.now() - 3600000 * 12).toISOString()
     }
+  ];
+
+  const newsStmt = db.prepare(`
+    INSERT INTO news (id, title, summary, source, url, symbol, sentiment, published_at)
+    VALUES (@id, @title, @summary, @source, @url, @symbol, @sentiment, @published_at)
+    ON CONFLICT(id) DO NOTHING
+  `);
+  for (const n of sampleNews) {
+    newsStmt.run(n);
   }
 }
 
-// Run DB initialization
 initDb();
 
 export default db;
