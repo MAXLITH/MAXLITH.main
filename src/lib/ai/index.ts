@@ -156,7 +156,7 @@ export function runRiskAgent(symbol: string): AgentReport {
       annualizedVolatility: `${annualizedVolPercent.toFixed(1)}%`,
       maxDrawdown30d: `${(maxDrawdown * 100).toFixed(1)}%`,
       riskLevel,
-      52wHighDistance: inst.high_52w ? `${(((inst.high_52w - inst.current_price) / inst.high_52w) * 100).toFixed(1)}% below 52w High` : 'N/A'
+      high52wDistance: inst.high_52w ? `${(((inst.high_52w - inst.current_price) / inst.high_52w) * 100).toFixed(1)}% below 52w High` : 'N/A'
     },
     analysis: `${symbol} exhibits an annualized volatility profile of ${annualizedVolPercent.toFixed(1)}% (${riskLevel.replace('_', ' ')}). Maximum drawdown over the last 30 trading sessions was ${(maxDrawdown * 100).toFixed(1)}%.`
   };

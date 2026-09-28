@@ -12,7 +12,7 @@ const dbPath = process.env.DATABASE_PATH
   ? path.resolve(process.cwd(), process.env.DATABASE_PATH)
   : path.join(dbDir, 'maxlith.db');
 
-const db = new Database(dbPath);
+const db = new Database(dbPath, { timeout: 10000 });
 db.pragma('journal_mode = WAL');
 db.pragma('foreign_keys = ON');
 
