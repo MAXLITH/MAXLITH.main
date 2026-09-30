@@ -1,28 +1,23 @@
 'use client';
 
-import { useState, useEffect } from 'react';
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { Search, Clock, Wallet, ShieldCheck, RefreshCw } from 'lucide-react';
-import { Search, Clock, Wallet, ShieldCheck, RefreshCw, TrendingUp } from 'lucide-react';
+import { Search, Wallet, ShieldCheck } from 'lucide-react';
 
 export default function Header({ user }: { user: any }) {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<any[]>([]);
-  const [isSearching, setIsSearching] = useState(false);
+  const [, setIsSearching] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
   const [sessionStatus, setSessionStatus] = useState<any>(null);
   const [virtualCash, setVirtualCash] = useState<number>(user?.virtualCash || 1000000);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    fetch('/api/markets')
   const fetchStatus = () => {
     fetch('/api/market/status')
       .then((res) => res.json())
       .then((data) => {
-        if (data.sessionStatus) {
         if (data.data) {
           setSessionStatus(data.data);
         } else if (data.sessionStatus) {
@@ -99,7 +94,6 @@ export default function Header({ user }: { user: any }) {
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchQuery.trim()) {
-      router.push(`/markets?q=${encodeURIComponent(searchQuery.trim())}`);
       setShowDropdown(false);
       router.push(`/dashboard/markets/${encodeURIComponent(searchQuery.trim().toUpperCase())}`);
     }
@@ -113,17 +107,6 @@ export default function Header({ user }: { user: any }) {
 
   return (
     <header className="h-16 bg-[#0d121c] border-b border-slate-800/80 px-6 flex items-center justify-between sticky top-0 z-40">
-      {/* Quick Instrument Search Bar */}
-      <form onSubmit={handleSearchSubmit} className="relative w-80">
-        <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
-        <input
-          type="text"
-          placeholder="Search NSE/BSE stocks (e.g. RELIANCE, TCS)..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full bg-[#121824] border border-slate-800 focus:border-blue-500 text-xs text-white placeholder-slate-500 rounded-lg pl-9 pr-4 py-2 outline-none transition-colors"
-        />
-      </form>
       {/* Quick Instrument Search Bar with Autocomplete Dropdown */}
       <div className="relative w-80" ref={dropdownRef}>
         <form onSubmit={handleSearchSubmit} className="relative w-full">

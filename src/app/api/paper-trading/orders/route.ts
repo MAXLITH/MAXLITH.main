@@ -1,10 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getAuthSession } from '@/lib/auth';
-import { getUserOrders } from '@/lib/paper-trading';
 import { getUserOrders, cancelOrder, modifyOrder } from '@/lib/paper-trading';
-import { z } from 'zod';
 
-export async function GET() {
 export const dynamic = 'force-dynamic';
 
 export async function GET(request: Request) {
@@ -14,8 +11,6 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const orders = getUserOrders(session.id);
-    return NextResponse.json({ orders });
     const { searchParams } = new URL(request.url);
     const status = searchParams.get('status') || undefined;
 

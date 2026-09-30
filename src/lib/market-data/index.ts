@@ -3,13 +3,7 @@ import { getMarketSessionStatus as getStatusFromHours, MarketSessionStatus } fro
 import { marketDataService, MarketDataService } from './service';
 export * from './types';
 export * from './service';
-
-export interface MarketSessionStatus {
-  isOpen: boolean;
-  session: 'PRE_MARKET' | 'OPEN' | 'POST_MARKET' | 'CLOSED';
-  nextSessionText: string;
-  currentTimeIST: string;
-}
+export type { MarketSessionStatus };
 
 export interface InstrumentData {
   symbol: string;

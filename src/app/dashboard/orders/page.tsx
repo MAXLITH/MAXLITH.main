@@ -1,15 +1,8 @@
-import { getAuthSession } from '@/lib/auth';
-import { getUserOrders } from '@/lib/paper-trading';
-import { FileText, Clock, CheckCircle2, XCircle, AlertCircle } from 'lucide-react';
 'use client';
 
-export const dynamic = 'force-dynamic';
 import { useState, useEffect } from 'react';
 import { FileText, Clock, CheckCircle2, XCircle, AlertCircle, RefreshCw, X, Edit3 } from 'lucide-react';
 
-export default async function OrdersPage() {
-  const session = await getAuthSession();
-  const orders = getUserOrders(session!.id);
 export default function OrdersPage() {
   const [activeTab, setActiveTab] = useState<'ALL' | 'OPEN' | 'EXECUTED' | 'CANCELLED_REJECTED' | 'TRADES'>('ALL');
   const [orders, setOrders] = useState<any[]>([]);
@@ -88,14 +81,6 @@ export default function OrdersPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-xl font-bold text-white flex items-center gap-2">
-          <FileText className="w-5 h-5 text-blue-400" />
-          <span>Paper Trading Orders History</span>
-        </h1>
-        <p className="text-xs text-slate-400 mt-1">
-          Complete audit ledger of market and limit order submissions, execution prices, and statuses.
-        </p>
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-xl font-bold text-white flex items-center gap-2">
@@ -206,7 +191,6 @@ export default function OrdersPage() {
 
       {/* MAIN ORDERS OR TRADES TABLE */}
       <div className="fintech-card p-5">
-        {orders.length === 0 ? (
         {activeTab === 'TRADES' ? (
           trades.length === 0 ? (
             <div className="p-8 text-center text-slate-500 font-mono text-xs bg-[#0d121c] rounded-lg">
@@ -258,7 +242,6 @@ export default function OrdersPage() {
           )
         ) : filteredOrders.length === 0 ? (
           <div className="p-8 text-center text-slate-500 font-mono text-xs bg-[#0d121c] rounded-lg">
-            No order submissions found.
             No orders match the selected filter.
           </div>
         ) : (
@@ -275,17 +258,13 @@ export default function OrdersPage() {
                   <th className="py-3 px-4 text-right">Quantity</th>
                   <th className="py-3 px-4 text-right">Limit Price</th>
                   <th className="py-3 px-4 text-right">Exec Price</th>
-                  <th className="py-3 px-4 text-right">Price</th>
                   <th className="py-3 px-4 text-right">Status</th>
                   <th className="py-3 px-4 text-right">Action</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-800/60">
-                {orders.map((ord: any) => (
                 {filteredOrders.map((ord: any) => (
                   <tr key={ord.id} className="hover:bg-slate-800/30">
-                    <td className="py-3.5 px-4 text-[11px] text-slate-400">{ord.id}</td>
-                    <td className="py-3.5 px-4 text-slate-400 text-[11px]">{ord.created_at}</td>
                     <td className="py-3.5 px-4 text-[10px] text-slate-400">{ord.id}</td>
                     <td className="py-3.5 px-4 text-slate-400 text-[10px]">{ord.created_at}</td>
                     <td className="py-3.5 px-4 font-bold text-white">{ord.symbol}</td>
@@ -296,15 +275,13 @@ export default function OrdersPage() {
                     <td className="py-3.5 px-4 text-slate-300">{ord.order_type}</td>
                     <td className="py-3.5 px-4 text-right text-slate-200">{ord.quantity}</td>
                     <td className="py-3.5 px-4 text-right text-slate-300">
-                      {ord.price ? `₹${ord.price.toFixed(2)}` : 'Market'}
+                      {ord.price ? `₹${Number(ord.price).toFixed(2)}` : 'Market'}
                     </td>
                     <td className="py-3.5 px-4 text-right text-white">
-                      {ord.executed_price ? `₹${ord.executed_price.toFixed(2)}` : '-'}
-                      {ord.executed_price ? `₹${Number(ord.executed_price).toFixed(2)}` : ord.price ? `₹${Number(ord.price).toFixed(2)}` : 'Market'}
+                      {ord.executed_price ? `₹${Number(ord.executed_price).toFixed(2)}` : '-'}
                     </td>
                     <td className="py-3.5 px-4 text-right">
                       <span
-                        className={`px-2.5 py-1 rounded text-[10px] ${
                         className={`px-2 py-0.5 rounded text-[10px] ${
                           ord.status === 'EXECUTED'
                             ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30'

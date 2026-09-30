@@ -39,7 +39,6 @@ export async function GET() {
         realizedTrades,
       },
       summary,
-      positions
       positions,
       sectorAllocations: summary.sectorAllocations,
       equityCurve,

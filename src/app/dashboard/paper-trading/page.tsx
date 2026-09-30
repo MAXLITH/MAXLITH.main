@@ -1,17 +1,11 @@
 'use client';
 
 import { useState, useEffect, Suspense } from 'react';
-import { useSearchParams, useRouter } from 'next/navigation';
-import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import {
   Layers,
-  ArrowUpRight,
-  ArrowDownRight,
-  ShieldCheck,
   CheckCircle2,
   AlertCircle,
-  RefreshCw,
-  Wallet
   Wallet,
   AlertTriangle
 } from 'lucide-react';
@@ -22,7 +16,6 @@ function PaperTradingContent() {
 
   const [symbol, setSymbol] = useState(initialSymbol);
   const [side, setSide] = useState<'BUY' | 'SELL'>('BUY');
-  const [orderType, setOrderType] = useState<'MARKET' | 'LIMIT'>('MARKET');
   const [orderType, setOrderType] = useState<'MARKET' | 'LIMIT' | 'SL' | 'SL-M'>('MARKET');
   const [productType, setProductType] = useState<'CNC' | 'MIS'>('CNC');
   const [quantity, setQuantity] = useState<number>(10);
@@ -43,20 +36,23 @@ function PaperTradingContent() {
       .then((res) => res.json())
       .then((data) => {
         if (data.instruments) setInstruments(data.instruments);
-      });
+      })
+      .catch(() => {});
 
     fetch('/api/paper-trading/portfolio')
       .then((res) => res.json())
       .then((data) => {
         if (data.summary) setPortfolio(data.summary);
         if (data.positions) setPositions(data.positions);
-      });
+      })
+      .catch(() => {});
 
     fetch('/api/paper-trading/orders')
       .then((res) => res.json())
       .then((data) => {
         if (data.orders) setOrders(data.orders);
-      });
+      })
+      .catch(() => {});
   };
 
   useEffect(() => {
@@ -64,9 +60,7 @@ function PaperTradingContent() {
   }, []);
 
   const selectedInst = instruments.find((i) => i.symbol === symbol) || instruments[0];
-  const currentPrice = selectedInst ? selectedInst.current_price : 0;
-  const targetPrice = orderType === 'LIMIT' && limitPrice ? parseFloat(limitPrice) : currentPrice;
-  const estimatedTotal = quantity * (isNaN(targetPrice) ? 0 : targetPrice);
+  const currentPrice = selectedInst ? Number(selectedInst.current_price) : 0;
   const effectivePrice = (orderType === 'LIMIT' || orderType === 'SL') && limitPrice ? parseFloat(limitPrice) : currentPrice;
 
   // Fetch live order preview & charges breakdown
@@ -96,7 +90,6 @@ function PaperTradingContent() {
           orderType,
           productType,
           quantity,
-          limitPrice: orderType === 'LIMIT' ? limitPrice : undefined
           price: (orderType === 'LIMIT' || orderType === 'SL') && limitPrice ? parseFloat(limitPrice) : undefined,
           triggerPrice: (orderType === 'SL' || orderType === 'SL-M') && triggerPrice ? parseFloat(triggerPrice) : undefined,
         })
@@ -110,7 +103,6 @@ function PaperTradingContent() {
 
       setFeedback({
         success: data.success,
-        message: data.message || 'Order placed successfully.'
         message: data.message || 'Order submitted successfully.'
       });
 
@@ -152,7 +144,6 @@ function PaperTradingContent() {
           <div className="p-2.5 rounded bg-[#121824] border border-slate-800 text-right">
             <span className="text-[9px] uppercase text-slate-500 block">Available Virtual Cash</span>
             <span className="font-bold text-emerald-400 text-sm">
-              ₹{portfolio ? portfolio.virtualCash.toLocaleString('en-IN', { minimumFractionDigits: 2 }) : '10,00,000.00'}
               ₹{portfolio ? (portfolio.availableCash ?? portfolio.virtualCash).toLocaleString('en-IN', { minimumFractionDigits: 2 }) : '10,00,000.00'}
             </span>
           </div>
@@ -223,7 +214,7 @@ function PaperTradingContent() {
                       productType === 'CNC' ? 'bg-blue-600 text-white font-semibold' : 'bg-[#0d121c] text-slate-400 border border-slate-800'
                     }`}
                   >
-                    CNC (Delivery)
+                    CNC
                   </button>
                   <button
                     type="button"
@@ -232,7 +223,7 @@ function PaperTradingContent() {
                       productType === 'MIS' ? 'bg-blue-600 text-white font-semibold' : 'bg-[#0d121c] text-slate-400 border border-slate-800'
                     }`}
                   >
-                    MIS (Intraday)
+                    MIS
                   </button>
                 </div>
               </div>
@@ -257,46 +248,19 @@ function PaperTradingContent() {
               <select
                 value={symbol}
                 onChange={(e) => setSymbol(e.target.value)}
-                className="w-full bg-[#0d121c] border border-slate-800 focus:border-blue-500 text-xs text-white rounded-lg px-3.5 py-2.5 outline-none font-mono"
                 className="w-full bg-[#0d121c] border border-slate-800 focus:border-blue-500 text-xs text-white rounded-lg px-3.5 py-2 outline-none font-mono"
               >
                 {instruments.map((inst) => (
                   <option key={inst.symbol} value={inst.symbol}>
-                    {inst.symbol} - {inst.name} (₹{inst.current_price.toFixed(2)})
                     {inst.symbol} - {inst.name} (₹{Number(inst.current_price).toFixed(2)})
                   </option>
                 ))}
               </select>
             </div>
 
-            <div>
-              <label className="block text-[11px] font-mono uppercase text-slate-400 mb-1.5">Order Type</label>
-              <div className="grid grid-cols-2 gap-2">
-                <button
-                  type="button"
-                  onClick={() => setOrderType('MARKET')}
-                  className={`py-2 rounded-lg text-xs font-mono transition-all ${
-                    orderType === 'MARKET'
-                      ? 'bg-blue-600 text-white font-semibold'
-                      : 'bg-[#0d121c] text-slate-400 border border-slate-800'
-                  }`}
-                >
-                  MARKET
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setOrderType('LIMIT')}
-                  className={`py-2 rounded-lg text-xs font-mono transition-all ${
-                    orderType === 'LIMIT'
-                      ? 'bg-blue-600 text-white font-semibold'
-                      : 'bg-[#0d121c] text-slate-400 border border-slate-800'
-                  }`}
-                >
-                  LIMIT
-                </button>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <label className="block text-[11px] font-mono uppercase text-slate-400 mb-1.5">Quantity</label>
+                <label className="block text-[11px] font-mono uppercase text-slate-400 mb-1.5">Share Quantity</label>
                 <input
                   type="number"
                   min="1"
@@ -306,18 +270,7 @@ function PaperTradingContent() {
                   className="w-full bg-[#0d121c] border border-slate-800 focus:border-blue-500 text-xs text-white rounded-lg px-3 py-2 outline-none font-mono"
                 />
               </div>
-            </div>
 
-            <div>
-              <label className="block text-[11px] font-mono uppercase text-slate-400 mb-1.5">Share Quantity</label>
-              <input
-                type="number"
-                min="1"
-                required
-                value={quantity}
-                onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 1))}
-                className="w-full bg-[#0d121c] border border-slate-800 focus:border-blue-500 text-xs text-white rounded-lg px-3.5 py-2.5 outline-none font-mono"
-              />
               {(orderType === 'LIMIT' || orderType === 'SL') && (
                 <div>
                   <label className="block text-[11px] font-mono uppercase text-slate-400 mb-1.5">Limit Price (₹)</label>
@@ -332,40 +285,30 @@ function PaperTradingContent() {
                   />
                 </div>
               )}
+
+              {(orderType === 'SL' || orderType === 'SL-M') && (
+                <div>
+                  <label className="block text-[11px] font-mono uppercase text-slate-400 mb-1.5">Trigger Price (₹)</label>
+                  <input
+                    type="number"
+                    step="0.05"
+                    required
+                    value={triggerPrice}
+                    placeholder={`Trigger (e.g. ₹${(currentPrice * 0.98).toFixed(2)})`}
+                    onChange={(e) => setTriggerPrice(e.target.value)}
+                    className="w-full bg-[#0d121c] border border-slate-800 focus:border-blue-500 text-xs text-white rounded-lg px-3 py-2 outline-none font-mono"
+                  />
+                </div>
+              )}
             </div>
 
-            {orderType === 'LIMIT' && (
-            {(orderType === 'SL' || orderType === 'SL-M') && (
-              <div>
-                <label className="block text-[11px] font-mono uppercase text-slate-400 mb-1.5">Limit Price (₹)</label>
-                <label className="block text-[11px] font-mono uppercase text-slate-400 mb-1.5">Trigger Price (₹)</label>
-                <input
-                  type="number"
-                  step="0.05"
-                  required
-                  value={limitPrice}
-                  placeholder={`Current: ₹${currentPrice.toFixed(2)}`}
-                  onChange={(e) => setLimitPrice(e.target.value)}
-                  className="w-full bg-[#0d121c] border border-slate-800 focus:border-blue-500 text-xs text-white rounded-lg px-3.5 py-2.5 outline-none font-mono"
-                  value={triggerPrice}
-                  placeholder={`Trigger (e.g. ₹${(currentPrice * 0.98).toFixed(2)})`}
-                  onChange={(e) => setTriggerPrice(e.target.value)}
-                  className="w-full bg-[#0d121c] border border-slate-800 focus:border-blue-500 text-xs text-white rounded-lg px-3 py-2 outline-none font-mono"
-                />
-              </div>
-            )}
-
-            <div className="p-3.5 rounded-lg bg-[#0d121c] border border-slate-800 text-xs font-mono space-y-2">
             {/* REALISTIC CHARGES & MARGIN PREVIEW BOX */}
             <div className="p-3.5 rounded-lg bg-[#0d121c] border border-slate-800 text-xs font-mono space-y-1.5">
               <div className="flex justify-between text-slate-400">
-                <span>Execution Price:</span>
                 <span>LTP:</span>
                 <span className="text-white font-bold">₹{currentPrice.toFixed(2)}</span>
               </div>
               <div className="flex justify-between text-slate-400">
-                <span>Est. Total Cost:</span>
-                <span className="text-blue-400 font-bold">₹{estimatedTotal.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
                 <span>Turnover:</span>
                 <span className="text-white">₹{(quantity * effectivePrice).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
               </div>
@@ -425,12 +368,9 @@ function PaperTradingContent() {
                         <td className="py-3 px-3 font-bold text-white">{pos.symbol}</td>
                         <td className="py-3 px-3 text-slate-400 text-[10px]">{pos.product_type || 'CNC'}</td>
                         <td className="py-3 px-3 text-right text-slate-300">{pos.quantity}</td>
-                        <td className="py-3 px-3 text-right text-slate-300">₹{pos.average_price.toFixed(2)}</td>
-                        <td className="py-3 px-3 text-right text-white">₹{pos.current_price.toFixed(2)}</td>
                         <td className="py-3 px-3 text-right text-slate-300">₹{Number(pos.average_price).toFixed(2)}</td>
                         <td className="py-3 px-3 text-right text-white">₹{Number(pos.current_price).toFixed(2)}</td>
                         <td className={`py-3 px-3 text-right font-bold ${pos.unrealized_pnl >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
-                          {pos.unrealized_pnl >= 0 ? '+' : ''}₹{pos.unrealized_pnl.toFixed(2)} ({pos.unrealized_pnl_percent >= 0 ? '+' : ''}{pos.unrealized_pnl_percent.toFixed(2)}%)
                           {pos.unrealized_pnl >= 0 ? '+' : ''}₹{Number(pos.unrealized_pnl).toFixed(2)} ({pos.unrealized_pnl_percent >= 0 ? '+' : ''}{Number(pos.unrealized_pnl_percent).toFixed(2)}%)
                         </td>
                       </tr>
@@ -454,20 +394,16 @@ function PaperTradingContent() {
                     <tr>
                       <th className="py-2.5 px-3">Order ID</th>
                       <th className="py-2.5 px-3">Symbol</th>
-                      <th className="py-2.5 px-3">Instrument</th>
                       <th className="py-2.5 px-3">Side</th>
                       <th className="py-2.5 px-3">Type</th>
                       <th className="py-2.5 px-3 text-right">Qty</th>
-                      <th className="py-2.5 px-3 text-right">Executed Price</th>
                       <th className="py-2.5 px-3 text-right">Price</th>
                       <th className="py-2.5 px-3 text-right">Status</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-800/60">
-                    {orders.slice(0, 5).map((ord) => (
                     {orders.slice(0, 6).map((ord) => (
                       <tr key={ord.id} className="hover:bg-slate-800/30">
-                        <td className="py-2.5 px-3 text-[11px] text-slate-400">{ord.id}</td>
                         <td className="py-2.5 px-3 text-[10px] text-slate-400">{ord.id}</td>
                         <td className="py-2.5 px-3 font-bold text-white">{ord.symbol}</td>
                         <td className={`py-2.5 px-3 font-bold ${ord.side === 'BUY' ? 'text-emerald-400' : 'text-rose-400'}`}>
@@ -476,18 +412,14 @@ function PaperTradingContent() {
                         <td className="py-2.5 px-3 text-slate-400">{ord.order_type}</td>
                         <td className="py-2.5 px-3 text-right text-slate-300">{ord.quantity}</td>
                         <td className="py-2.5 px-3 text-right text-white">
-                          {ord.executed_price ? `₹${ord.executed_price.toFixed(2)}` : 'N/A'}
-                          ₹{ord.executed_price ? Number(ord.executed_price).toFixed(2) : Number(ord.price).toFixed(2)}
+                          ₹{ord.executed_price ? Number(ord.executed_price).toFixed(2) : Number(ord.price || 0).toFixed(2)}
                         </td>
                         <td className="py-2.5 px-3 text-right">
                           <span
                             className={`px-2 py-0.5 rounded text-[10px] ${
                               ord.status === 'EXECUTED'
-                                ? 'bg-emerald-500/10 text-emerald-400'
                                 ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30'
                                 : ord.status === 'REJECTED'
-                                ? 'bg-rose-500/10 text-rose-400'
-                                : 'bg-amber-500/10 text-amber-400'
                                 ? 'bg-rose-500/10 text-rose-400 border border-rose-500/30'
                                 : 'bg-amber-500/10 text-amber-400 border border-amber-500/30'
                             }`}
@@ -510,7 +442,6 @@ function PaperTradingContent() {
 
 export default function PaperTradingPage() {
   return (
-    <Suspense fallback={<div className="p-8 text-center text-slate-500 font-mono text-xs">Loading trading console...</div>}>
     <Suspense fallback={<div className="p-8 text-center text-slate-500 font-mono text-xs">Loading Paper Trading Console...</div>}>
       <PaperTradingContent />
     </Suspense>

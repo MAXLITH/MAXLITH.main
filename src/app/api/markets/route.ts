@@ -1,5 +1,4 @@
 import { NextResponse } from 'next/server';
-import { getAllInstruments, searchInstruments, getMarketSessionStatus } from '@/lib/market-data';
 import { getAllInstruments, searchInstruments, getMarketSessionStatus, marketDataService } from '@/lib/market-data';
 import db from '@/lib/db';
 
@@ -13,11 +12,6 @@ export async function GET(request: Request) {
     const instruments = query ? searchInstruments(query) : getAllInstruments();
     const sessionStatus = getMarketSessionStatus();
 
-    // Top gainers, losers, volume leaders
-    const sortedByChange = [...instruments].sort((a, b) => b.percent_change - a.percent_change);
-    const topGainers = sortedByChange.slice(0, 3);
-    const topLosers = sortedByChange.slice(-3).reverse();
-    const volumeLeaders = [...instruments].sort((a, b) => b.volume - a.volume).slice(0, 3);
     // Indices
     const indices = await marketDataService.getIndices();
 
@@ -26,6 +20,7 @@ export async function GET(request: Request) {
     const topGainers = sortedByChange.slice(0, 5);
     const topLosers = [...sortedByChange].reverse().slice(0, 5);
     const mostActive = [...instruments].filter(i => i.asset_type === 'EQUITY').sort((a, b) => (b.volume * b.current_price) - (a.volume * a.current_price)).slice(0, 5);
+    const volumeLeaders = [...instruments].sort((a, b) => b.volume - a.volume).slice(0, 5);
 
     // Sector Heatmap
     const sectorHeatmap = marketDataService.getSectorHeatmap();
@@ -55,16 +50,14 @@ export async function GET(request: Request) {
       movers: {
         topGainers,
         topLosers,
-        volumeLeaders
-      }
         mostActive,
+        volumeLeaders,
       },
       sectorHeatmap,
       highLow52w: {
         nearHigh: near52wHigh,
         nearLow: near52wLow,
       },
-      instruments,
     });
   } catch (error: any) {
     console.error('Markets API error', error);

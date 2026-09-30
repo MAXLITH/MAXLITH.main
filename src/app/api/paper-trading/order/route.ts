@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
 import { getAuthSession } from '@/lib/auth';
-import { executePaperOrder } from '@/lib/paper-trading';
 import { executePaperOrder, previewOrder } from '@/lib/paper-trading';
 import { z } from 'zod';
 
@@ -57,11 +56,6 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Unauthorized. Please sign in to paper trade.' }, { status: 401 });
     }
 
-    const body = await request.json();
-    const { symbol, side, orderType, quantity, limitPrice } = body;
-
-    if (!symbol || !side || !orderType || !quantity) {
-      return NextResponse.json({ error: 'Invalid order parameters.' }, { status: 400 });
     const json = await request.json();
     const parsed = OrderSchema.safeParse(json);
     if (!parsed.success) {
@@ -76,11 +70,6 @@ export async function POST(request: Request) {
 
     const result = executePaperOrder({
       userId: session.id,
-      symbol,
-      side,
-      orderType,
-      quantity: parseInt(quantity, 10),
-      limitPrice: limitPrice ? parseFloat(limitPrice) : undefined
       symbol: body.symbol.toUpperCase(),
       side: body.side,
       orderType: body.orderType,

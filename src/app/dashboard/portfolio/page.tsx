@@ -1,9 +1,8 @@
 import Link from 'next/link';
 import { getAuthSession } from '@/lib/auth';
 import { getUserPortfolioSummary, getUserPositions } from '@/lib/paper-trading';
-import { Briefcase, Wallet, PieChart, TrendingUp, TrendingDown, ArrowRight } from 'lucide-react';
 import db from '@/lib/db';
-import { Briefcase, Wallet, PieChart, TrendingUp, TrendingDown, ArrowRight, BarChart2, Calendar } from 'lucide-react';
+import { Briefcase, PieChart, ArrowRight, BarChart2 } from 'lucide-react';
 
 export const dynamic = 'force-dynamic';
 
@@ -11,14 +10,6 @@ export default async function PortfolioPage() {
   const session = await getAuthSession();
   const summary = getUserPortfolioSummary(session!.id);
   const positions = getUserPositions(session!.id);
-
-  const equitySnapshots = db.prepare(`
-    SELECT as_of as date, portfolio_value as value, cash, holdings_value
-    FROM portfolio_snapshots
-    WHERE user_id = ?
-    ORDER BY as_of ASC
-    LIMIT 30
-  `).all(session!.id) as any[];
 
   const closedTrades = db.prepare(`
     SELECT t.*, o.order_type, o.product_type
@@ -56,7 +47,6 @@ export default async function PortfolioPage() {
           <div className="text-xl font-bold font-mono text-white mt-1">
             ₹{summary.currentPortfolioValue.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
           </div>
-          <div className="text-[11px] font-mono text-slate-400 mt-0.5">Initial: ₹10,00,000.00</div>
           <div className="text-[11px] font-mono text-slate-400 mt-0.5">
             Initial: ₹{summary.initialCapital.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
           </div>
@@ -81,8 +71,7 @@ export default async function PortfolioPage() {
         <div className="fintech-card p-4">
           <span className="text-[10px] uppercase font-mono text-slate-500 block">Available Cash Balance</span>
           <div className="text-xl font-bold font-mono text-emerald-400 mt-1">
-            ₹{summary.virtualCash.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
-            ₹{summary.availableCash.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+            ₹{(summary.availableCash ?? summary.virtualCash).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
           </div>
           <div className="text-[11px] font-mono text-slate-400 mt-0.5">Liquid Virtual Reserves</div>
         </div>
@@ -103,13 +92,9 @@ export default async function PortfolioPage() {
                   <th className="py-3 px-4">Instrument</th>
                   <th className="py-3 px-4">Product</th>
                   <th className="py-3 px-4 text-right">Quantity</th>
-                  <th className="py-3 px-4 text-right">Avg Buy Price</th>
                   <th className="py-3 px-4 text-right">Avg Price</th>
-                  <th className="py-3 px-4 text-right">Invested Value</th>
-                  <th className="py-3 px-4 text-right">Current Price</th>
-                  <th className="py-3 px-4 text-right">Current Value</th>
-                  <th className="py-3 px-4 text-right">Unrealized Return</th>
                   <th className="py-3 px-4 text-right">LTP</th>
+                  <th className="py-3 px-4 text-right">Current Value</th>
                   <th className="py-3 px-4 text-right">Day P&amp;L</th>
                   <th className="py-3 px-4 text-right">Total P&amp;L (%)</th>
                 </tr>
@@ -123,17 +108,16 @@ export default async function PortfolioPage() {
                     </td>
                     <td className="py-3.5 px-4 text-slate-400 text-[11px]">{pos.product_type}</td>
                     <td className="py-3.5 px-4 text-right text-slate-200">{pos.quantity}</td>
-                    <td className="py-3.5 px-4 text-right text-slate-300">₹{pos.average_price.toFixed(2)}</td>
-                    <td className="py-3.5 px-4 text-right text-slate-300">₹{pos.invested_value.toFixed(2)}</td>
-                    <td className="py-3.5 px-4 text-right text-slate-300">₹{pos.invested_value.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
-                    <td className="py-3.5 px-4 text-right text-white">₹{pos.current_price.toFixed(2)}</td>
-                    <td className="py-3.5 px-4 text-right font-bold text-white">₹{pos.current_value.toFixed(2)}</td>
+                    <td className="py-3.5 px-4 text-right text-slate-300">₹{Number(pos.average_price).toFixed(2)}</td>
+                    <td className="py-3.5 px-4 text-right text-white">₹{Number(pos.current_price).toFixed(2)}</td>
+                    <td className="py-3.5 px-4 text-right font-bold text-white">
+                      ₹{Number(pos.current_value).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                    </td>
                     <td className={`py-3.5 px-4 text-right font-bold ${pos.day_pnl >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
-                      {pos.day_pnl >= 0 ? '+' : ''}₹{pos.day_pnl.toFixed(2)}
+                      {pos.day_pnl >= 0 ? '+' : ''}₹{Number(pos.day_pnl || 0).toFixed(2)}
                     </td>
                     <td className={`py-3.5 px-4 text-right font-bold ${pos.unrealized_pnl >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
-                      {pos.unrealized_pnl >= 0 ? '+' : ''}₹{pos.unrealized_pnl.toFixed(2)} ({pos.unrealized_pnl_percent >= 0 ? '+' : ''}{pos.unrealized_pnl_percent.toFixed(2)}%)
-                      {pos.unrealized_pnl >= 0 ? '+' : ''}₹{pos.unrealized_pnl.toLocaleString('en-IN', { minimumFractionDigits: 2 })} ({pos.unrealized_pnl_percent >= 0 ? '+' : ''}{pos.unrealized_pnl_percent.toFixed(2)}%)
+                      {pos.unrealized_pnl >= 0 ? '+' : ''}₹{Number(pos.unrealized_pnl).toLocaleString('en-IN', { minimumFractionDigits: 2 })} ({pos.unrealized_pnl_percent >= 0 ? '+' : ''}{Number(pos.unrealized_pnl_percent).toFixed(2)}%)
                     </td>
                   </tr>
                 ))}
@@ -143,7 +127,7 @@ export default async function PortfolioPage() {
         )}
       </div>
 
-      {/* SECTOR ALLOCATION & EQUITY HISTORY */}
+      {/* SECTOR ALLOCATION & TRADE HISTORY */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Sector Allocation Breakdown */}
         <div className="fintech-card p-5">

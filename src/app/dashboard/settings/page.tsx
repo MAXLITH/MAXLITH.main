@@ -1,13 +1,8 @@
-import { getAuthSession } from '@/lib/auth';
-import { Settings, ShieldCheck, User, RefreshCw } from 'lucide-react';
 'use client';
 
-export const dynamic = 'force-dynamic';
 import { useState, useEffect } from 'react';
-import { Settings, ShieldCheck, User, RefreshCw, AlertTriangle, CheckCircle2, Lock, Bell, Check } from 'lucide-react';
+import { Settings, User, RefreshCw, AlertTriangle, CheckCircle2, Lock, Bell } from 'lucide-react';
 
-export default async function SettingsPage() {
-  const session = await getAuthSession();
 export default function SettingsPage() {
   const [user, setUser] = useState<any>(null);
   const [startingCapital, setStartingCapital] = useState('1000000');
@@ -48,7 +43,7 @@ export default function SettingsPage() {
   }, []);
 
   const handleResetAccount = async () => {
-    if (!confirm('Are you sure you want to reset your paper trading account? This will cancel all open orders, close all positions, and reset your virtual wallet balance.')) {
+    if (!confirm('Are you sure you want to reset your paper trading account? This action cancels open orders and closes all positions.')) {
       return;
     }
 
@@ -57,23 +52,25 @@ export default function SettingsPage() {
     setResetError('');
 
     try {
-      const amount = parseFloat(startingCapital) || 1000000;
       const res = await fetch('/api/paper-trading/reset', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ startingCapital: amount }),
+        body: JSON.stringify({ startingCapital: parseFloat(startingCapital) || 1000000 }),
       });
+
       const data = await res.json();
       if (!res.ok) {
         setResetError(data.error || 'Failed to reset account');
       } else {
         setResetSuccess(true);
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new Event('maxlith:wallet_updated'));
+        }
         await fetchUser();
-        // Discard success notice after 4 seconds
         setTimeout(() => setResetSuccess(false), 4000);
       }
     } catch (err: any) {
-      setResetError(err.message || 'Reset failed');
+      setResetError(err.message || 'Failed to reset account');
     } finally {
       setResetting(false);
     }
@@ -84,19 +81,20 @@ export default function SettingsPage() {
     setPasswordError('');
     setPasswordSuccess(false);
 
-    if (newPassword !== confirmPassword) {
-      setPasswordError('New passwords do not match.');
+    if (newPassword.length < 6) {
+      setPasswordError('New password must be at least 6 characters long');
       return;
     }
 
-    if (newPassword.length < 6) {
-      setPasswordError('Password must be at least 6 characters.');
+    if (newPassword !== confirmPassword) {
+      setPasswordError('New passwords do not match');
       return;
     }
 
     setPasswordUpdating(true);
+
     try {
-      const res = await fetch('/api/auth/me', {
+      const res = await fetch('/api/auth/password', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -136,7 +134,6 @@ export default function SettingsPage() {
 
       {/* Profile Information */}
       <div className="fintech-card p-6 space-y-4">
-        <h2 className="text-sm font-bold text-white border-b border-slate-800 pb-3">Profile Information</h2>
         <h2 className="text-sm font-bold text-white border-b border-slate-800 pb-3 flex items-center gap-2">
           <User className="w-4 h-4 text-blue-400" />
           <span>Profile Information</span>
@@ -145,19 +142,16 @@ export default function SettingsPage() {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs font-mono">
           <div>
             <span className="text-slate-500 text-[10px] block uppercase">Full Name</span>
-            <span className="text-white font-bold text-sm">{session?.fullName}</span>
             <span className="text-white font-bold text-sm">{user?.fullName || 'Active User'}</span>
           </div>
 
           <div>
             <span className="text-slate-500 text-[10px] block uppercase">Email Address</span>
-            <span className="text-white font-bold text-sm">{session?.email}</span>
             <span className="text-white font-bold text-sm">{user?.email || 'user@maxlith.com'}</span>
           </div>
 
           <div>
             <span className="text-slate-500 text-[10px] block uppercase">Role Authorization</span>
-            <span className="text-blue-400 font-bold text-sm">{session?.role}</span>
             <span className="text-blue-400 font-bold text-sm">{user?.role || 'USER'}</span>
           </div>
 
@@ -170,8 +164,6 @@ export default function SettingsPage() {
 
       {/* Virtual Trading & Reset Settings */}
       <div className="fintech-card p-6 space-y-4">
-        <h2 className="text-sm font-bold text-white border-b border-slate-800 pb-3">Virtual Trading Settings</h2>
-        <div className="flex items-center justify-between text-xs font-mono">
         <h2 className="text-sm font-bold text-white border-b border-slate-800 pb-3 flex items-center gap-2">
           <RefreshCw className="w-4 h-4 text-blue-400" />
           <span>Virtual Trading &amp; Reset Account</span>
@@ -236,8 +228,6 @@ export default function SettingsPage() {
 
         <form onSubmit={handleUpdatePassword} className="space-y-3 font-mono text-xs">
           <div>
-            <span className="text-white font-bold block">Starting Virtual Capital</span>
-            <span className="text-slate-400 text-[11px]">Default allocation for paper trading</span>
             <label className="block text-[10px] uppercase text-slate-400 mb-1">Current Password</label>
             <input
               type="password"
@@ -247,7 +237,6 @@ export default function SettingsPage() {
               className="w-full sm:w-80 bg-[#0d121c] border border-slate-800 focus:border-blue-500 text-xs text-white rounded-lg px-3 py-2 outline-none"
             />
           </div>
-          <span className="text-emerald-400 font-bold text-sm">₹10,00,000.00</span>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
@@ -340,4 +329,3 @@ export default function SettingsPage() {
     </div>
   );
 }
-

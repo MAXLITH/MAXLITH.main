@@ -1,4 +1,3 @@
-import { Cpu, ShieldCheck, Zap, Activity } from 'lucide-react';
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -110,14 +109,6 @@ export default function AIAgentsPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-xl font-bold text-white flex items-center gap-2">
-          <Cpu className="w-5 h-5 text-blue-400" />
-          <span>Specialized AI Agent Ecosystem</span>
-        </h1>
-        <p className="text-xs text-slate-400 mt-1">
-          MAXLITH operates a decoupled multi-agent orchestration architecture to eliminate single-model hallucination.
-        </p>
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-xl font-bold text-white flex items-center gap-2">
@@ -174,18 +165,11 @@ export default function AIAgentsPage() {
 
       {/* Agents Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {agents.map((agent) => (
-          <div key={agent.name} className="fintech-card p-5 border-t-2 border-t-blue-500 space-y-3">
-            <div className="flex items-center justify-between">
-              <span className="font-bold text-white font-mono text-sm">{agent.name}</span>
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-            </div>
         {agents.map((agent) => {
           const telem = agentTelemetry[agent.id];
           const isRunning = runningAgent === agent.id;
           const isExpanded = expandedAgent === agent.id;
 
-            <div className="text-xs font-semibold text-blue-400 font-sans">{agent.role}</div>
           return (
             <div key={agent.name} className="fintech-card p-5 border-t-2 border-t-blue-500 space-y-3 flex flex-col justify-between">
               <div>
@@ -199,13 +183,9 @@ export default function AIAgentsPage() {
                   </div>
                 </div>
 
-            <p className="text-xs text-slate-400 leading-relaxed font-sans">{agent.description}</p>
                 <div className="text-xs font-semibold text-blue-400 font-sans mt-1">{agent.role}</div>
                 <p className="text-xs text-slate-400 leading-relaxed font-sans mt-1">{agent.description}</p>
 
-            <div className="p-2.5 rounded bg-[#0d121c] border border-slate-800 text-[10px] font-mono text-slate-300">
-              <span className="text-slate-500 block mb-0.5 uppercase">Tracked Metrics</span>
-              <span>{agent.metrics}</span>
                 <div className="p-2.5 rounded bg-[#0d121c] border border-slate-800 text-[10px] font-mono text-slate-300 mt-3 space-y-1">
                   <div className="flex justify-between text-slate-500 uppercase">
                     <span>Lifetime Runs: {telem?.totalRuns || 0}</span>
@@ -260,8 +240,6 @@ export default function AIAgentsPage() {
                 )}
               </div>
             </div>
-          </div>
-        ))}
           );
         })}
       </div>

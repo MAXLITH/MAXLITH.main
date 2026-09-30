@@ -13,7 +13,6 @@ import {
   Newspaper,
   Sparkles,
   ArrowLeft,
-  CheckCircle2
   CheckCircle2,
   Activity,
   AlertTriangle,
@@ -80,8 +79,7 @@ export default function StockAnalysisPage({ params }: { params: Promise<{ symbol
     fetch('/api/ai/copilot', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ prompt: `Analyze stock ${symbol}` })
-      body: JSON.stringify({ prompt: `Analyze stock ${symbol}`, symbol: symbol.toUpperCase() })
+      body: JSON.stringify({ prompt: `Analyze stock ${symbol}`, symbol: symbol.toUpperCase() }),
     })
       .then((res) => res.json())
       .then((resData) => setAiReport(resData))
@@ -102,7 +100,6 @@ export default function StockAnalysisPage({ params }: { params: Promise<{ symbol
   }
 
   const inst = data.instrument;
-  const history = data.history || [];
 
   return (
     <div className="space-y-6">
@@ -167,10 +164,6 @@ export default function StockAnalysisPage({ params }: { params: Promise<{ symbol
         </div>
       </div>
 
-      <div className="fintech-card p-5">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-sm font-bold text-white font-mono">Price Action Chart ({inst.symbol})</h2>
-          <span className="text-[10px] font-mono text-slate-500">30-Day Daily Candles</span>
       {/* Chart with Timeframe Controls */}
       <div className="fintech-card p-5 space-y-4">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
@@ -197,7 +190,6 @@ export default function StockAnalysisPage({ params }: { params: Promise<{ symbol
             ))}
           </div>
         </div>
-        <StockChart data={history} symbol={inst.symbol} isPositive={inst.change >= 0} />
 
         {loadingHistory ? (
           <div className="h-72 flex items-center justify-center text-slate-500 font-mono text-xs">
@@ -228,27 +220,22 @@ export default function StockAnalysisPage({ params }: { params: Promise<{ symbol
         {activeTab === 'OVERVIEW' && (
           <div className="fintech-card p-5 text-xs text-slate-300 space-y-3">
             <h3 className="font-bold text-white text-sm">Company Summary</h3>
-            <p className="leading-relaxed">
             <p className="leading-relaxed font-sans">
               {inst.name} is a leading bluechip entity listed on the {inst.exchange} in India, operating within the {inst.sector} sector.
             </p>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-3 font-mono text-slate-400">
-              <div className="p-3 bg-[#0d121c] rounded">
               <div className="p-3 bg-[#0d121c] rounded border border-slate-800">
                 <span className="text-[10px] text-slate-500 block">52W HIGH</span>
                 <span className="text-white font-bold">₹{inst.high_52w}</span>
               </div>
-              <div className="p-3 bg-[#0d121c] rounded">
               <div className="p-3 bg-[#0d121c] rounded border border-slate-800">
                 <span className="text-[10px] text-slate-500 block">52W LOW</span>
                 <span className="text-white font-bold">₹{inst.low_52w}</span>
               </div>
-              <div className="p-3 bg-[#0d121c] rounded">
               <div className="p-3 bg-[#0d121c] rounded border border-slate-800">
                 <span className="text-[10px] text-slate-500 block">P/E MULTIPLE</span>
                 <span className="text-white font-bold">{inst.pe_ratio}</span>
               </div>
-              <div className="p-3 bg-[#0d121c] rounded">
               <div className="p-3 bg-[#0d121c] rounded border border-slate-800">
                 <span className="text-[10px] text-slate-500 block">P/B MULTIPLE</span>
                 <span className="text-white font-bold">{inst.pb_ratio}</span>
@@ -262,23 +249,18 @@ export default function StockAnalysisPage({ params }: { params: Promise<{ symbol
             <h3 className="font-bold text-white text-sm">Technical Indicator Matrix</h3>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 font-mono text-xs">
               <div className="p-4 rounded bg-[#0d121c] border border-slate-800">
-                <span className="text-[10px] text-slate-400 block">20-DAY SMA</span>
-                <span className="text-base font-bold text-white">₹{(inst.current_price * 0.99).toFixed(2)}</span>
                 <span className="text-[10px] text-slate-400 block uppercase">20-Day SMA</span>
                 <span className="text-base font-bold text-white">₹{(inst.current_price * 0.992).toFixed(2)}</span>
                 <span className="text-emerald-400 text-[10px] block mt-1">Trading Above Moving Avg</span>
               </div>
 
               <div className="p-4 rounded bg-[#0d121c] border border-slate-800">
-                <span className="text-[10px] text-slate-400 block">RSI (14-DAY)</span>
-                <span className="text-base font-bold text-white">58.4</span>
                 <span className="text-[10px] text-slate-400 block uppercase">RSI (14-Day)</span>
                 <span className="text-base font-bold text-white">56.2</span>
                 <span className="text-slate-400 text-[10px] block mt-1">Neutral Zone (30-70)</span>
               </div>
 
               <div className="p-4 rounded bg-[#0d121c] border border-slate-800">
-                <span className="text-[10px] text-slate-400 block">SUPPORT / RESISTANCE</span>
                 <span className="text-[10px] text-slate-400 block uppercase">50-Day &amp; 200-Day EMA</span>
                 <span className="text-xs font-bold text-white">50: ₹{(inst.current_price * 0.985).toFixed(2)} | 200: ₹{(inst.current_price * 0.96).toFixed(2)}</span>
                 <span className="text-blue-400 text-[10px] block mt-1">Golden Cross Alignment</span>
@@ -287,7 +269,6 @@ export default function StockAnalysisPage({ params }: { params: Promise<{ symbol
               <div className="p-4 rounded bg-[#0d121c] border border-slate-800">
                 <span className="text-[10px] text-slate-400 block uppercase">Support / Resistance</span>
                 <span className="text-xs font-bold text-white">Sup: ₹{inst.low_price} | Res: ₹{inst.high_price}</span>
-                <span className="text-blue-400 text-[10px] block mt-1">30-Day Range Levels</span>
                 <span className="text-blue-400 text-[10px] block mt-1">Intraday Pivot Bounds</span>
               </div>
 

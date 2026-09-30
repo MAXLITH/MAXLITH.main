@@ -1,6 +1,5 @@
 import Link from 'next/link';
 import { getAuthSession } from '@/lib/auth';
-import { getAllInstruments, getMarketSessionStatus } from '@/lib/market-data';
 import { getAllInstruments, getMarketSessionStatus, marketDataService } from '@/lib/market-data';
 import { getUserPortfolioSummary } from '@/lib/paper-trading';
 import {
@@ -140,10 +139,6 @@ export default async function UserDashboard() {
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              <div className="p-3.5 rounded-lg bg-[#0d121c] border border-slate-800">
-                <div className="flex justify-between text-xs text-slate-400 font-mono">
-                  <span>NIFTY 50</span>
-                  <span className="text-emerald-400">+0.68%</span>
               {indices.map((idx) => (
                 <div key={idx.symbol} className="p-3.5 rounded-lg bg-[#0d121c] border border-slate-800">
                   <div className="flex justify-between text-xs text-slate-400 font-mono">
@@ -159,27 +154,6 @@ export default async function UserDashboard() {
                     {idx.change >= 0 ? '+' : ''}{idx.change.toFixed(2)} pts
                   </div>
                 </div>
-                <div className="text-lg font-bold font-mono text-white mt-1">25,410.80</div>
-                <div className="text-[10px] font-mono text-slate-500 mt-0.5">+172.40 pts</div>
-              </div>
-
-              <div className="p-3.5 rounded-lg bg-[#0d121c] border border-slate-800">
-                <div className="flex justify-between text-xs text-slate-400 font-mono">
-                  <span>BANK NIFTY</span>
-                  <span className="text-emerald-400">+0.91%</span>
-                </div>
-                <div className="text-lg font-bold font-mono text-white mt-1">52,890.15</div>
-                <div className="text-[10px] font-mono text-slate-500 mt-0.5">+475.20 pts</div>
-              </div>
-
-              <div className="p-3.5 rounded-lg bg-[#0d121c] border border-slate-800">
-                <div className="flex justify-between text-xs text-slate-400 font-mono">
-                  <span>SENSEX</span>
-                  <span className="text-emerald-400">+0.54%</span>
-                </div>
-                <div className="text-lg font-bold font-mono text-white mt-1">83,120.40</div>
-                <div className="text-[10px] font-mono text-slate-500 mt-0.5">+446.80 pts</div>
-              </div>
               ))}
             </div>
           </div>
@@ -219,12 +193,6 @@ export default async function UserDashboard() {
                         {inst.change >= 0 ? '+' : ''}{inst.percent_change.toFixed(2)}%
                       </td>
                       <td className="py-3 px-3 text-right">
-                        <Link
-                          href={`/dashboard/markets/${inst.symbol}`}
-                          className="px-2.5 py-1 rounded bg-blue-600/20 hover:bg-blue-600 text-blue-400 hover:text-white transition-all text-[11px]"
-                        >
-                          Analyze
-                        </Link>
                         <div className="flex items-center justify-end gap-1.5">
                           <Link
                             href={`/dashboard/paper-trading?symbol=${inst.symbol}`}
@@ -290,7 +258,6 @@ export default async function UserDashboard() {
               <h2 className="text-sm font-bold text-white">MAXLITH AI Insights</h2>
             </div>
             <p className="text-xs text-slate-300 leading-relaxed mb-4">
-              Technical Agent detects 20-day SMA support holding on <strong>RELIANCE</strong> at ₹2,965. Relative Strength Index (RSI 14) stands at 58.2 (Neutral).
               Technical Agent detects 20-day SMA support holding on <strong>RELIANCE</strong> at ₹2,965. Relative Strength Index (RSI 14) stands at 58.2 (Neutral). Multi-agent consensus rating: <strong>CONSTRUCTIVE</strong>.
             </p>
             <Link

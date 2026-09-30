@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
 import { requireAdminSession } from '@/lib/auth';
 import db from '@/lib/db';
-import { getMarketSessionStatus } from '@/lib/market-data';
 import { getMarketSessionStatus } from '@/lib/market-hours';
 
 export const dynamic = 'force-dynamic';
@@ -57,7 +56,6 @@ export async function GET() {
     return NextResponse.json({
       adminSession: { id: session.id, email: session.email, name: session.fullName },
       systemHealth: 'OPERATIONAL',
-      databaseStatus: 'HEALTHY (SQLite WAL Mode)',
       databaseStatus: 'HEALTHY (SQLite WAL Mode, ACID)',
       dataProviderHealth: {
         yahoo: 'ONLINE',

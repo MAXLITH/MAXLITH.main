@@ -3,7 +3,6 @@ import { getAuthSession } from '@/lib/auth';
 import db from '@/lib/db';
 import { newId } from '@/lib/ids';
 
-export async function GET() {
 export const dynamic = 'force-dynamic';
 
 export async function GET(request: Request) {
@@ -13,16 +12,9 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    let watchlist = db.prepare('SELECT * FROM watchlists WHERE user_id = ?').get(session.id) as { id: string; name: string } | undefined;
     const { searchParams } = new URL(request.url);
     const requestedId = searchParams.get('watchlistId');
 
-    if (!watchlist) {
-      const wlId = `wl-${Date.now()}`;
-      db.prepare('INSERT INTO watchlists (id, user_id, name) VALUES (?, ?, ?)').run(wlId, session.id, 'My Watchlist');
-      db.prepare('INSERT INTO watchlist_items (id, watchlist_id, symbol) VALUES (?, ?, ?)').run(`wli-1-${Date.now()}`, wlId, 'RELIANCE');
-      db.prepare('INSERT INTO watchlist_items (id, watchlist_id, symbol) VALUES (?, ?, ?)').run(`wli-2-${Date.now()}`, wlId, 'TCS');
-      watchlist = { id: wlId, name: 'My Watchlist' };
     let watchlists = db.prepare('SELECT * FROM watchlists WHERE user_id = ? ORDER BY created_at ASC').all(session.id) as { id: string; name: string }[];
 
     if (watchlists.length === 0) {
@@ -42,10 +34,8 @@ export async function GET(request: Request) {
       JOIN instruments i ON wi.symbol = i.symbol
       WHERE wi.watchlist_id = ?
       ORDER BY wi.added_at DESC
-    `).all(watchlist.id);
     `).all(activeWatchlist.id);
 
-    return NextResponse.json({ watchlist, items });
     return NextResponse.json({
       watchlists,
       watchlist: activeWatchlist,
@@ -70,7 +60,6 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const { symbol } = body;
     const { symbol, name, watchlistId } = body;
 
     // Create a new named watchlist
@@ -81,15 +70,9 @@ export async function POST(request: Request) {
     }
 
     if (!symbol) {
-      return NextResponse.json({ error: 'Symbol is required.' }, { status: 400 });
       return NextResponse.json({ error: 'Symbol or name is required.' }, { status: 400 });
     }
 
-    let watchlist = db.prepare('SELECT id FROM watchlists WHERE user_id = ?').get(session.id) as { id: string } | undefined;
-    if (!watchlist) {
-      const wlId = `wl-${Date.now()}`;
-      db.prepare('INSERT INTO watchlists (id, user_id, name) VALUES (?, ?, ?)').run(wlId, session.id, 'My Watchlist');
-      watchlist = { id: wlId };
     // Target specific watchlist or default
     let targetWlId = watchlistId;
     if (!targetWlId) {
@@ -102,7 +85,6 @@ export async function POST(request: Request) {
       }
     }
 
-    const itemId = `wli-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`;
     const symUpper = symbol.toUpperCase().trim();
     const inst = db.prepare('SELECT symbol FROM instruments WHERE symbol = ?').get(symUpper);
     if (!inst) {
@@ -111,17 +93,13 @@ export async function POST(request: Request) {
 
     const itemId = newId('wli');
     try {
-      db.prepare('INSERT INTO watchlist_items (id, watchlist_id, symbol) VALUES (?, ?, ?)').run(itemId, watchlist.id, symbol.toUpperCase());
       db.prepare('INSERT INTO watchlist_items (id, watchlist_id, symbol) VALUES (?, ?, ?)').run(itemId, targetWlId, symUpper);
     } catch {
-      // Already exists
       // Already in watchlist
     }
 
-    return NextResponse.json({ success: true, symbol: symbol.toUpperCase() });
     return NextResponse.json({ success: true, symbol: symUpper, watchlistId: targetWlId });
   } catch (error: any) {
-    return NextResponse.json({ error: 'Failed to add item to watchlist' }, { status: 500 });
     return NextResponse.json({ error: 'Failed to update watchlist' }, { status: 500 });
   }
 }
@@ -148,9 +126,6 @@ export async function DELETE(request: Request) {
       return NextResponse.json({ error: 'Symbol is required' }, { status: 400 });
     }
 
-    const watchlist = db.prepare('SELECT id FROM watchlists WHERE user_id = ?').get(session.id) as { id: string } | undefined;
-    if (watchlist) {
-      db.prepare('DELETE FROM watchlist_items WHERE watchlist_id = ? AND symbol = ?').run(watchlist.id, symbol.toUpperCase());
     const symUpper = symbol.toUpperCase().trim();
     if (watchlistId) {
       db.prepare('DELETE FROM watchlist_items WHERE watchlist_id = ? AND symbol = ?').run(watchlistId, symUpper);
@@ -162,7 +137,6 @@ export async function DELETE(request: Request) {
       `).run(symUpper, session.id);
     }
 
-    return NextResponse.json({ success: true, symbol: symbol.toUpperCase() });
     return NextResponse.json({ success: true, symbol: symUpper });
   } catch (error: any) {
     return NextResponse.json({ error: 'Failed to remove item from watchlist' }, { status: 500 });
