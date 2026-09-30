@@ -30,7 +30,6 @@ export interface MarketSessionStatus {
   squareOffWindow?: boolean;
 }
 
-function istNow(from?: Date): Date {
 export function istNow(from?: Date): Date {
   const now = from || new Date();
   const istOffset = 5.5 * 60 * 60 * 1000;
@@ -93,7 +92,6 @@ export function getMarketSessionStatus(now?: Date, extraHolidays: string[] = [])
       nextSessionText: `Opens ${nextOpen.label}`,
       currentTimeIST: `${timeStr} IST`,
       nextOpenAt: nextOpen.iso,
-      isHoliday: isHolidayDate(ymd(istDate), extraHolidays),
       nextOpenTime: nextOpen.iso,
       nextCloseTime: undefined,
       canPlaceAmo: true,
@@ -128,6 +126,8 @@ export function getMarketSessionStatus(now?: Date, extraHolidays: string[] = [])
       session: 'OPEN',
       nextSessionText: 'Closes at 03:30 PM IST',
       currentTimeIST: `${timeStr} IST`,
+      nextOpenAt: nextOpen.iso,
+      nextOpenTime: nextOpen.iso,
       nextCloseAt: isoToday(istDate, 15, 30),
       nextCloseTime: isoToday(istDate, 15, 30),
       canPlaceAmo: false,

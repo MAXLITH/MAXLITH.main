@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { getAuthSession } from '@/lib/auth';
 import { getAllInstruments, getMarketSessionStatus } from '@/lib/market-data';
+import { getAllInstruments, getMarketSessionStatus, marketDataService } from '@/lib/market-data';
 import { getUserPortfolioSummary } from '@/lib/paper-trading';
 import {
   TrendingUp,
@@ -23,6 +24,7 @@ export default async function UserDashboard() {
   const summary = getUserPortfolioSummary(session!.id);
   const instruments = getAllInstruments();
   const sessionStatus = getMarketSessionStatus();
+  const indices = await marketDataService.getIndices();
 
   const sortedByChange = [...instruments].sort((a, b) => b.percent_change - a.percent_change);
   const topGainers = sortedByChange.slice(0, 3);
@@ -37,6 +39,7 @@ export default async function UserDashboard() {
             <h1 className="text-xl font-bold text-white">Welcome back, {session?.fullName}</h1>
             <span className="px-2 py-0.5 rounded bg-blue-500/10 text-blue-400 text-[10px] font-mono border border-blue-500/20">
               TRADER V1
+              {session?.role === 'ADMIN' ? 'ADMIN V1' : 'TRADER V1'}
             </span>
           </div>
           <p className="text-xs text-slate-400 mt-1">
@@ -74,6 +77,7 @@ export default async function UserDashboard() {
           </div>
           <div className="flex items-center gap-1 text-[11px] font-mono mt-1">
             <span className="text-slate-500">Capital: ₹10,00,000</span>
+            <span className="text-slate-500">Capital: ₹{summary.initialCapital.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
           </div>
         </div>
 
@@ -84,6 +88,7 @@ export default async function UserDashboard() {
           </div>
           <div className="text-xl font-bold font-mono text-white">
             ₹{summary.virtualCash.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+            ₹{summary.availableCash.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
           </div>
           <div className="text-[11px] font-mono text-slate-500 mt-1">
             Invested: ₹{summary.investedValue.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
@@ -131,6 +136,7 @@ export default async function UserDashboard() {
                 <span>Market Indices Overview</span>
               </h2>
               <span className="text-[10px] font-mono text-slate-500">NSE INDIA</span>
+              <span className="text-[10px] font-mono text-slate-500">NSE / BSE LIVE</span>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -138,6 +144,20 @@ export default async function UserDashboard() {
                 <div className="flex justify-between text-xs text-slate-400 font-mono">
                   <span>NIFTY 50</span>
                   <span className="text-emerald-400">+0.68%</span>
+              {indices.map((idx) => (
+                <div key={idx.symbol} className="p-3.5 rounded-lg bg-[#0d121c] border border-slate-800">
+                  <div className="flex justify-between text-xs text-slate-400 font-mono">
+                    <span>{idx.name}</span>
+                    <span className={idx.percentChange >= 0 ? 'text-emerald-400' : 'text-rose-400'}>
+                      {idx.percentChange >= 0 ? '+' : ''}{idx.percentChange.toFixed(2)}%
+                    </span>
+                  </div>
+                  <div className="text-lg font-bold font-mono text-white mt-1">
+                    {idx.value.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                  </div>
+                  <div className="text-[10px] font-mono text-slate-500 mt-0.5">
+                    {idx.change >= 0 ? '+' : ''}{idx.change.toFixed(2)} pts
+                  </div>
                 </div>
                 <div className="text-lg font-bold font-mono text-white mt-1">25,410.80</div>
                 <div className="text-[10px] font-mono text-slate-500 mt-0.5">+172.40 pts</div>
@@ -160,6 +180,7 @@ export default async function UserDashboard() {
                 <div className="text-lg font-bold font-mono text-white mt-1">83,120.40</div>
                 <div className="text-[10px] font-mono text-slate-500 mt-0.5">+446.80 pts</div>
               </div>
+              ))}
             </div>
           </div>
 
@@ -204,6 +225,20 @@ export default async function UserDashboard() {
                         >
                           Analyze
                         </Link>
+                        <div className="flex items-center justify-end gap-1.5">
+                          <Link
+                            href={`/dashboard/paper-trading?symbol=${inst.symbol}`}
+                            className="px-2.5 py-1 rounded bg-emerald-600/20 hover:bg-emerald-600 text-emerald-400 hover:text-white transition-all text-[11px]"
+                          >
+                            Trade
+                          </Link>
+                          <Link
+                            href={`/dashboard/markets/${inst.symbol}`}
+                            className="px-2.5 py-1 rounded bg-blue-600/20 hover:bg-blue-600 text-blue-400 hover:text-white transition-all text-[11px]"
+                          >
+                            Analyze
+                          </Link>
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -256,6 +291,7 @@ export default async function UserDashboard() {
             </div>
             <p className="text-xs text-slate-300 leading-relaxed mb-4">
               Technical Agent detects 20-day SMA support holding on <strong>RELIANCE</strong> at ₹2,965. Relative Strength Index (RSI 14) stands at 58.2 (Neutral).
+              Technical Agent detects 20-day SMA support holding on <strong>RELIANCE</strong> at ₹2,965. Relative Strength Index (RSI 14) stands at 58.2 (Neutral). Multi-agent consensus rating: <strong>CONSTRUCTIVE</strong>.
             </p>
             <Link
               href="/dashboard/ai-copilot"

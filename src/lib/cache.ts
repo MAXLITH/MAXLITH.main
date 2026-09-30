@@ -2,7 +2,6 @@ type CacheEntry<T> = { value: T; expiresAt: number };
 
 const mem = new Map<string, CacheEntry<unknown>>();
 let redis: { get: (k: string) => Promise<string | null>; set: (k: string, v: string, ...rest: unknown[]) => Promise<unknown> } | null = null;
-let redis: any = null;
 let redisTried = false;
 
 async function getRedis() {
@@ -12,17 +11,15 @@ async function getRedis() {
   if (!url) return null;
   try {
     const Redis = (await import('ioredis')).default;
-    redis = new Redis(url, { maxRetriesPerRequest: 1, enableOfflineQueue: false, lazyConnect: true });
-    await redis.connect?.();
     const client = new Redis(url, { maxRetriesPerRequest: 1, enableOfflineQueue: false, lazyConnect: true });
-    if (typeof client.connect === 'function') {
+    if (typeof (client as any).connect === 'function') {
       try {
-        await client.connect();
+        await (client as any).connect();
       } catch {
-        /* connect error */
+        /* ignore connect error */
       }
     }
-    redis = client;
+    redis = client as any;
     return redis;
   } catch {
     redis = null;

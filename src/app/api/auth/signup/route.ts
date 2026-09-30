@@ -25,18 +25,26 @@ export async function POST(request: Request) {
 
     const userId = `usr-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`;
     const passwordHash = await bcrypt.hash(password, 10);
-    const initialCash = 1000000.0; // ₹10,00,000 Virtual Capital
+    const initialCash = Number(process.env.INITIAL_VIRTUAL_CAPITAL || 1000000.0);
 
     db.prepare(`
-      INSERT INTO users (id, email, password_hash, full_name, role, virtual_cash)
-      VALUES (?, ?, ?, ?, 'USER', ?)
-    `).run(userId, normalizedEmail, passwordHash, fullName, initialCash);
+      INSERT INTO users (id, email, password_hash, full_name, role, virtual_cash, initial_capital, blocked_margin)
+      VALUES (?, ?, ?, ?, 'USER', ?, ?, 0.0)
+    `).run(userId, normalizedEmail, passwordHash, fullName, initialCash, initialCash);
+
+    // Double-entry ledger entry for initial capital deposit
+    db.prepare(`
+      INSERT INTO ledger_entries (id, user_id, direction, account_kind, amount_paise, ref_type, memo, created_at)
+      VALUES (?, ?, 'CREDIT', 'CASH', ?, 'INITIAL_CAPITAL', 'Account creation virtual capital', CURRENT_TIMESTAMP)
+    `).run(`led-${Date.now()}-init`, userId, Math.round(initialCash * 100));
 
     // Create default Watchlist for new user
     const watchlistId = `wl-${Date.now()}`;
     db.prepare('INSERT INTO watchlists (id, user_id, name) VALUES (?, ?, ?)').run(watchlistId, userId, 'My First Watchlist');
     db.prepare('INSERT INTO watchlist_items (id, watchlist_id, symbol) VALUES (?, ?, ?)').run(`wli-1-${Date.now()}`, watchlistId, 'RELIANCE');
     db.prepare('INSERT INTO watchlist_items (id, watchlist_id, symbol) VALUES (?, ?, ?)').run(`wli-2-${Date.now()}`, watchlistId, 'TCS');
+    db.prepare('INSERT INTO watchlist_items (id, watchlist_id, symbol) VALUES (?, ?, ?)').run(`wli-3-${Date.now()}`, watchlistId, 'HDFCBANK');
+    db.prepare('INSERT INTO watchlist_items (id, watchlist_id, symbol) VALUES (?, ?, ?)').run(`wli-4-${Date.now()}`, watchlistId, 'INFY');
 
     const token = await createSessionToken({ id: userId, email: normalizedEmail, role: 'USER' });
 
@@ -47,7 +55,8 @@ export async function POST(request: Request) {
         email: normalizedEmail,
         fullName,
         role: 'USER',
-        virtualCash: initialCash
+        virtualCash: initialCash,
+        initialCapital: initialCash,
       }
     });
 

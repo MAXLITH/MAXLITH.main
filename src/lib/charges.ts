@@ -1,5 +1,4 @@
 import { Decimal } from 'decimal.js';
-import { roundRupee } from './money';
 import { roundRupee, toPaise } from './money';
 
 export type ProductType = 'CNC' | 'MIS';
@@ -27,13 +26,10 @@ export interface ChargeBreakdown {
 export function calculateCharges(params: {
   side: 'BUY' | 'SELL';
   productType: ProductType;
-  quantity: number;
-  price: number;
   quantity?: number;
   price?: number;
   turnover?: number;
 }): ChargeBreakdown {
-  const turnover = roundRupee(new Decimal(params.quantity).mul(params.price).toNumber());
   const turnover = params.turnover !== undefined
     ? roundRupee(params.turnover)
     : roundRupee(new Decimal(params.quantity || 0).mul(params.price || 0).toNumber());
@@ -73,7 +69,6 @@ export function calculateCharges(params: {
       ? roundRupee(turnover + totalCharges)
       : roundRupee(turnover - totalCharges);
 
-  return { turnover, brokerage, stt, exchangeTxn, sebi, stampDuty, gst, totalCharges, netAmount };
   return {
     turnover,
     brokerage,
