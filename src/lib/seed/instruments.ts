@@ -1,0 +1,166 @@
+export interface SeedInstrument {
+  symbol: string;
+  name: string;
+  exchange: 'NSE' | 'BSE';
+  sector: string;
+  current_price: number;
+  previous_close: number;
+  pe_ratio?: number;
+  pb_ratio?: number;
+  market_cap?: number;
+  high_52w?: number;
+  low_52w?: number;
+  volume?: number;
+  asset_type?: 'EQUITY' | 'INDEX';
+  universe?: string;
+  yahoo?: string;
+}
+
+function eq(
+  symbol: string,
+  name: string,
+  sector: string,
+  price: number,
+  extras: Partial<SeedInstrument> = {}
+): SeedInstrument {
+  const prev = Number((price * 0.992).toFixed(2));
+  return {
+    symbol,
+    name,
+    exchange: 'NSE',
+    sector,
+    current_price: price,
+    previous_close: extras.previous_close ?? prev,
+    pe_ratio: extras.pe_ratio ?? 22,
+    pb_ratio: extras.pb_ratio ?? 3.2,
+    market_cap: extras.market_cap ?? Math.round(price * 1200),
+    high_52w: extras.high_52w ?? Number((price * 1.18).toFixed(2)),
+    low_52w: extras.low_52w ?? Number((price * 0.72).toFixed(2)),
+    volume: extras.volume ?? 4_500_000,
+    asset_type: extras.asset_type ?? 'EQUITY',
+    universe: extras.universe ?? 'NIFTY500',
+    yahoo: extras.yahoo ?? `${symbol}.NS`,
+  };
+}
+
+/** Core NIFTY 50 + liquid NIFTY 500 names used as the master instrument book. */
+export const SEED_INSTRUMENTS: SeedInstrument[] = [
+  eq('NIFTY50', 'Nifty 50', 'Index', 25410.8, { asset_type: 'INDEX', universe: 'INDEX', yahoo: '^NSEI', previous_close: 25238.4, volume: 0, market_cap: 0 }),
+  eq('BANKNIFTY', 'Nifty Bank', 'Index', 52890.15, { asset_type: 'INDEX', universe: 'INDEX', yahoo: '^NSEBANK', previous_close: 52414.95, volume: 0, market_cap: 0 }),
+  eq('SENSEX', 'S&P BSE Sensex', 'Index', 83120.4, { asset_type: 'INDEX', universe: 'INDEX', yahoo: '^BSESN', previous_close: 82673.6, volume: 0, market_cap: 0 }),
+  eq('RELIANCE', 'Reliance Industries Ltd.', 'Energy & Conglomerate', 2985.4, { pe_ratio: 28.4, pb_ratio: 2.6, market_cap: 2019450, volume: 4820150 }),
+  eq('TCS', 'Tata Consultancy Services Ltd.', 'Information Technology', 4280.15, { pe_ratio: 31.8, pb_ratio: 13.2, market_cap: 1548000, volume: 2150340 }),
+  eq('HDFCBANK', 'HDFC Bank Ltd.', 'Banking & Financials', 1642.8, { pe_ratio: 18.2, pb_ratio: 2.7, market_cap: 1250300, volume: 12450800 }),
+  eq('INFY', 'Infosys Ltd.', 'Information Technology', 1892.5, { pe_ratio: 29.5, pb_ratio: 8.4, market_cap: 785400, volume: 6850120 }),
+  eq('ICICIBANK', 'ICICI Bank Ltd.', 'Banking & Financials', 1235.6, { pe_ratio: 18.9, pb_ratio: 3.1, market_cap: 868900, volume: 8940200 }),
+  eq('BHARTIARTL', 'Bharti Airtel Ltd.', 'Telecommunications', 1560.3, { pe_ratio: 65.4, pb_ratio: 8.9, market_cap: 890100, volume: 4120300 }),
+  eq('SBIN', 'State Bank of India', 'Banking & Financials', 815.4, { pe_ratio: 10.8, pb_ratio: 1.8, market_cap: 727700, volume: 11200450 }),
+  eq('ITC', 'ITC Ltd.', 'FMCG', 512.45, { pe_ratio: 31.2, pb_ratio: 8.1, market_cap: 640200, volume: 9840100 }),
+  eq('HINDUNILVR', 'Hindustan Unilever Ltd.', 'FMCG', 2485.0, { pe_ratio: 55.1, pb_ratio: 11.4, market_cap: 583000 }),
+  eq('LT', 'Larsen & Toubro Ltd.', 'Infrastructure', 3620.0, { pe_ratio: 34.2, pb_ratio: 5.6, market_cap: 497000 }),
+  eq('BAJFINANCE', 'Bajaj Finance Ltd.', 'Banking & Financials', 7125.0, { pe_ratio: 32.4, pb_ratio: 6.1, market_cap: 441000 }),
+  eq('HCLTECH', 'HCL Technologies Ltd.', 'Information Technology', 1910.0, { pe_ratio: 27.3, pb_ratio: 6.8, market_cap: 518000 }),
+  eq('MARUTI', 'Maruti Suzuki India Ltd.', 'Automobile', 12780.0, { pe_ratio: 26.8, pb_ratio: 4.4, market_cap: 401000 }),
+  eq('SUNPHARMA', 'Sun Pharmaceutical Industries Ltd.', 'Healthcare', 1788.0, { pe_ratio: 39.2, pb_ratio: 6.2, market_cap: 428000 }),
+  eq('AXISBANK', 'Axis Bank Ltd.', 'Banking & Financials', 1098.0, { pe_ratio: 13.5, pb_ratio: 2.1, market_cap: 339000 }),
+  eq('KOTAKBANK', 'Kotak Mahindra Bank Ltd.', 'Banking & Financials', 1795.0, { pe_ratio: 16.4, pb_ratio: 2.5, market_cap: 356000 }),
+  eq('TITAN', 'Titan Company Ltd.', 'Consumer Discretionary', 3450.0, { pe_ratio: 82.0, pb_ratio: 22.1, market_cap: 306000 }),
+  eq('ASIANPAINT', 'Asian Paints Ltd.', 'Materials', 2420.0, { pe_ratio: 52.3, pb_ratio: 12.8, market_cap: 232000 }),
+  eq('ULTRACEMCO', 'UltraTech Cement Ltd.', 'Materials', 11840.0, { pe_ratio: 46.1, pb_ratio: 5.3, market_cap: 341000 }),
+  eq('NESTLEIND', 'Nestle India Ltd.', 'FMCG', 2285.0, { pe_ratio: 74.2, pb_ratio: 58.0, market_cap: 220000 }),
+  eq('TATAMOTORS', 'Tata Motors Ltd.', 'Automobile', 982.1, { pe_ratio: 10.4, pb_ratio: 3.4, market_cap: 326000, volume: 7650300 }),
+  eq('M&M', 'Mahindra & Mahindra Ltd.', 'Automobile', 2875.0, { pe_ratio: 28.7, pb_ratio: 4.9, market_cap: 357000 }),
+  eq('NTPC', 'NTPC Ltd.', 'Power', 368.4, { pe_ratio: 16.8, pb_ratio: 2.1, market_cap: 357000 }),
+  eq('POWERGRID', 'Power Grid Corporation of India Ltd.', 'Power', 318.6, { pe_ratio: 17.9, pb_ratio: 3.0, market_cap: 296000 }),
+  eq('ONGC', 'Oil and Natural Gas Corporation Ltd.', 'Energy & Conglomerate', 268.5, { pe_ratio: 8.4, pb_ratio: 1.0, market_cap: 337000 }),
+  eq('COALINDIA', 'Coal India Ltd.', 'Energy & Conglomerate', 412.3, { pe_ratio: 7.6, pb_ratio: 2.6, market_cap: 254000 }),
+  eq('ADANIENT', 'Adani Enterprises Ltd.', 'Energy & Conglomerate', 2468.0, { pe_ratio: 48.2, pb_ratio: 7.1, market_cap: 283000 }),
+  eq('ADANIPORTS', 'Adani Ports and SEZ Ltd.', 'Infrastructure', 1248.0, { pe_ratio: 27.5, pb_ratio: 4.8, market_cap: 270000 }),
+  eq('JSWSTEEL', 'JSW Steel Ltd.', 'Metals', 958.0, { pe_ratio: 19.4, pb_ratio: 2.9, market_cap: 234000 }),
+  eq('TATASTEEL', 'Tata Steel Ltd.', 'Metals', 158.4, { pe_ratio: 14.2, pb_ratio: 1.3, market_cap: 198000 }),
+  eq('HINDALCO', 'Hindalco Industries Ltd.', 'Metals', 692.0, { pe_ratio: 12.8, pb_ratio: 1.5, market_cap: 155000 }),
+  eq('WIPRO', 'Wipro Ltd.', 'Information Technology', 298.5, { pe_ratio: 22.1, pb_ratio: 3.4, market_cap: 156000 }),
+  eq('TECHM', 'Tech Mahindra Ltd.', 'Information Technology', 1648.0, { pe_ratio: 33.2, pb_ratio: 5.1, market_cap: 161000 }),
+  eq('LTIM', 'LTIMindtree Ltd.', 'Information Technology', 6140.0, { pe_ratio: 38.6, pb_ratio: 9.8, market_cap: 181800, volume: 850120 }),
+  eq('BAJAJFINSV', 'Bajaj Finserv Ltd.', 'Banking & Financials', 1845.0, { pe_ratio: 17.6, pb_ratio: 4.2, market_cap: 294000 }),
+  eq('HDFCLIFE', 'HDFC Life Insurance Company Ltd.', 'Banking & Financials', 712.0, { pe_ratio: 84.0, pb_ratio: 9.6, market_cap: 153000 }),
+  eq('SBILIFE', 'SBI Life Insurance Company Ltd.', 'Banking & Financials', 1688.0, { pe_ratio: 72.3, pb_ratio: 10.1, market_cap: 169000 }),
+  eq('DIVISLAB', "Divi's Laboratories Ltd.", 'Healthcare', 5780.0, { pe_ratio: 74.5, pb_ratio: 11.2, market_cap: 153000 }),
+  eq('CIPLA', 'Cipla Ltd.', 'Healthcare', 1488.0, { pe_ratio: 26.4, pb_ratio: 4.3, market_cap: 120000 }),
+  eq('DRREDDY', "Dr. Reddy's Laboratories Ltd.", 'Healthcare', 1285.0, { pe_ratio: 19.8, pb_ratio: 3.5, market_cap: 107000 }),
+  eq('APOLLOHOSP', 'Apollo Hospitals Enterprise Ltd.', 'Healthcare', 6985.0, { pe_ratio: 82.1, pb_ratio: 12.4, market_cap: 100000 }),
+  eq('GRASIM', 'Grasim Industries Ltd.', 'Materials', 2688.0, { pe_ratio: 21.4, pb_ratio: 2.0, market_cap: 177000 }),
+  eq('INDUSINDBK', 'IndusInd Bank Ltd.', 'Banking & Financials', 1048.0, { pe_ratio: 11.2, pb_ratio: 1.4, market_cap: 81500 }),
+  eq('EICHERMOT', 'Eicher Motors Ltd.', 'Automobile', 5120.0, { pe_ratio: 32.8, pb_ratio: 7.6, market_cap: 140000 }),
+  eq('HEROMOTOCO', 'Hero MotoCorp Ltd.', 'Automobile', 4850.0, { pe_ratio: 21.5, pb_ratio: 5.2, market_cap: 97000 }),
+  eq('BPCL', 'Bharat Petroleum Corporation Ltd.', 'Energy & Conglomerate', 318.0, { pe_ratio: 9.8, pb_ratio: 1.6, market_cap: 138000 }),
+  eq('IOC', 'Indian Oil Corporation Ltd.', 'Energy & Conglomerate', 148.6, { pe_ratio: 8.9, pb_ratio: 1.1, market_cap: 209000 }),
+  eq('TATACONSUM', 'Tata Consumer Products Ltd.', 'FMCG', 918.0, { pe_ratio: 64.2, pb_ratio: 6.8, market_cap: 90500 }),
+  eq('BEL', 'Bharat Electronics Ltd.', 'Defence & Industrials', 312.4, { pe_ratio: 48.6, pb_ratio: 12.1, market_cap: 228000 }),
+  eq('TRENT', 'Trent Ltd.', 'Consumer Discretionary', 5480.0, { pe_ratio: 118.0, pb_ratio: 32.0, market_cap: 195000 }),
+  eq('BRITANNIA', 'Britannia Industries Ltd.', 'FMCG', 5488.0, { pe_ratio: 61.4, pb_ratio: 32.0, market_cap: 132000 }),
+  eq('DMART', 'Avenue Supermarts Ltd.', 'Consumer Discretionary', 3920.0, { pe_ratio: 94.0, pb_ratio: 12.5, market_cap: 255000 }),
+  eq('PIDILITIND', 'Pidilite Industries Ltd.', 'Materials', 2985.0, { pe_ratio: 78.2, pb_ratio: 16.4, market_cap: 151000 }),
+  eq('GODREJCP', 'Godrej Consumer Products Ltd.', 'FMCG', 1228.0, { pe_ratio: 66.4, pb_ratio: 10.2, market_cap: 125000 }),
+  eq('DABUR', 'Dabur India Ltd.', 'FMCG', 518.0, { pe_ratio: 52.1, pb_ratio: 8.6, market_cap: 91800 }),
+  eq('HAVELLS', 'Havells India Ltd.', 'Consumer Discretionary', 1588.0, { pe_ratio: 68.4, pb_ratio: 11.8, market_cap: 99500 }),
+  eq('SIEMENS', 'Siemens Ltd.', 'Defence & Industrials', 3288.0, { pe_ratio: 72.0, pb_ratio: 14.2, market_cap: 117000 }),
+  eq('ABB', 'ABB India Ltd.', 'Defence & Industrials', 6120.0, { pe_ratio: 84.2, pb_ratio: 18.1, market_cap: 129000 }),
+  eq('HAL', 'Hindustan Aeronautics Ltd.', 'Defence & Industrials', 4485.0, { pe_ratio: 36.8, pb_ratio: 9.4, market_cap: 300000 }),
+  eq('IRFC', 'Indian Railway Finance Corporation Ltd.', 'Banking & Financials', 148.2, { pe_ratio: 24.1, pb_ratio: 3.2, market_cap: 193000 }),
+  eq('PFC', 'Power Finance Corporation Ltd.', 'Banking & Financials', 448.0, { pe_ratio: 7.9, pb_ratio: 1.4, market_cap: 147000 }),
+  eq('RECLTD', 'REC Ltd.', 'Banking & Financials', 492.0, { pe_ratio: 8.2, pb_ratio: 1.6, market_cap: 129000 }),
+  eq('VEDL', 'Vedanta Ltd.', 'Metals', 468.0, { pe_ratio: 11.6, pb_ratio: 2.4, market_cap: 183000 }),
+  eq('HINDPETRO', 'Hindustan Petroleum Corporation Ltd.', 'Energy & Conglomerate', 412.0, { pe_ratio: 9.1, pb_ratio: 1.7, market_cap: 87500 }),
+  eq('GAIL', 'GAIL (India) Ltd.', 'Energy & Conglomerate', 198.4, { pe_ratio: 12.4, pb_ratio: 1.3, market_cap: 130000 }),
+  eq('DLF', 'DLF Ltd.', 'Realty', 818.0, { pe_ratio: 48.6, pb_ratio: 4.8, market_cap: 202000 }),
+  eq('LODHA', 'Macrotech Developers Ltd.', 'Realty', 1288.0, { pe_ratio: 42.1, pb_ratio: 5.6, market_cap: 128000 }),
+  eq('GODREJPROP', 'Godrej Properties Ltd.', 'Realty', 2285.0, { pe_ratio: 58.0, pb_ratio: 6.2, market_cap: 68500 }),
+  eq('ZOMATO', 'Eternal Ltd.', 'Consumer Discretionary', 248.6, { pe_ratio: 312.0, pb_ratio: 8.4, market_cap: 219000 }),
+  eq('PAYTM', 'One97 Communications Ltd.', 'Information Technology', 812.0, { pe_ratio: 0, pb_ratio: 4.1, market_cap: 51800 }),
+  eq('NYKAA', 'FSN E-Commerce Ventures Ltd.', 'Consumer Discretionary', 178.4, { pe_ratio: 118.0, pb_ratio: 9.2, market_cap: 51000 }),
+  eq('POLICYBZR', 'PB Fintech Ltd.', 'Banking & Financials', 1688.0, { pe_ratio: 184.0, pb_ratio: 12.4, market_cap: 77500 }),
+  eq('IRCTC', 'Indian Railway Catering and Tourism Corporation Ltd.', 'Consumer Discretionary', 788.0, { pe_ratio: 52.4, pb_ratio: 16.8, market_cap: 63000 }),
+  eq('INDIGO', 'InterGlobe Aviation Ltd.', 'Aviation', 4488.0, { pe_ratio: 24.6, pb_ratio: 18.2, market_cap: 173000 }),
+  eq('TVSMOTOR', 'TVS Motor Company Ltd.', 'Automobile', 2488.0, { pe_ratio: 62.1, pb_ratio: 16.4, market_cap: 118000 }),
+  eq('BAJAJ-AUTO', 'Bajaj Auto Ltd.', 'Automobile', 9188.0, { pe_ratio: 32.4, pb_ratio: 8.1, market_cap: 256000, yahoo: 'BAJAJ-AUTO.NS' }),
+  eq('SHREECEM', 'Shree Cement Ltd.', 'Materials', 27840.0, { pe_ratio: 44.2, pb_ratio: 4.6, market_cap: 100000 }),
+  eq('AMBUJACEM', 'Ambuja Cements Ltd.', 'Materials', 548.0, { pe_ratio: 32.8, pb_ratio: 2.8, market_cap: 134000 }),
+  eq('ACC', 'ACC Ltd.', 'Materials', 2188.0, { pe_ratio: 21.4, pb_ratio: 2.6, market_cap: 41100 }),
+  eq('JINDALSTEL', 'Jindal Steel Ltd.', 'Metals', 948.0, { pe_ratio: 16.8, pb_ratio: 2.1, market_cap: 96800 }),
+  eq('SAIL', 'Steel Authority of India Ltd.', 'Metals', 128.6, { pe_ratio: 18.2, pb_ratio: 0.9, market_cap: 53100 }),
+  eq('NMDC', 'NMDC Ltd.', 'Metals', 72.4, { pe_ratio: 9.6, pb_ratio: 2.2, market_cap: 63300 }),
+  eq('BANKBARODA', 'Bank of Baroda', 'Banking & Financials', 248.6, { pe_ratio: 6.8, pb_ratio: 0.9, market_cap: 128000 }),
+  eq('PNB', 'Punjab National Bank', 'Banking & Financials', 108.4, { pe_ratio: 8.1, pb_ratio: 1.0, market_cap: 124000 }),
+  eq('CANBK', 'Canara Bank', 'Banking & Financials', 108.8, { pe_ratio: 6.4, pb_ratio: 1.0, market_cap: 98500 }),
+  eq('UNIONBANK', 'Union Bank of India', 'Banking & Financials', 128.2, { pe_ratio: 6.1, pb_ratio: 0.9, market_cap: 97800 }),
+  eq('IDFCFIRSTB', 'IDFC First Bank Ltd.', 'Banking & Financials', 68.4, { pe_ratio: 18.6, pb_ratio: 1.3, market_cap: 50200 }),
+  eq('FEDERALBNK', 'The Federal Bank Ltd.', 'Banking & Financials', 198.6, { pe_ratio: 11.4, pb_ratio: 1.4, market_cap: 48700 }),
+  eq('CHOLAFIN', 'Cholamandalam Investment and Finance Company Ltd.', 'Banking & Financials', 1488.0, { pe_ratio: 31.2, pb_ratio: 5.8, market_cap: 125000 }),
+  eq('MUTHOOTFIN', 'Muthoot Finance Ltd.', 'Banking & Financials', 2188.0, { pe_ratio: 18.4, pb_ratio: 3.6, market_cap: 87800 }),
+  eq('LICI', 'Life Insurance Corporation of India', 'Banking & Financials', 912.0, { pe_ratio: 12.8, pb_ratio: 6.4, market_cap: 576000 }),
+  eq('ICICIGI', 'ICICI Lombard General Insurance Company Ltd.', 'Banking & Financials', 1988.0, { pe_ratio: 38.6, pb_ratio: 6.8, market_cap: 98500 }),
+  eq('NAUKRI', 'Info Edge (India) Ltd.', 'Information Technology', 7488.0, { pe_ratio: 92.0, pb_ratio: 12.4, market_cap: 96800 }),
+  eq('PERSISTENT', 'Persistent Systems Ltd.', 'Information Technology', 5688.0, { pe_ratio: 58.2, pb_ratio: 13.6, market_cap: 87500 }),
+  eq('COFORGE', 'Coforge Ltd.', 'Information Technology', 8488.0, { pe_ratio: 62.4, pb_ratio: 14.1, market_cap: 56800 }),
+  eq('MPHASIS', 'Mphasis Ltd.', 'Information Technology', 2788.0, { pe_ratio: 32.1, pb_ratio: 6.8, market_cap: 52800 }),
+  eq('LUPIN', 'Lupin Ltd.', 'Healthcare', 2088.0, { pe_ratio: 42.6, pb_ratio: 5.2, market_cap: 95200 }),
+  eq('AUROPHARMA', 'Aurobindo Pharma Ltd.', 'Healthcare', 1288.0, { pe_ratio: 21.4, pb_ratio: 2.4, market_cap: 75200 }),
+  eq('BIOCON', 'Biocon Ltd.', 'Healthcare', 348.0, { pe_ratio: 48.2, pb_ratio: 2.8, market_cap: 41800 }),
+  eq('MAXHEALTH', 'Max Healthcare Institute Ltd.', 'Healthcare', 1088.0, { pe_ratio: 82.4, pb_ratio: 11.2, market_cap: 105000 }),
+  eq('TORNTPHARM', 'Torrent Pharmaceuticals Ltd.', 'Healthcare', 3288.0, { pe_ratio: 58.1, pb_ratio: 14.6, market_cap: 111000 }),
+  eq('VOLTAS', 'Voltas Ltd.', 'Consumer Discretionary', 1488.0, { pe_ratio: 68.4, pb_ratio: 7.2, market_cap: 49200 }),
+  eq('WHIRLPOOL', 'Whirlpool of India Ltd.', 'Consumer Discretionary', 1688.0, { pe_ratio: 72.0, pb_ratio: 5.8, market_cap: 21400 }),
+  eq('CROMPTON', 'Crompton Greaves Consumer Electricals Ltd.', 'Consumer Discretionary', 388.0, { pe_ratio: 42.6, pb_ratio: 6.1, market_cap: 24900 }),
+  eq('PAGEIND', 'Page Industries Ltd.', 'Consumer Discretionary', 42880.0, { pe_ratio: 74.2, pb_ratio: 28.4, market_cap: 47800 }),
+  eq('BSE', 'BSE Ltd.', 'Banking & Financials', 2688.0, { pe_ratio: 62.1, pb_ratio: 18.4, market_cap: 36500, exchange: 'BSE' as never }),
+];
+
+export const NIFTY50_SYMBOLS = [
+  'RELIANCE', 'TCS', 'HDFCBANK', 'INFY', 'ICICIBANK', 'BHARTIARTL', 'SBIN', 'ITC', 'HINDUNILVR', 'LT',
+  'BAJFINANCE', 'HCLTECH', 'MARUTI', 'SUNPHARMA', 'AXISBANK', 'KOTAKBANK', 'TITAN', 'ASIANPAINT', 'ULTRACEMCO',
+  'NESTLEIND', 'TATAMOTORS', 'M&M', 'NTPC', 'POWERGRID', 'ONGC', 'COALINDIA', 'ADANIENT', 'ADANIPORTS',
+  'JSWSTEEL', 'TATASTEEL', 'HINDALCO', 'WIPRO', 'TECHM', 'BAJAJFINSV', 'HDFCLIFE', 'SBILIFE', 'DIVISLAB',
+  'CIPLA', 'DRREDDY', 'APOLLOHOSP', 'GRASIM', 'INDUSINDBK', 'EICHERMOT', 'HEROMOTOCO', 'BPCL', 'TATACONSUM',
+  'BEL', 'TRENT', 'BAJAJ-AUTO', 'SHREeCEM',
+];
