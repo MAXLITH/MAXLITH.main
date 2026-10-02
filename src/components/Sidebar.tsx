@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import {
@@ -22,6 +23,43 @@ import {
 export default function Sidebar({ user }: { user: any }) {
   const pathname = usePathname();
   const router = useRouter();
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  useEffect(() => {
+    // Check unread notifications / alerts count
+    const fetchUnread = () => {
+      fetch('/api/alerts?unreadOnly=true')
+        .then((res) => res.json())
+        .then((data) => {
+          if (typeof data.unreadCount === 'number') {
+            setUnreadCount(data.unreadCount);
+          }
+        })
+        .catch(() => {});
+    };
+
+    fetchUnread();
+    const interval = setInterval(fetchUnread, 15000);
+
+    // Also connect to SSE if available
+    let es: EventSource | null = null;
+    try {
+      es = new EventSource('/api/stream/alerts');
+      es.addEventListener('alert_update', (event) => {
+        try {
+          const parsed = JSON.parse(event.data);
+          if (typeof parsed.unreadCount === 'number') {
+            setUnreadCount(parsed.unreadCount);
+          }
+        } catch {}
+      });
+    } catch {}
+
+    return () => {
+      clearInterval(interval);
+      es?.close();
+    };
+  }, []);
 
   const handleLogout = async () => {
     await fetch('/api/auth/logout', { method: 'POST' });
@@ -31,16 +69,16 @@ export default function Sidebar({ user }: { user: any }) {
 
   const navItems = [
     { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
-    { name: 'Markets', href: '/markets', icon: TrendingUp },
-    { name: 'Watchlist', href: '/watchlist', icon: Bookmark },
-    { name: 'Portfolio', href: '/portfolio', icon: Briefcase },
-    { name: 'Paper Trading', href: '/paper-trading', icon: Layers, highlight: true },
-    { name: 'Orders', href: '/orders', icon: FileText },
-    { name: 'AI Copilot', href: '/ai-copilot', icon: Bot, highlight: true },
-    { name: 'AI Agents', href: '/ai-agents', icon: Cpu },
-    { name: 'News Feed', href: '/news', icon: Newspaper },
-    { name: 'Price Alerts', href: '/alerts', icon: Bell },
-    { name: 'Settings', href: '/settings', icon: Settings },
+    { name: 'Markets', href: '/dashboard/markets', icon: TrendingUp },
+    { name: 'Watchlist', href: '/dashboard/watchlist', icon: Bookmark },
+    { name: 'Portfolio', href: '/dashboard/portfolio', icon: Briefcase },
+    { name: 'Paper Trading', href: '/dashboard/paper-trading', icon: Layers, highlight: true },
+    { name: 'Orders', href: '/dashboard/orders', icon: FileText },
+    { name: 'AI Copilot', href: '/dashboard/ai-copilot', icon: Bot, highlight: true },
+    { name: 'AI Agents', href: '/dashboard/ai-agents', icon: Cpu },
+    { name: 'News Feed', href: '/dashboard/news', icon: Newspaper },
+    { name: 'Price Alerts', href: '/dashboard/alerts', icon: Bell, badgeCount: unreadCount },
+    { name: 'Settings', href: '/dashboard/settings', icon: Settings },
   ];
 
   return (
@@ -62,10 +100,10 @@ export default function Sidebar({ user }: { user: any }) {
       <nav className="flex-1 overflow-y-auto p-3 space-y-1">
         {navItems.map((item) => {
           const Icon = item.icon;
-          const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`);
+          const isActive = pathname === item.href || (item.href !== '/dashboard' && pathname.startsWith(item.href));
           return (
             <Link
-              key={item.name}
+              key={item.href}
               href={item.href}
               className={`flex items-center justify-between px-3 py-2.5 rounded-lg text-xs font-medium transition-all ${
                 isActive
@@ -77,9 +115,15 @@ export default function Sidebar({ user }: { user: any }) {
                 <Icon className={`w-4 h-4 ${isActive ? 'text-white' : item.highlight ? 'text-blue-400' : 'text-slate-400'}`} />
                 <span>{item.name}</span>
               </div>
-              {item.highlight && !isActive && (
-                <span className="w-1.5 h-1.5 rounded-full bg-blue-400"></span>
-              )}
+              <div className="flex items-center gap-1.5">
+                {item.badgeCount && item.badgeCount > 0 ? (
+                  <span className="px-1.5 py-0.5 rounded-full text-[10px] font-mono bg-rose-500 text-white font-bold leading-none animate-pulse">
+                    {item.badgeCount}
+                  </span>
+                ) : item.highlight && !isActive ? (
+                  <span className="w-1.5 h-1.5 rounded-full bg-blue-400"></span>
+                ) : null}
+              </div>
             </Link>
           );
         })}

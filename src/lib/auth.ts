@@ -12,6 +12,8 @@ export interface UserSession {
   fullName: string;
   role: 'USER' | 'ADMIN';
   virtualCash: number;
+  initialCapital: number;
+  blockedMargin: number;
 }
 
 export async function createSessionToken(user: { id: string; email: string; role: string }) {
@@ -39,12 +41,14 @@ export async function getAuthSession(): Promise<UserSession | null> {
   const payload = await verifySessionToken(token);
   if (!payload) return null;
 
-  const user = db.prepare('SELECT id, email, full_name, role, virtual_cash FROM users WHERE id = ?').get(payload.id) as {
+  const user = db.prepare('SELECT id, email, full_name, role, virtual_cash, initial_capital, blocked_margin FROM users WHERE id = ?').get(payload.id) as {
     id: string;
     email: string;
     full_name: string;
     role: 'USER' | 'ADMIN';
     virtual_cash: number;
+    initial_capital?: number;
+    blocked_margin?: number;
   } | undefined;
 
   if (!user) return null;
@@ -55,6 +59,8 @@ export async function getAuthSession(): Promise<UserSession | null> {
     fullName: user.full_name,
     role: user.role,
     virtualCash: user.virtual_cash,
+    initialCapital: user.initial_capital ?? 1000000.0,
+    blockedMargin: user.blocked_margin ?? 0.0,
   };
 }
 

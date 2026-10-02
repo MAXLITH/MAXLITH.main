@@ -1,0 +1,39 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: maxlith_app
+    restart: always
+    ports:
+      - '3000:3000'
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - REDIS_URL=redis://redis:6379
+      - DATABASE_PATH=/app/data/maxlith.db
+      - JWT_SECRET=maxlith_secure_production_secret_key_9988776655
+      - ADMIN_EMAIL=admin@maxlith.com
+      - ADMIN_PASSWORD=adminPassword@123
+      - INITIAL_VIRTUAL_CAPITAL=1000000
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+      - ANTHROPIC_MODEL=${ANTHROPIC_MODEL:-claude-3-7-sonnet-20250219}
+    volumes:
+      - maxlith_data:/app/data
+    depends_on:
+      - redis
+
+  redis:
+    image: redis:7-alpine
+    container_name: maxlith_redis
+    restart: always
+    ports:
+      - '6379:6379'
+    volumes:
+      - redis_data:/data
+
+volumes:
+  maxlith_data:
+  redis_data:

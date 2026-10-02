@@ -2,10 +2,13 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Search, Filter, TrendingUp, TrendingDown, Layers, Bot, ChevronRight } from 'lucide-react';
+import { Search, Filter, TrendingUp, TrendingDown, Layers, Bot, ChevronRight, Activity, Flame } from 'lucide-react';
 
 export default function MarketsPage() {
   const [instruments, setInstruments] = useState<any[]>([]);
+  const [indices, setIndices] = useState<any[]>([]);
+  const [movers, setMovers] = useState<any>(null);
+  const [sectorHeatmap, setSectorHeatmap] = useState<any[]>([]);
   const [search, setSearch] = useState('');
   const [selectedSector, setSelectedSector] = useState('ALL');
   const [loading, setLoading] = useState(true);
@@ -16,6 +19,15 @@ export default function MarketsPage() {
       .then((data) => {
         if (data.instruments) {
           setInstruments(data.instruments);
+        }
+        if (data.indices) {
+          setIndices(data.indices);
+        }
+        if (data.movers) {
+          setMovers(data.movers);
+        }
+        if (data.sectorHeatmap) {
+          setSectorHeatmap(data.sectorHeatmap);
         }
       })
       .catch((err) => console.error(err))
@@ -45,6 +57,119 @@ export default function MarketsPage() {
           </p>
         </div>
       </div>
+
+      {/* Major Indices Strip */}
+      {indices.length > 0 && (
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          {indices.map((idx) => {
+            const isPos = idx.change >= 0;
+            return (
+              <div key={idx.symbol} className="fintech-card p-4">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-mono font-bold text-slate-300">{idx.name}</span>
+                  <span className={`text-[10px] font-mono px-1.5 py-0.5 rounded ${isPos ? 'bg-emerald-500/10 text-emerald-400' : 'bg-rose-500/10 text-rose-400'}`}>
+                    {isPos ? '+' : ''}{idx.percentChange.toFixed(2)}%
+                  </span>
+                </div>
+                <div className="mt-2 flex items-baseline justify-between">
+                  <span className="text-lg font-bold font-mono text-white">
+                    {idx.value.toLocaleString('en-IN', { maximumFractionDigits: 2 })}
+                  </span>
+                  <span className={`text-xs font-mono font-semibold ${isPos ? 'text-emerald-400' : 'text-rose-400'}`}>
+                    {isPos ? '+' : ''}{idx.change.toFixed(2)}
+                  </span>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Sector Heatmap Preview */}
+      {sectorHeatmap.length > 0 && (
+        <div className="fintech-card p-4 space-y-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Activity className="w-4 h-4 text-blue-400" />
+              <h2 className="text-xs font-mono font-bold uppercase tracking-wider text-slate-300">Sector Performance</h2>
+            </div>
+            <span className="text-[10px] font-mono text-slate-500">Average % Change</span>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2">
+            {sectorHeatmap.slice(0, 6).map((sec) => {
+              const isPos = sec.avg_percent_change >= 0;
+              return (
+                <button
+                  key={sec.sector}
+                  onClick={() => setSelectedSector(sec.sector)}
+                  className={`p-2.5 rounded-lg border text-left transition-colors ${
+                    selectedSector === sec.sector
+                      ? 'bg-blue-600/20 border-blue-500'
+                      : 'bg-[#0d121c] border-slate-800 hover:border-slate-700'
+                  }`}
+                >
+                  <span className="text-[11px] font-bold text-white block truncate">{sec.sector}</span>
+                  <span className={`text-xs font-mono font-bold block mt-1 ${isPos ? 'text-emerald-400' : 'text-rose-400'}`}>
+                    {isPos ? '+' : ''}{sec.avg_percent_change.toFixed(2)}%
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Top Gainers & Losers Strip */}
+      {movers && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="fintech-card p-4 space-y-2.5">
+            <div className="flex items-center gap-1.5 text-xs font-mono font-bold text-emerald-400">
+              <TrendingUp className="w-4 h-4" />
+              <span>Top Gainers</span>
+            </div>
+            <div className="divide-y divide-slate-800/60 font-mono text-xs">
+              {movers.topGainers?.slice(0, 3).map((g: any) => (
+                <div key={g.symbol} className="py-2 flex items-center justify-between">
+                  <div>
+                    <Link href={`/dashboard/markets/${g.symbol}`} className="font-bold text-white hover:text-blue-400">
+                      {g.symbol}
+                    </Link>
+                    <span className="text-[10px] text-slate-500 block">{g.name}</span>
+                  </div>
+                  <div className="text-right">
+                    <span className="text-white font-bold block">₹{g.current_price.toFixed(2)}</span>
+                    <span className="text-emerald-400 text-[11px] font-bold">+{g.percent_change.toFixed(2)}%</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="fintech-card p-4 space-y-2.5">
+            <div className="flex items-center gap-1.5 text-xs font-mono font-bold text-rose-400">
+              <TrendingDown className="w-4 h-4" />
+              <span>Top Losers</span>
+            </div>
+            <div className="divide-y divide-slate-800/60 font-mono text-xs">
+              {movers.topLosers?.slice(0, 3).map((l: any) => (
+                <div key={l.symbol} className="py-2 flex items-center justify-between">
+                  <div>
+                    <Link href={`/dashboard/markets/${l.symbol}`} className="font-bold text-white hover:text-blue-400">
+                      {l.symbol}
+                    </Link>
+                    <span className="text-[10px] text-slate-500 block">{l.name}</span>
+                  </div>
+                  <div className="text-right">
+                    <span className="text-white font-bold block">₹{l.current_price.toFixed(2)}</span>
+                    <span className="text-rose-400 text-[11px] font-bold">{l.percent_change.toFixed(2)}%</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
 
       <div className="flex flex-col md:flex-row items-center justify-between gap-4 fintech-card p-4">
         <div className="relative w-full md:w-80">
