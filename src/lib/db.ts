@@ -8,14 +8,19 @@ import { NSE_HOLIDAYS_2026 } from './market-hours';
 import { toPaise } from './money';
 import './cron';
 
-const dbDir = path.join(process.cwd(), 'data');
+// Vercel functions can only write to /tmp. Keep the default database beside
+// the app for local/Docker deployments, but use the writable temp directory
+// when running in a Vercel function.
+const dbPath = process.env.VERCEL
+  ? path.join('/tmp', 'maxlith.db')
+  : process.env.DATABASE_PATH
+    ? path.resolve(process.cwd(), process.env.DATABASE_PATH)
+    : path.join(process.cwd(), 'data', 'maxlith.db');
+
+const dbDir = path.dirname(dbPath);
 if (!fs.existsSync(dbDir)) {
   fs.mkdirSync(dbDir, { recursive: true });
 }
-
-const dbPath = process.env.DATABASE_PATH
-  ? path.resolve(process.cwd(), process.env.DATABASE_PATH)
-  : path.join(dbDir, 'maxlith.db');
 
 const db = new Database(dbPath, { timeout: 10000 });
 db.pragma('journal_mode = WAL');
