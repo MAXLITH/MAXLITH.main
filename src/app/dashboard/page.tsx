@@ -37,7 +37,6 @@ export default async function UserDashboard() {
           <div className="flex items-center gap-2">
             <h1 className="text-xl font-bold text-white">Welcome back, {session?.fullName}</h1>
             <span className="px-2 py-0.5 rounded bg-blue-500/10 text-blue-400 text-[10px] font-mono border border-blue-500/20">
-              TRADER V1
               {session?.role === 'ADMIN' ? 'ADMIN V1' : 'TRADER V1'}
             </span>
           </div>
@@ -75,7 +74,6 @@ export default async function UserDashboard() {
             ₹{summary.currentPortfolioValue.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
           </div>
           <div className="flex items-center gap-1 text-[11px] font-mono mt-1">
-            <span className="text-slate-500">Capital: ₹10,00,000</span>
             <span className="text-slate-500">Capital: ₹{summary.initialCapital.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
           </div>
         </div>
@@ -86,7 +84,6 @@ export default async function UserDashboard() {
             <PieChart className="w-4 h-4 text-emerald-400" />
           </div>
           <div className="text-xl font-bold font-mono text-white">
-            ₹{summary.virtualCash.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
             ₹{summary.availableCash.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
           </div>
           <div className="text-[11px] font-mono text-slate-500 mt-1">
@@ -134,7 +131,6 @@ export default async function UserDashboard() {
                 <TrendingUp className="w-4 h-4 text-blue-400" />
                 <span>Market Indices Overview</span>
               </h2>
-              <span className="text-[10px] font-mono text-slate-500">NSE INDIA</span>
               <span className="text-[10px] font-mono text-slate-500">NSE / BSE LIVE</span>
             </div>
 

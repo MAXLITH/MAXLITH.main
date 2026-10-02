@@ -69,16 +69,6 @@ export default function Sidebar({ user }: { user: any }) {
 
   const navItems = [
     { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
-    { name: 'Markets', href: '/markets', icon: TrendingUp },
-    { name: 'Watchlist', href: '/watchlist', icon: Bookmark },
-    { name: 'Portfolio', href: '/portfolio', icon: Briefcase },
-    { name: 'Paper Trading', href: '/paper-trading', icon: Layers, highlight: true },
-    { name: 'Orders', href: '/orders', icon: FileText },
-    { name: 'AI Copilot', href: '/ai-copilot', icon: Bot, highlight: true },
-    { name: 'AI Agents', href: '/ai-agents', icon: Cpu },
-    { name: 'News Feed', href: '/news', icon: Newspaper },
-    { name: 'Price Alerts', href: '/alerts', icon: Bell },
-    { name: 'Settings', href: '/settings', icon: Settings },
     { name: 'Markets', href: '/dashboard/markets', icon: TrendingUp },
     { name: 'Watchlist', href: '/dashboard/watchlist', icon: Bookmark },
     { name: 'Portfolio', href: '/dashboard/portfolio', icon: Briefcase },
@@ -113,7 +103,7 @@ export default function Sidebar({ user }: { user: any }) {
           const isActive = pathname === item.href || (item.href !== '/dashboard' && pathname.startsWith(item.href));
           return (
             <Link
-              key={item.name}
+              key={item.href}
               href={item.href}
               className={`flex items-center justify-between px-3 py-2.5 rounded-lg text-xs font-medium transition-all ${
                 isActive
@@ -125,9 +115,6 @@ export default function Sidebar({ user }: { user: any }) {
                 <Icon className={`w-4 h-4 ${isActive ? 'text-white' : item.highlight ? 'text-blue-400' : 'text-slate-400'}`} />
                 <span>{item.name}</span>
               </div>
-              {item.highlight && !isActive && (
-                <span className="w-1.5 h-1.5 rounded-full bg-blue-400"></span>
-              )}
               <div className="flex items-center gap-1.5">
                 {item.badgeCount && item.badgeCount > 0 ? (
                   <span className="px-1.5 py-0.5 rounded-full text-[10px] font-mono bg-rose-500 text-white font-bold leading-none animate-pulse">
