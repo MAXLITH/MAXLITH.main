@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { getAuthSession } from '@/lib/auth';
 import { executePaperOrder, previewOrder } from '@/lib/paper-trading';
+import { getVerifiedPaperQuote, PaperMarketQuoteError } from '@/lib/market-data/paper-trading-quote';
+import { MarketDataUnavailableError } from '@/lib/market-data/provider';
 import { z } from 'zod';
 
 export const dynamic = 'force-dynamic';
@@ -12,10 +14,28 @@ const OrderSchema = z.object({
   productType: z.enum(['CNC', 'MIS']).default('CNC'),
   quantity: z.number().int().positive(),
   price: z.number().positive().optional(),
-  limitPrice: z.union([z.number(), z.string()]).optional(),
+  limitPrice: z.union([z.number().positive(), z.string().regex(/^\d+(\.\d+)?$/)]).optional(),
   triggerPrice: z.number().positive().optional(),
   idempotencyKey: z.string().optional(),
+}).superRefine((order, context) => {
+  if (order.orderType === 'LIMIT' && order.price === undefined && order.limitPrice === undefined) {
+    context.addIssue({ code: 'custom', path: ['price'], message: 'A limit price is required.' });
+  }
+  if ((order.orderType === 'SL' || order.orderType === 'SL-M') && order.triggerPrice === undefined) {
+    context.addIssue({ code: 'custom', path: ['triggerPrice'], message: 'A trigger price is required for stop orders.' });
+  }
 });
+
+function orderError(error: unknown) {
+  const message = error instanceof Error ? error.message : 'Order request failed.';
+  const status = error instanceof MarketDataUnavailableError
+    ? 503
+    : error instanceof PaperMarketQuoteError
+      ? error.status
+      : 400;
+  const code = status === 503 ? 'MARKET_DATA_UNAVAILABLE' : status >= 500 ? 'MARKET_DATA_ERROR' : 'ORDER_VALIDATION_FAILED';
+  return NextResponse.json({ error: message, code }, { status });
+}
 
 export async function GET(request: Request) {
   try {
@@ -25,27 +45,36 @@ export async function GET(request: Request) {
     }
 
     const { searchParams } = new URL(request.url);
-    const symbol = searchParams.get('symbol') || 'RELIANCE';
-    const side = (searchParams.get('side') || 'BUY').toUpperCase() as 'BUY' | 'SELL';
-    const orderType = (searchParams.get('orderType') || 'MARKET').toUpperCase() as any;
-    const productType = (searchParams.get('productType') || 'CNC').toUpperCase() as any;
-    const quantity = parseInt(searchParams.get('quantity') || '1', 10);
+    const symbol = searchParams.get('symbol') || 'NSE:RELIANCE';
     const priceStr = searchParams.get('price');
-    const price = priceStr ? parseFloat(priceStr) : undefined;
+    const triggerStr = searchParams.get('triggerPrice');
+    const parsed = OrderSchema.safeParse({
+      symbol,
+      side: (searchParams.get('side') || 'BUY').toUpperCase(),
+      orderType: (searchParams.get('orderType') || 'MARKET').toUpperCase(),
+      productType: (searchParams.get('productType') || 'CNC').toUpperCase(),
+      quantity: Number(searchParams.get('quantity') || '1'),
+      ...(priceStr ? { price: Number(priceStr) } : {}),
+      ...(triggerStr ? { triggerPrice: Number(triggerStr) } : {}),
+    });
+    if (!parsed.success) return NextResponse.json({ error: 'Invalid order preview parameters.', details: parsed.error.format() }, { status: 400 });
+    const { side, orderType, productType, quantity, price } = parsed.data;
 
+    const verified = await getVerifiedPaperQuote(symbol);
     const preview = previewOrder({
       userId: session.id,
-      symbol,
+      symbol: verified.symbol,
       side,
       orderType,
       productType,
       quantity,
       price,
+      marketPrice: verified.quote.last,
     });
 
     return NextResponse.json({ data: preview, preview });
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message || 'Failed to preview order.' }, { status: 400 });
+  } catch (error) {
+    return orderError(error);
   }
 }
 
@@ -67,22 +96,24 @@ export async function POST(request: Request) {
     const idempotencyKey = body.idempotencyKey || headerIdempotency || undefined;
 
     const effectivePrice = body.price ?? (body.limitPrice ? parseFloat(String(body.limitPrice)) : undefined);
+    const verified = await getVerifiedPaperQuote(body.symbol);
 
     const result = executePaperOrder({
       userId: session.id,
-      symbol: body.symbol.toUpperCase(),
+      symbol: verified.symbol,
       side: body.side,
       orderType: body.orderType,
       productType: body.productType,
       quantity: body.quantity,
       price: effectivePrice,
+      marketPrice: verified.quote.last,
       triggerPrice: body.triggerPrice,
       idempotencyKey,
     });
 
     return NextResponse.json(result);
-  } catch (error: any) {
+  } catch (error) {
     console.error('Paper trade execution error', error);
-    return NextResponse.json({ error: error.message || 'Order execution failed.' }, { status: 400 });
+    return orderError(error);
   }
 }

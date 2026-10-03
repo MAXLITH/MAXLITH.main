@@ -40,6 +40,9 @@ export function getMarketSessionStatus(): MarketSessionStatus {
  * Fetch all registered market instruments from the persistent database
  */
 export function getAllInstruments(): InstrumentData[] {
+  if (process.env.NODE_ENV === 'production') {
+    return db.prepare("SELECT * FROM instruments WHERE source IS NOT NULL AND source != 'SEED' AND stale = 0 ORDER BY market_cap DESC").all() as InstrumentData[];
+  }
   return db.prepare('SELECT * FROM instruments ORDER BY market_cap DESC').all() as InstrumentData[];
 }
 
@@ -47,7 +50,9 @@ export function getAllInstruments(): InstrumentData[] {
  * Fetch single instrument details by ticker symbol
  */
 export function getInstrument(symbol: string): InstrumentData | null {
-  const result = db.prepare('SELECT * FROM instruments WHERE symbol = ?').get(symbol.toUpperCase());
+  const result = process.env.NODE_ENV === 'production'
+    ? db.prepare("SELECT * FROM instruments WHERE symbol = ? AND source IS NOT NULL AND source != 'SEED' AND stale = 0").get(symbol.toUpperCase())
+    : db.prepare('SELECT * FROM instruments WHERE symbol = ?').get(symbol.toUpperCase());
   return result ? (result as InstrumentData) : null;
 }
 
@@ -55,6 +60,7 @@ export function getInstrument(symbol: string): InstrumentData | null {
  * Fetch historical price series (candles) for chart rendering
  */
 export function getInstrumentHistory(symbol: string, timeframe: string = '1D') {
+  if (process.env.NODE_ENV === 'production') return [];
   return db.prepare(`
     SELECT timestamp, open, high, low, close, volume 
     FROM price_history 
@@ -72,6 +78,14 @@ export function searchInstruments(query: string): InstrumentData[] {
   }
   const q = `%${query.trim()}%`;
   const prefix = `${query.trim()}%`;
+  if (process.env.NODE_ENV === 'production') {
+    return db.prepare(`
+      SELECT * FROM instruments
+      WHERE (symbol LIKE ? OR name LIKE ? OR sector LIKE ?)
+        AND source IS NOT NULL AND source != 'SEED' AND stale = 0
+      ORDER BY CASE WHEN symbol LIKE ? THEN 1 WHEN name LIKE ? THEN 2 ELSE 3 END, market_cap DESC
+    `).all(q, q, q, prefix, prefix) as InstrumentData[];
+  }
   return db.prepare(`
     SELECT * FROM instruments 
     WHERE symbol LIKE ? OR name LIKE ? OR sector LIKE ?

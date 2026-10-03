@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import { getAuthSession } from '@/lib/auth';
 import db from '@/lib/db';
 import { newId } from '@/lib/ids';
+import { getVerifiedPaperQuote, PaperMarketQuoteError } from '@/lib/market-data/paper-trading-quote';
+import { MarketDataUnavailableError } from '@/lib/market-data/provider';
 import { z } from 'zod';
 
 export const dynamic = 'force-dynamic';
@@ -58,12 +60,8 @@ export async function POST(request: Request) {
     }
 
     const { symbol, condition, targetValue } = parsed.data;
-    const symUpper = symbol.toUpperCase().trim();
-
-    const inst = db.prepare('SELECT symbol, current_price FROM instruments WHERE symbol = ?').get(symUpper) as any;
-    if (!inst) {
-      return NextResponse.json({ error: `Instrument ${symUpper} not found.` }, { status: 404 });
-    }
+    const verified = await getVerifiedPaperQuote(symbol);
+    const symUpper = verified.symbol;
 
     const alertId = newId('alt');
     db.prepare(`
@@ -83,7 +81,8 @@ export async function POST(request: Request) {
       },
     });
   } catch (error: any) {
-    return NextResponse.json({ error: error.message || 'Failed to create alert' }, { status: 500 });
+    const status = error instanceof MarketDataUnavailableError ? 503 : error instanceof PaperMarketQuoteError ? error.status : 400;
+    return NextResponse.json({ error: error.message || 'Failed to create alert' }, { status });
   }
 }
 

@@ -24,7 +24,11 @@ export function evaluatePendingOrders(): number {
   const pendingOrders = db.prepare("SELECT * FROM orders WHERE status = 'PENDING'").all() as any[];
 
   for (const ord of pendingOrders) {
-    const inst = db.prepare('SELECT current_price FROM instruments WHERE symbol = ?').get(ord.symbol) as any;
+    const inst = db.prepare(`
+      SELECT current_price FROM instruments
+      WHERE symbol = ? AND source IS NOT NULL AND source != 'SEED'
+        AND stale = 0 AND updated_at >= datetime('now', '-60 seconds')
+    `).get(ord.symbol) as any;
     if (!inst) continue;
 
     const ltp = inst.current_price;
@@ -191,7 +195,11 @@ export function autoSquareOffMIS(): number {
   let squaredCount = 0;
 
   for (const pos of misPositions) {
-    const inst = db.prepare('SELECT current_price FROM instruments WHERE symbol = ?').get(pos.symbol) as any;
+    const inst = db.prepare(`
+      SELECT current_price FROM instruments
+      WHERE symbol = ? AND source IS NOT NULL AND source != 'SEED'
+        AND stale = 0 AND updated_at >= datetime('now', '-60 seconds')
+    `).get(pos.symbol) as any;
     if (!inst) continue;
 
     try {
@@ -266,14 +274,18 @@ export function autoSquareOffMIS(): number {
  * Checks price alerts against live instruments and triggers notifications
  */
 export function evaluatePriceAlerts(): number {
-  const activeAlerts = db.prepare('SELECT * FROM alerts WHERE is_triggered = 0').all() as any[];
+  const activeAlerts = db.prepare(`
+    SELECT a.*, i.current_price
+    FROM alerts a
+    JOIN instruments i ON i.symbol = a.symbol
+    WHERE a.is_triggered = 0
+      AND i.source IS NOT NULL AND i.source != 'SEED'
+      AND i.stale = 0 AND i.updated_at >= datetime('now', '-60 seconds')
+  `).all() as any[];
   let triggeredCount = 0;
 
   for (const alert of activeAlerts) {
-    const inst = db.prepare('SELECT current_price FROM instruments WHERE symbol = ?').get(alert.symbol) as any;
-    if (!inst) continue;
-
-    const ltp = inst.current_price;
+    const ltp = alert.current_price;
     let shouldTrigger = false;
 
     if (alert.condition === 'ABOVE' && ltp >= alert.target_value) {

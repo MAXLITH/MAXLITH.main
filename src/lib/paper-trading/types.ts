@@ -12,6 +12,8 @@ export interface OrderRequest {
   productType?: ProductType;
   quantity: number;
   price?: number;
+  /** Server-verified provider quote used for pricing and trigger checks. */
+  marketPrice?: number;
   triggerPrice?: number;
   idempotencyKey?: string;
 }

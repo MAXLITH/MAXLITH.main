@@ -3,6 +3,9 @@ import { getAuthSession } from '@/lib/auth';
 import Sidebar from '@/components/Sidebar';
 import Header from '@/components/Header';
 
+// Dashboard output depends on the request's authentication cookie.
+export const dynamic = 'force-dynamic';
+
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const session = await getAuthSession();
 

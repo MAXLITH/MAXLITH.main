@@ -12,10 +12,7 @@ export class MarketDataService {
 
   constructor() {
     this.dbFallback = new DatabaseFallbackProvider();
-    this.providers = [
-      new YahooFinanceProvider(),
-      this.dbFallback,
-    ];
+    this.providers = process.env.NODE_ENV === 'production' ? [] : [new YahooFinanceProvider(), this.dbFallback];
   }
 
   normalizeSymbol(symbol: string): string {
@@ -39,7 +36,7 @@ export class MarketDataService {
 
     // 1. Try cache first
     for (const sym of normalized) {
-      const cached = await cacheGet<LiveQuote>(`quote:${sym}`);
+      const cached = process.env.NODE_ENV === 'production' ? null : await cacheGet<LiveQuote>(`quote:${sym}`);
       if (cached) {
         results.set(sym, cached);
       } else {
@@ -74,7 +71,7 @@ export class MarketDataService {
 
     // 3. Fallback to DB for any still missing
     const stillMissing = missing.filter((m) => !fetched.has(m));
-    if (stillMissing.length > 0) {
+    if (stillMissing.length > 0 && process.env.NODE_ENV !== 'production') {
       const dbQuotes = await this.dbFallback.getQuotes(stillMissing);
       for (const [k, v] of dbQuotes.entries()) {
         fetched.set(k, v);
@@ -125,8 +122,10 @@ export class MarketDataService {
         };
       }
 
+      if (process.env.NODE_ENV === 'production') return null;
       // Hard fallback from db if not in quotes
-      const inst = db.prepare('SELECT * FROM instruments WHERE symbol = ?').get(sym) as any;
+      const inst = db.prepare("SELECT * FROM instruments WHERE symbol = ? AND source IS NOT NULL AND source != 'SEED' AND stale = 0").get(sym) as any;
+      if (!inst) return null;
       return {
         symbol: sym,
         name,
@@ -139,13 +138,13 @@ export class MarketDataService {
         previousClose: inst ? inst.previous_close : 0,
         updatedAt: new Date().toISOString(),
       };
-    });
+    }).filter((quote): quote is IndexQuote => quote !== null);
   }
 
   async getHistory(symbol: string, timeframe: string = '1D'): Promise<OHLCV[]> {
     const norm = this.normalizeSymbol(symbol);
     const cacheKey = `history:${norm}:${timeframe}`;
-    const cached = await cacheGet<OHLCV[]>(cacheKey);
+    const cached = process.env.NODE_ENV === 'production' ? null : await cacheGet<OHLCV[]>(cacheKey);
     if (cached) return cached;
 
     for (const provider of this.providers) {
@@ -160,13 +159,16 @@ export class MarketDataService {
       }
     }
 
-    // Fallback to database price_history
+    if (process.env.NODE_ENV === 'production') return [];
+
+    // Local development fallback to fixture history
     const fallbackCandles = await this.dbFallback.getHistory(norm, timeframe);
     await cacheSet(cacheKey, fallbackCandles, 60_000);
     return fallbackCandles;
   }
 
   search(query: string, limit: number = 10) {
+    if (process.env.NODE_ENV === 'production') return [];
     if (!query || !query.trim()) {
       return db.prepare('SELECT symbol, name, exchange, sector, current_price, percent_change FROM instruments ORDER BY market_cap DESC LIMIT ?').all(limit);
     }
@@ -183,6 +185,7 @@ export class MarketDataService {
   }
 
   getMarketMovers() {
+    if (process.env.NODE_ENV === 'production') return { topGainers: [], topLosers: [], mostActive: [] };
     const instruments = db.prepare(`
       SELECT symbol, name, exchange, sector, current_price, previous_close, change, percent_change, volume
       FROM instruments
@@ -199,6 +202,7 @@ export class MarketDataService {
   }
 
   getSectorHeatmap() {
+    if (process.env.NODE_ENV === 'production') return [];
     return db.prepare(`
       SELECT 
         sector, 

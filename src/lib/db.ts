@@ -78,38 +78,78 @@ function runMigrations() {
 
 export function initDb() {
   runMigrations();
+  migrateWatchlistItems();
   seedInitialData();
 }
 
+function migrateWatchlistItems() {
+  const foreignKeys = db.prepare('PRAGMA foreign_key_list(watchlist_items)').all() as { table: string }[];
+  const columns = db.prepare('PRAGMA table_info(watchlist_items)').all() as { name: string }[];
+  const hasInstrumentForeignKey = foreignKeys.some((key) => key.table === 'instruments');
+
+  if (hasInstrumentForeignKey) {
+    db.pragma('foreign_keys = OFF');
+    try {
+      db.transaction(() => {
+        db.exec(`
+          CREATE TABLE watchlist_items_next (
+            id TEXT PRIMARY KEY,
+            watchlist_id TEXT NOT NULL,
+            symbol TEXT NOT NULL,
+            position INTEGER NOT NULL DEFAULT 0,
+            added_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (watchlist_id) REFERENCES watchlists(id) ON DELETE CASCADE,
+            UNIQUE(watchlist_id, symbol)
+          );
+          INSERT OR IGNORE INTO watchlist_items_next (id, watchlist_id, symbol, position, added_at)
+          SELECT id, watchlist_id,
+            CASE WHEN instr(symbol, ':') > 0 THEN upper(symbol) ELSE 'NSE:' || upper(symbol) END,
+            0, added_at
+          FROM watchlist_items;
+          DROP TABLE watchlist_items;
+          ALTER TABLE watchlist_items_next RENAME TO watchlist_items;
+        `);
+      })();
+    } finally {
+      db.pragma('foreign_keys = ON');
+    }
+  } else if (!columns.some((column) => column.name === 'position')) {
+    db.exec('ALTER TABLE watchlist_items ADD COLUMN position INTEGER NOT NULL DEFAULT 0');
+  }
+}
+
 function seedInitialData() {
-  const adminEmail = process.env.ADMIN_EMAIL || 'admin@maxlith.com';
-  const adminPass = process.env.ADMIN_PASSWORD || 'AdminSecurePass2026!';
-  const passwordHash = bcrypt.hashSync(adminPass, 10);
+  const isProduction = process.env.NODE_ENV === 'production';
+  const adminEmail = process.env.ADMIN_EMAIL || (isProduction ? '' : 'admin@maxlith.com');
+  const adminPass = process.env.ADMIN_PASSWORD || (isProduction ? '' : 'AdminSecurePass2026!');
   const adminCash = 5000000.0;
 
-  db.prepare(`
-    INSERT INTO users (id, email, password_hash, full_name, role, virtual_cash, initial_capital, blocked_margin)
-    VALUES (?, ?, ?, ?, ?, ?, ?, 0.0)
-    ON CONFLICT(email) DO UPDATE SET
-      password_hash = excluded.password_hash,
-      role = 'ADMIN'
-  `).run(
-    'admin-root-001',
-    adminEmail,
-    passwordHash,
-    'MAXLITH Administrator',
-    'ADMIN',
-    adminCash,
-    adminCash
-  );
-
-  // Admin ledger initial capital entry
-  const hasAdminLedger = db.prepare("SELECT id FROM ledger_entries WHERE user_id = 'admin-root-001'").get();
-  if (!hasAdminLedger) {
+  if (adminEmail && adminPass) {
+    const passwordHash = bcrypt.hashSync(adminPass, 10);
     db.prepare(`
-      INSERT INTO ledger_entries (id, user_id, direction, account_kind, amount_paise, ref_type, memo, created_at)
-      VALUES (?, ?, 'CREDIT', 'CASH', ?, 'INITIAL_CAPITAL', 'Initial paper trading virtual capital', CURRENT_TIMESTAMP)
-    `).run('led-admin-init', 'admin-root-001', toPaise(adminCash));
+      INSERT INTO users (id, email, password_hash, full_name, role, virtual_cash, initial_capital, blocked_margin)
+      VALUES (?, ?, ?, ?, ?, ?, ?, 0.0)
+      ON CONFLICT(email) DO UPDATE SET
+        password_hash = excluded.password_hash,
+        role = 'ADMIN'
+    `).run(
+      'admin-root-001',
+      adminEmail,
+      passwordHash,
+      'MAXLITH Administrator',
+      'ADMIN',
+      adminCash,
+      adminCash
+    );
+
+    // Admin ledger initial capital entry
+    const hasAdminLedger = db.prepare("SELECT id FROM ledger_entries WHERE user_id = 'admin-root-001'").get();
+    if (!hasAdminLedger) {
+      db.prepare(`
+        INSERT INTO ledger_entries (id, user_id, direction, account_kind, amount_paise, ref_type, memo, created_at)
+        VALUES (?, ?, 'CREDIT', 'CASH', ?, 'INITIAL_CAPITAL', 'Initial paper trading virtual capital', CURRENT_TIMESTAMP)
+      `).run('led-admin-init', 'admin-root-001', toPaise(adminCash));
+    }
   }
 
   // Seed Market Holidays
@@ -135,6 +175,10 @@ function seedInitialData() {
   for (const hDate of NSE_HOLIDAYS_2026) {
     holidayStmt.run(hDate, holidayNames[hDate] || 'Market Holiday');
   }
+
+  // Seed quotes, candles, news, and watchlist examples are local development
+  // fixtures only. Production stays empty until a verified provider writes data.
+  if (process.env.NODE_ENV === 'production') return;
 
   // Seed Instruments (NIFTY 500 / 50 Bluechips)
   const insertInstruments = db.transaction((items: any[]) => {
@@ -314,11 +358,11 @@ function seedInitialData() {
   if (!adminWl) {
     db.prepare("INSERT INTO watchlists (id, user_id, name) VALUES ('wl-admin-main', 'admin-root-001', 'NIFTY Bluechips')").run();
     const addWlItem = db.prepare("INSERT INTO watchlist_items (id, watchlist_id, symbol) VALUES (?, 'wl-admin-main', ?)");
-    addWlItem.run('wli-adm-1', 'RELIANCE');
-    addWlItem.run('wli-adm-2', 'TCS');
-    addWlItem.run('wli-adm-3', 'HDFCBANK');
-    addWlItem.run('wli-adm-4', 'INFY');
-    addWlItem.run('wli-adm-5', 'ICICIBANK');
+    addWlItem.run('wli-adm-1', 'NSE:RELIANCE');
+    addWlItem.run('wli-adm-2', 'NSE:TCS');
+    addWlItem.run('wli-adm-3', 'NSE:HDFCBANK');
+    addWlItem.run('wli-adm-4', 'NSE:INFY');
+    addWlItem.run('wli-adm-5', 'NSE:ICICIBANK');
   }
 }
 
