@@ -93,7 +93,7 @@ MAXLITH eliminates LLM hallucinations by calculating mathematical indicators in 
 ## 🚀 Getting Started
 
 ### Prerequisites
-- Node.js 18+ (Node 20+ recommended)
+- Node.js 22.21.1 (pinned in `.nvmrc`; the project requires Node.js 22.3.0 or newer)
 - npm or pnpm
 
 ### Quick Setup
@@ -104,10 +104,14 @@ MAXLITH eliminates LLM hallucinations by calculating mathematical indicators in 
    cd maxlith
    ```
 
-2. **Install dependencies:**
+2. **Select the project Node.js version and install dependencies:**
    ```bash
-   npm install
+   nvm install
+   nvm use
+   node --version # v22.21.1
+   npm ci
    ```
+   Use the Node version from `.nvmrc` before installing or rebuilding native modules such as `better-sqlite3`. If you change Node versions, run `npm rebuild better-sqlite3` under the selected Node version.
 
 3. **Configure Environment Variables:**
    ```bash
@@ -117,7 +121,7 @@ MAXLITH eliminates LLM hallucinations by calculating mathematical indicators in 
 
 4. **Initialize & Seed Database:**
    The database automatically initializes and seeds on server start:
-   - Admin account: `admin@maxlith.com` (password from `.env.local` or default `AdminSecurePass2026!`)
+   - Development admin account: `admin@maxlith.com` (password from `.env.local` or development default `AdminSecurePass2026!`)
    - NIFTY 500 equity instruments
    - 45 days of historical OHLC daily candles
    - 2026 NSE holiday calendar
