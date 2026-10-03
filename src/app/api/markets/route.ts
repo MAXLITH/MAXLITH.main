@@ -26,7 +26,7 @@ export async function GET(request: Request) {
     const sectorHeatmap = marketDataService.getSectorHeatmap();
 
     // 52-Week High / Low
-    const near52wHigh = db.prepare(`
+    const near52wHigh = process.env.NODE_ENV === 'production' ? [] : db.prepare(`
       SELECT symbol, name, current_price, high_52w, percent_change
       FROM instruments
       WHERE asset_type = 'EQUITY' AND high_52w > 0
@@ -34,7 +34,7 @@ export async function GET(request: Request) {
       LIMIT 5
     `).all();
 
-    const near52wLow = db.prepare(`
+    const near52wLow = process.env.NODE_ENV === 'production' ? [] : db.prepare(`
       SELECT symbol, name, current_price, low_52w, percent_change
       FROM instruments
       WHERE asset_type = 'EQUITY' AND low_52w > 0
@@ -64,4 +64,3 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: 'Failed to fetch market data' }, { status: 500 });
   }
 }
-

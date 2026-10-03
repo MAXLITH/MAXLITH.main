@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Bookmark, Plus, Trash2, ListPlus } from 'lucide-react';
 
+type VerifiedQuote = { last: number; change: number; changePercent: number; volume: number; asOf: string };
+
 export default function WatchlistPage() {
   const [watchlists, setWatchlists] = useState<any[]>([]);
   const [activeWatchlist, setActiveWatchlist] = useState<any>(null);
@@ -12,6 +14,8 @@ export default function WatchlistPage() {
   const [newListName, setNewListName] = useState('');
   const [showNewListForm, setShowNewListForm] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [quotes, setQuotes] = useState<Record<string, VerifiedQuote | undefined>>({});
+  const [message, setMessage] = useState('');
 
   const fetchWatchlist = (watchlistId?: string) => {
     const url = watchlistId ? `/api/watchlist?watchlistId=${watchlistId}` : '/api/watchlist';
@@ -30,49 +34,26 @@ export default function WatchlistPage() {
     fetchWatchlist();
   }, []);
 
-  // Connect to SSE for live price updates across items in active watchlist
   useEffect(() => {
-    if (items.length === 0) return;
-    const symbols = items.map((i) => i.symbol).join(',');
-    let es: EventSource | null = null;
-
-    try {
-      es = new EventSource(`/api/stream/quotes?symbols=${symbols}`);
-      es.addEventListener('quotes', (event) => {
-        try {
-          const parsed = JSON.parse(event.data);
-          const liveQuotes = parsed.quotes || [];
-          if (liveQuotes.length > 0) {
-            setItems((prevItems) =>
-              prevItems.map((item) => {
-                const quote = liveQuotes.find((q: any) => q.symbol === item.symbol);
-                if (quote) {
-                  return {
-                    ...item,
-                    current_price: quote.ltp,
-                    change: quote.change,
-                    percent_change: quote.percentChange,
-                    volume: quote.volume,
-                  };
-                }
-                return item;
-              })
-            );
-          }
-        } catch {}
-      });
-    } catch {}
-
-    return () => {
-      es?.close();
-    };
-  }, [items.length]);
+    const controller = new AbortController();
+    Promise.all(items.map(async (item) => {
+      try {
+        const response = await fetch(`/api/market/quote?symbol=${encodeURIComponent(item.symbol)}`, { signal: controller.signal, cache: 'no-store' });
+        if (!response.ok) return null;
+        const payload = await response.json();
+        return [item.symbol, payload.data as VerifiedQuote] as const;
+      } catch { return null; }
+    })).then((rows) => {
+      if (!controller.signal.aborted) setQuotes(Object.fromEntries(rows.filter((row): row is NonNullable<typeof row> => row !== null)));
+    });
+    return () => controller.abort();
+  }, [items]);
 
   const handleAddItem = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newSymbol.trim()) return;
 
-    await fetch('/api/watchlist', {
+    const response = await fetch('/api/watchlist', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -80,8 +61,10 @@ export default function WatchlistPage() {
         watchlistId: activeWatchlist?.id,
       }),
     });
-
+    const payload = await response.json();
+    if (!response.ok) { setMessage(payload.error || 'Could not add that symbol.'); return; }
     setNewSymbol('');
+    setMessage('');
     fetchWatchlist(activeWatchlist?.id);
   };
 
@@ -96,6 +79,7 @@ export default function WatchlistPage() {
     });
 
     const data = await res.json();
+    if (!res.ok) { setMessage(data.error || 'Could not create watchlist.'); return; }
     setNewListName('');
     setShowNewListForm(false);
     if (data.watchlist) {
@@ -104,7 +88,7 @@ export default function WatchlistPage() {
   };
 
   const handleRemoveItem = async (symbol: string) => {
-    await fetch(`/api/watchlist?symbol=${symbol}&watchlistId=${activeWatchlist?.id}`, {
+    await fetch(`/api/watchlist?symbol=${encodeURIComponent(symbol)}&watchlistId=${activeWatchlist?.id}`, {
       method: 'DELETE',
     });
     fetchWatchlist(activeWatchlist?.id);
@@ -140,6 +124,8 @@ export default function WatchlistPage() {
           </button>
         </form>
       </div>
+
+      {message && <p role="status" className="rounded-lg border border-amber-900/50 bg-amber-950/20 px-3 py-2 text-[11px] text-amber-200">{message}</p>}
 
       {/* MULTIPLE NAMED WATCHLISTS BAR */}
       <div className="flex items-center justify-between border-b border-slate-800 pb-3">
@@ -213,8 +199,8 @@ export default function WatchlistPage() {
                   <tr key={item.symbol} className="hover:bg-slate-800/30">
                     <td className="py-3.5 px-4">
                       <div className="flex items-center gap-2">
-                        <Link href={`/dashboard/markets/${item.symbol}`} className="font-bold text-white hover:text-blue-400 transition-colors">
-                          {item.symbol}
+                        <Link href={`/dashboard/markets/${encodeURIComponent(item.symbol)}`} className="font-bold text-white hover:text-blue-400 transition-colors">
+                          {item.ticker || item.symbol}
                         </Link>
                         {item.exchange && (
                           <span className="text-[9px] px-1.5 py-0.5 rounded bg-slate-800 text-slate-400">{item.exchange}</span>
@@ -223,15 +209,15 @@ export default function WatchlistPage() {
                       <div className="text-[10px] text-slate-400 font-sans truncate max-w-[160px]">{item.name}</div>
                     </td>
                     <td className="py-3.5 px-4 text-slate-400 text-[11px] font-sans">{item.sector}</td>
-                    <td className="py-3.5 px-4 text-right font-bold text-white">₹{Number(item.current_price).toFixed(2)}</td>
-                    <td className={`py-3.5 px-4 text-right font-bold ${item.change >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
-                      {item.change >= 0 ? '+' : ''}{Number(item.percent_change).toFixed(2)}%
+                    <td className="py-3.5 px-4 text-right font-bold text-white">{quotes[item.symbol] ? `₹${quotes[item.symbol]!.last.toLocaleString('en-IN', { minimumFractionDigits: 2 })}` : '—'}</td>
+                    <td className={`py-3.5 px-4 text-right font-bold ${quotes[item.symbol] ? quotes[item.symbol]!.change >= 0 ? 'text-emerald-400' : 'text-rose-400' : 'text-slate-600'}`}>
+                      {quotes[item.symbol] ? `${quotes[item.symbol]!.change > 0 ? '+' : ''}${quotes[item.symbol]!.changePercent.toFixed(2)}%` : 'No quote'}
                     </td>
                     <td className="py-3.5 px-4 text-right text-slate-300">
-                      {item.volume ? item.volume.toLocaleString('en-IN') : '-'}
+                      {quotes[item.symbol] ? quotes[item.symbol]!.volume.toLocaleString('en-IN') : '—'}
                     </td>
                     <td className="py-3.5 px-4 text-right text-slate-400 text-[11px]">
-                      {item.low_52w && item.high_52w ? `₹${item.low_52w.toFixed(0)} - ₹${item.high_52w.toFixed(0)}` : '-'}
+                      —
                     </td>
                     <td className="py-3.5 px-4 text-right">
                       <div className="flex items-center justify-end gap-1.5">
@@ -242,7 +228,7 @@ export default function WatchlistPage() {
                           Trade
                         </Link>
                         <Link
-                          href={`/dashboard/markets/${item.symbol}`}
+                          href={`/dashboard/markets/${encodeURIComponent(item.symbol)}`}
                           className="px-2.5 py-1 rounded bg-blue-600/20 hover:bg-blue-600 text-blue-400 hover:text-white transition-all text-[11px]"
                         >
                           Analyze

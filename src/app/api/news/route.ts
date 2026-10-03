@@ -5,6 +5,9 @@ export const dynamic = 'force-dynamic';
 
 export async function GET(request: Request) {
   try {
+    if (process.env.NODE_ENV === 'production') {
+      return NextResponse.json({ news: [], data: [], meta: { count: 0, timestamp: new Date().toISOString(), source: 'UNAVAILABLE' } });
+    }
     const { searchParams } = new URL(request.url);
     const symbol = searchParams.get('symbol');
     const limit = Math.min(parseInt(searchParams.get('limit') || '25', 10), 100);

@@ -23,7 +23,7 @@ export function previewOrder(request: OrderRequest): OrderPreviewResult {
     throw new Error(`Instrument ${symbol} not found.`);
   }
 
-  const effectivePrice = orderType === 'MARKET' ? inst.current_price : (price || inst.current_price);
+  const effectivePrice = orderType === 'MARKET' ? (request.marketPrice ?? inst.current_price) : (price || request.marketPrice || inst.current_price);
   const charges = calculateCharges({
     side,
     productType,
@@ -115,7 +115,7 @@ export function executePaperOrder(request: OrderRequest) {
 
   const marketStatus = getMarketSessionStatus();
   const isMarketClosed = !marketStatus.isOpen;
-  const ltp = inst.current_price;
+  const ltp = request.marketPrice ?? inst.current_price;
 
   // Calculate execution price with slippage for MARKET orders
   let executionPrice = ltp;

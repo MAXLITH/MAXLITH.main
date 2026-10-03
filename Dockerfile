@@ -1,5 +1,5 @@
 # Multi-stage Dockerfile for MAXLITH - Indian Equities Paper Trading Platform
-FROM node:20-alpine AS base
+FROM node:22-alpine AS base
 
 # Install build dependencies for better-sqlite3 native bindings
 RUN apk add --no-cache python3 make g++ gcc libc-dev
@@ -21,7 +21,7 @@ ENV NODE_ENV=production
 RUN npm run build
 
 # Production runner stage
-FROM node:20-alpine AS runner
+FROM node:22-alpine AS runner
 WORKDIR /app
 
 ENV NODE_ENV=production

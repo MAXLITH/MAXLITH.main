@@ -2,11 +2,16 @@
   "name": "maxlith-app",
   "version": "1.0.0",
   "private": true,
+  "engines": {
+    "node": ">=22.3.0"
+  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
+    "typecheck": "tsc --noEmit",
+    "market-stream": "node services/market-stream/server.mjs",
     "test": "vitest run"
   },
   "dependencies": {
@@ -16,6 +21,7 @@
     "decimal.js": "^10.6.0",
     "ioredis": "^6.0.0",
     "jose": "^5.9.6",
+    "lightweight-charts": "^5.2.1",
     "lucide-react": "^0.475.0",
     "next": "^15.1.0",
     "node-cron": "^4.6.0",
@@ -23,6 +29,7 @@
     "react-dom": "^19.0.0",
     "recharts": "^2.15.0",
     "tailwind-merge": "^2.6.0",
+    "ws": "^8.22.0",
     "zod": "^4.6.5"
   },
   "devDependencies": {
@@ -33,6 +40,7 @@
     "@types/node-cron": "^3.0.11",
     "@types/react": "^19.0.1",
     "@types/react-dom": "^19.0.1",
+    "@types/ws": "^8.18.2",
     "eslint": "^9.16.0",
     "eslint-config-next": "^15.1.0",
     "postcss": "^8.5.1",

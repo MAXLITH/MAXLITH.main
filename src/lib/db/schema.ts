@@ -89,9 +89,9 @@ export const SCHEMA_SQL = `
       id TEXT PRIMARY KEY,
       watchlist_id TEXT NOT NULL,
       symbol TEXT NOT NULL,
+      position INTEGER NOT NULL DEFAULT 0,
       added_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (watchlist_id) REFERENCES watchlists(id) ON DELETE CASCADE,
-      FOREIGN KEY (symbol) REFERENCES instruments(symbol) ON DELETE CASCADE,
       UNIQUE(watchlist_id, symbol)
     );
 
