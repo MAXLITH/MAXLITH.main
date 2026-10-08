@@ -17,14 +17,20 @@ const SYMBOL_ISIN_MAP: Record<string, string> = {
   TATASTEEL: 'NSE_EQ|INE081A01020',
   WIPRO: 'NSE_EQ|INE075A01022',
   HCLTECH: 'NSE_EQ|INE860A01027',
+  MARUTI: 'NSE_EQ|INE585B01010',
+  SUNPHARMA: 'NSE_EQ|INE044A01036',
+  TITAN: 'NSE_EQ|INE280A01028',
+  BAJFINANCE: 'NSE_EQ|INE296A01024',
   NIFTY50: 'NSE_INDEX|Nifty 50',
   NIFTY: 'NSE_INDEX|Nifty 50',
   BANKNIFTY: 'NSE_INDEX|Nifty Bank',
+  FINNIFTY: 'NSE_INDEX|Nifty Fin Service',
+  MIDCPNIFTY: 'NSE_INDEX|NIFTY MID SELECT',
   SENSEX: 'BSE_INDEX|SENSEX',
 };
 
 export class UpstoxProvider implements MarketDataProvider {
-  name = 'upstox';
+  readonly name = 'upstox';
   private accessToken: string;
   private baseUrl = 'https://api.upstox.com/v2';
 
@@ -39,6 +45,46 @@ export class UpstoxProvider implements MarketDataProvider {
     return `NSE_EQ|${sym}`;
   }
 
+  private mapTimeframeToInterval(timeframe: string): string {
+    const tf = timeframe.toUpperCase().trim();
+    switch (tf) {
+      case '1M':
+      case '1':
+      case '1MIN':
+        return '1minute';
+      case '3M':
+      case '3':
+        return '3minute';
+      case '5M':
+      case '5':
+        return '5minute';
+      case '15M':
+      case '15':
+        return '15minute';
+      case '30M':
+      case '30':
+        return '30minute';
+      case '1H':
+      case '60':
+      case '2H':
+      case '4H':
+        return '30minute';
+      case '1D':
+      case 'D':
+      case 'DAY':
+        return 'day';
+      case '1W':
+      case 'W':
+      case 'WEEK':
+        return 'week';
+      case 'MON':
+      case 'MONTH':
+        return 'month';
+      default:
+        return 'day';
+    }
+  }
+
   async getQuotes(symbols: string[]): Promise<Map<string, LiveQuote>> {
     const results = new Map<string, LiveQuote>();
     if (symbols.length === 0) return results;
@@ -47,7 +93,7 @@ export class UpstoxProvider implements MarketDataProvider {
     const url = `${this.baseUrl}/market-quote/quotes?instrument_key=${encodeURIComponent(instrumentKeys)}`;
 
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 5000);
+    const timeout = setTimeout(() => controller.abort(), 6000);
 
     try {
       const res = await fetch(url, {
@@ -68,6 +114,9 @@ export class UpstoxProvider implements MarketDataProvider {
           const prev = q.ohlc?.close || ltp;
           const change = q.net_change ?? (ltp - prev);
           const pctChange = prev > 0 ? (change / prev) * 100 : 0;
+
+          // Strict Quote Invariant Check
+          if (typeof ltp !== 'number' || isNaN(ltp) || ltp <= 0) continue;
 
           results.set(sym, {
             symbol: sym,
@@ -102,15 +151,13 @@ export class UpstoxProvider implements MarketDataProvider {
 
   async getHistory(symbol: string, timeframe: string): Promise<OHLCV[]> {
     const key = this.toUpstoxKey(symbol);
-    let interval = 'day';
-    if (timeframe === '1D') interval = '1minute';
-    if (timeframe === '1W') interval = '30minute';
+    const interval = this.mapTimeframeToInterval(timeframe);
 
     const today = new Date().toISOString().split('T')[0];
     const url = `${this.baseUrl}/historical-candle/${encodeURIComponent(key)}/${interval}/${today}`;
 
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 5000);
+    const timeout = setTimeout(() => controller.abort(), 6000);
 
     try {
       const res = await fetch(url, {
@@ -129,18 +176,32 @@ export class UpstoxProvider implements MarketDataProvider {
 
       for (const c of candlesData) {
         if (!c || c.length < 5) continue;
+
+        const timestampStr = String(c[0]).replace('T', ' ').substring(0, 19);
+        const open = Number(c[1]);
+        const high = Number(c[2]);
+        const low = Number(c[3]);
+        const close = Number(c[4]);
+        const volume = Number(c[5] || 0);
+
+        // Strict Rule 5 Candle Validation: High >= max(Open, Close), Low <= min(Open, Close)
+        if (isNaN(open) || isNaN(high) || isNaN(low) || isNaN(close) || open <= 0 || close <= 0) continue;
+        if (high < Math.max(open, close) || low > Math.min(open, close) || high < low) continue;
+
         candles.push({
-          timestamp: String(c[0]).replace('T', ' ').substring(0, 19),
-          open: Number(c[1]),
-          high: Number(c[2]),
-          low: Number(c[3]),
-          close: Number(c[4]),
-          volume: Number(c[5] || 0),
+          timestamp: timestampStr,
+          open,
+          high,
+          low,
+          close,
+          volume,
         });
       }
 
+      // Upstox returns newest candle first; reverse to chronological order
       return candles.reverse();
-    } catch {
+    } catch (err) {
+      console.error('Upstox history error:', err);
       return [];
     } finally {
       clearTimeout(timeout);
