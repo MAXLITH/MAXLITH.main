@@ -4,15 +4,15 @@ import { config } from '../config';
 import { getMarketSessionStatus, MarketSessionStatus } from '../market-hours';
 import { LiveQuote, IndexQuote, OHLCV, MarketDataProvider } from './types';
 import { YahooFinanceProvider } from './providers/yahoo';
-import { DatabaseFallbackProvider } from './providers/database';
+import { SupabaseFallbackProvider } from './providers/database';
 
 export class MarketDataService {
   private providers: MarketDataProvider[];
-  private dbFallback: DatabaseFallbackProvider;
+  private dbFallback: SupabaseFallbackProvider;
 
   constructor() {
-    this.dbFallback = new DatabaseFallbackProvider();
-    this.providers = process.env.NODE_ENV === 'production' ? [] : [new YahooFinanceProvider(), this.dbFallback];
+    this.dbFallback = new SupabaseFallbackProvider();
+    this.providers = [new YahooFinanceProvider(), this.dbFallback];
   }
 
   normalizeSymbol(symbol: string): string {
@@ -36,7 +36,7 @@ export class MarketDataService {
 
     // 1. Try cache first
     for (const sym of normalized) {
-      const cached = process.env.NODE_ENV === 'production' ? null : await cacheGet<LiveQuote>(`quote:${sym}`);
+      const cached = await cacheGet<LiveQuote>(`quote:${sym}`);
       if (cached) {
         results.set(sym, cached);
       } else {
@@ -50,7 +50,7 @@ export class MarketDataService {
 
     // 2. Fetch missing from providers
     const ttl = this.getCacheTtl();
-    let fetched = new Map<string, LiveQuote>();
+    const fetched = new Map<string, LiveQuote>();
 
     for (const provider of this.providers) {
       try {
@@ -64,14 +64,14 @@ export class MarketDataService {
         }
         // If all found, stop provider loop
         if (missing.every((m) => fetched.has(m))) break;
-      } catch (err) {
+      } catch {
         // Provider failed, continue to fallback
       }
     }
 
     // 3. Fallback to DB for any still missing
     const stillMissing = missing.filter((m) => !fetched.has(m));
-    if (stillMissing.length > 0 && process.env.NODE_ENV !== 'production') {
+    if (stillMissing.length > 0) {
       const dbQuotes = await this.dbFallback.getQuotes(stillMissing);
       for (const [k, v] of dbQuotes.entries()) {
         fetched.set(k, v);
@@ -122,9 +122,8 @@ export class MarketDataService {
         };
       }
 
-      if (process.env.NODE_ENV === 'production') return null;
       // Hard fallback from db if not in quotes
-      const inst = db.prepare("SELECT * FROM instruments WHERE symbol = ? AND source IS NOT NULL AND source != 'SEED' AND stale = 0").get(sym) as any;
+      const inst = db.prepare("SELECT * FROM instruments WHERE symbol = ?").get(sym) as any;
       if (!inst) return null;
       return {
         symbol: sym,
@@ -144,7 +143,7 @@ export class MarketDataService {
   async getHistory(symbol: string, timeframe: string = '1D'): Promise<OHLCV[]> {
     const norm = this.normalizeSymbol(symbol);
     const cacheKey = `history:${norm}:${timeframe}`;
-    const cached = process.env.NODE_ENV === 'production' ? null : await cacheGet<OHLCV[]>(cacheKey);
+    const cached = await cacheGet<OHLCV[]>(cacheKey);
     if (cached) return cached;
 
     for (const provider of this.providers) {
@@ -159,16 +158,13 @@ export class MarketDataService {
       }
     }
 
-    if (process.env.NODE_ENV === 'production') return [];
-
-    // Local development fallback to fixture history
+    // Local development/database fallback to price history
     const fallbackCandles = await this.dbFallback.getHistory(norm, timeframe);
     await cacheSet(cacheKey, fallbackCandles, 60_000);
     return fallbackCandles;
   }
 
   search(query: string, limit: number = 10) {
-    if (process.env.NODE_ENV === 'production') return [];
     if (!query || !query.trim()) {
       return db.prepare('SELECT symbol, name, exchange, sector, current_price, percent_change FROM instruments ORDER BY market_cap DESC LIMIT ?').all(limit);
     }
@@ -185,7 +181,6 @@ export class MarketDataService {
   }
 
   getMarketMovers() {
-    if (process.env.NODE_ENV === 'production') return { topGainers: [], topLosers: [], mostActive: [] };
     const instruments = db.prepare(`
       SELECT symbol, name, exchange, sector, current_price, previous_close, change, percent_change, volume
       FROM instruments
@@ -202,7 +197,6 @@ export class MarketDataService {
   }
 
   getSectorHeatmap() {
-    if (process.env.NODE_ENV === 'production') return [];
     return db.prepare(`
       SELECT 
         sector, 

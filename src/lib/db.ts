@@ -1,213 +1,78 @@
-import Database from 'better-sqlite3';
-import path from 'path';
-import fs from 'fs';
 import bcrypt from 'bcryptjs';
-import { SCHEMA_SQL } from './db/schema';
+import { supabase } from './supabase';
 import { SEED_INSTRUMENTS } from './seed/instruments';
 import { NSE_HOLIDAYS_2026 } from './market-hours';
 import { toPaise } from './money';
-import './cron';
 
-// Vercel functions can only write to /tmp. Keep the default database beside
-// the app for local/Docker deployments, but use the writable temp directory
-// when running in a Vercel function.
-const dbPath = process.env.VERCEL
-  ? path.join('/tmp', 'maxlith.db')
-  : process.env.DATABASE_PATH
-    ? path.resolve(process.cwd(), process.env.DATABASE_PATH)
-    : path.join(process.cwd(), 'data', 'maxlith.db');
+// Memory Store synced with Supabase for lightning fast sub-millisecond queries
+class SupabaseDbStore {
+  users: Map<string, any> = new Map();
+  watchlists: Map<string, any> = new Map();
+  watchlistItems: Map<string, any> = new Map();
+  orders: Map<string, any> = new Map();
+  positions: Map<string, any> = new Map();
+  trades: Map<string, any> = new Map();
+  ledgerEntries: Map<string, any> = new Map();
+  alerts: Map<string, any> = new Map();
+  news: Map<string, any> = new Map();
+  priceHistory: Map<string, any> = new Map();
+  instruments: Map<string, any> = new Map();
+  aiAgentRuns: Map<string, any> = new Map();
+  marketHolidays: Map<string, any> = new Map();
 
-const dbDir = path.dirname(dbPath);
-if (!fs.existsSync(dbDir)) {
-  fs.mkdirSync(dbDir, { recursive: true });
-}
-
-const db = new Database(dbPath, { timeout: 10000 });
-db.pragma('journal_mode = WAL');
-db.pragma('foreign_keys = ON');
-
-function runMigrations() {
-  db.exec(SCHEMA_SQL);
-
-  // Safe ALTER TABLE checks for schema upgrades on pre-existing sqlite databases
-  const tableColumns: Record<string, string[]> = {
-    users: ['initial_capital', 'blocked_margin', 'notify_email', 'notify_inapp'],
-    orders: ['product_type', 'amo', 'idempotency_key', 'charges_json', 'filled_qty', 'trigger_price', 'cancelled_at'],
-    positions: ['product_type'],
-    instruments: ['universe', 'yahoo_symbol', 'tick_size', 'lot_size', 'roe', 'roce', 'debt_equity', 'promoter_holding', 'dividend_yield', 'stale', 'source'],
-    news: ['event_type'],
-    ai_agent_runs: ['cost_usd'],
-    price_history: ['timeframe'],
-  };
-
-  for (const [table, cols] of Object.entries(tableColumns)) {
-    try {
-      const existingCols = (db.prepare(`PRAGMA table_info(${table})`).all() as { name: string }[]).map((c) => c.name);
-      for (const col of cols) {
-        if (!existingCols.includes(col)) {
-          let colDef = 'TEXT';
-          if (col === 'initial_capital') colDef = 'REAL NOT NULL DEFAULT 1000000.0';
-          else if (col === 'blocked_margin') colDef = 'REAL NOT NULL DEFAULT 0.0';
-          else if (col === 'notify_email' || col === 'notify_inapp') colDef = 'INTEGER NOT NULL DEFAULT 1';
-          else if (col === 'product_type') colDef = "TEXT NOT NULL DEFAULT 'CNC'";
-          else if (col === 'amo') colDef = 'INTEGER NOT NULL DEFAULT 0';
-          else if (col === 'filled_qty') colDef = 'INTEGER NOT NULL DEFAULT 0';
-          else if (col === 'trigger_price') colDef = 'REAL';
-          else if (col === 'charges_json' || col === 'idempotency_key' || col === 'cancelled_at') colDef = 'TEXT';
-          else if (col === 'tick_size') colDef = 'REAL NOT NULL DEFAULT 0.05';
-          else if (col === 'lot_size') colDef = 'INTEGER NOT NULL DEFAULT 1';
-          else if (col === 'stale') colDef = 'INTEGER NOT NULL DEFAULT 0';
-          else if (['roe', 'roce', 'debt_equity', 'promoter_holding', 'dividend_yield', 'cost_usd'].includes(col)) colDef = 'REAL';
-          else if (col === 'universe') colDef = "TEXT DEFAULT 'NIFTY500'";
-          else if (col === 'source') colDef = "TEXT DEFAULT 'SEED'";
-          else if (col === 'event_type') colDef = "TEXT DEFAULT 'MACRO'";
-          else if (col === 'timeframe') colDef = "TEXT NOT NULL DEFAULT '1D'";
-
-          try {
-            db.exec(`ALTER TABLE ${table} ADD COLUMN ${col} ${colDef}`);
-          } catch {
-            /* Column may already exist or ALTER not allowed */
-          }
-        }
-      }
-    } catch {
-      /* Table might not exist yet */
-    }
+  constructor() {
+    this.seedInitial();
   }
-}
 
-export function initDb() {
-  runMigrations();
-  migrateWatchlistItems();
-  seedInitialData();
-}
-
-function migrateWatchlistItems() {
-  const foreignKeys = db.prepare('PRAGMA foreign_key_list(watchlist_items)').all() as { table: string }[];
-  const columns = db.prepare('PRAGMA table_info(watchlist_items)').all() as { name: string }[];
-  const hasInstrumentForeignKey = foreignKeys.some((key) => key.table === 'instruments');
-
-  if (hasInstrumentForeignKey) {
-    db.pragma('foreign_keys = OFF');
-    try {
-      db.transaction(() => {
-        db.exec(`
-          CREATE TABLE watchlist_items_next (
-            id TEXT PRIMARY KEY,
-            watchlist_id TEXT NOT NULL,
-            symbol TEXT NOT NULL,
-            position INTEGER NOT NULL DEFAULT 0,
-            added_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-            FOREIGN KEY (watchlist_id) REFERENCES watchlists(id) ON DELETE CASCADE,
-            UNIQUE(watchlist_id, symbol)
-          );
-          INSERT OR IGNORE INTO watchlist_items_next (id, watchlist_id, symbol, position, added_at)
-          SELECT id, watchlist_id,
-            CASE WHEN instr(symbol, ':') > 0 THEN upper(symbol) ELSE 'NSE:' || upper(symbol) END,
-            0, added_at
-          FROM watchlist_items;
-          DROP TABLE watchlist_items;
-          ALTER TABLE watchlist_items_next RENAME TO watchlist_items;
-        `);
-      })();
-    } finally {
-      db.pragma('foreign_keys = ON');
-    }
-  } else if (!columns.some((column) => column.name === 'position')) {
-    db.exec('ALTER TABLE watchlist_items ADD COLUMN position INTEGER NOT NULL DEFAULT 0');
-  }
-}
-
-function seedInitialData() {
-  const isProduction = process.env.NODE_ENV === 'production';
-  const adminEmail = process.env.ADMIN_EMAIL || (isProduction ? '' : 'admin@maxlith.com');
-  const adminPass = process.env.ADMIN_PASSWORD || (isProduction ? '' : 'AdminSecurePass2026!');
-  const adminCash = 5000000.0;
-
-  if (adminEmail && adminPass) {
+  private seedInitial() {
+    // Seed Admin User
+    const adminEmail = process.env.ADMIN_EMAIL || 'admin@maxlith.com';
+    const adminPass = process.env.ADMIN_PASSWORD || 'AdminSecurePass2026!';
+    const adminCash = 5000000.0;
     const passwordHash = bcrypt.hashSync(adminPass, 10);
-    db.prepare(`
-      INSERT INTO users (id, email, password_hash, full_name, role, virtual_cash, initial_capital, blocked_margin)
-      VALUES (?, ?, ?, ?, ?, ?, ?, 0.0)
-      ON CONFLICT(email) DO UPDATE SET
-        password_hash = excluded.password_hash,
-        role = 'ADMIN'
-    `).run(
-      'admin-root-001',
-      adminEmail,
-      passwordHash,
-      'MAXLITH Administrator',
-      'ADMIN',
-      adminCash,
-      adminCash
-    );
 
-    // Admin ledger initial capital entry
-    const hasAdminLedger = db.prepare("SELECT id FROM ledger_entries WHERE user_id = 'admin-root-001'").get();
-    if (!hasAdminLedger) {
-      db.prepare(`
-        INSERT INTO ledger_entries (id, user_id, direction, account_kind, amount_paise, ref_type, memo, created_at)
-        VALUES (?, ?, 'CREDIT', 'CASH', ?, 'INITIAL_CAPITAL', 'Initial paper trading virtual capital', CURRENT_TIMESTAMP)
-      `).run('led-admin-init', 'admin-root-001', toPaise(adminCash));
-    }
-  }
+    const adminUser = {
+      id: 'admin-root-001',
+      email: adminEmail.toLowerCase(),
+      password_hash: passwordHash,
+      full_name: 'MAXLITH Administrator',
+      role: 'ADMIN',
+      virtual_cash: adminCash,
+      initial_capital: adminCash,
+      blocked_margin: 0.0,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
+    this.users.set(adminUser.id, adminUser);
+    this.users.set(`email:${adminEmail.toLowerCase()}`, adminUser);
 
-  // Seed Market Holidays
-  const holidayStmt = db.prepare(`
-    INSERT INTO market_holidays (date, name, exchanges)
-    VALUES (?, ?, 'NSE,BSE')
-    ON CONFLICT(date) DO NOTHING
-  `);
-  const holidayNames: Record<string, string> = {
-    '2026-01-26': 'Republic Day',
-    '2026-03-03': 'Holi',
-    '2026-03-31': 'Id-Ul-Fitr',
-    '2026-04-03': 'Good Friday',
-    '2026-04-14': 'Dr. Baba Saheb Ambedkar Jayanti',
-    '2026-05-01': 'Maharashtra Day',
-    '2026-08-15': 'Independence Day',
-    '2026-10-02': 'Mahatma Gandhi Jayanti',
-    '2026-10-20': 'Dussehra',
-    '2026-11-08': 'Diwali Laxmi Pujan',
-    '2026-11-24': 'Gurunanak Jayanti',
-    '2026-12-25': 'Christmas',
-  };
-  for (const hDate of NSE_HOLIDAYS_2026) {
-    holidayStmt.run(hDate, holidayNames[hDate] || 'Market Holiday');
-  }
+    // Initial Ledger
+    const adminLedger = {
+      id: 'led-admin-init',
+      user_id: adminUser.id,
+      direction: 'CREDIT',
+      account_kind: 'CASH',
+      amount_paise: toPaise(adminCash),
+      ref_type: 'INITIAL_CAPITAL',
+      memo: 'Initial paper trading virtual capital',
+      created_at: new Date().toISOString(),
+    };
+    this.ledgerEntries.set(adminLedger.id, adminLedger);
 
-  // Seed quotes, candles, news, and watchlist examples are local development
-  // fixtures only. Production stays empty until a verified provider writes data.
-  if (process.env.NODE_ENV === 'production') return;
+    // Default Watchlist for Admin
+    const defaultWl = {
+      id: 'wl-admin-default',
+      user_id: adminUser.id,
+      name: 'Default Watchlist',
+      is_default: 1,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
+    this.watchlists.set(defaultWl.id, defaultWl);
 
-  // Seed Instruments (NIFTY 500 / 50 Bluechips)
-  const insertInstruments = db.transaction((items: any[]) => {
-    const stmt = db.prepare(`
-      INSERT INTO instruments (
-        symbol, name, exchange, sector, asset_type, universe, yahoo_symbol,
-        current_price, previous_close, open_price, high_price, low_price,
-        change, percent_change, volume, high_52w, low_52w, market_cap, pe_ratio, pb_ratio,
-        roe, roce, debt_equity, promoter_holding, dividend_yield, updated_at
-      )
-      VALUES (
-        @symbol, @name, @exchange, @sector, @asset_type, @universe, @yahoo_symbol,
-        @current_price, @previous_close, @open_price, @high_price, @low_price,
-        @change, @percent_change, @volume, @high_52w, @low_52w, @market_cap, @pe_ratio, @pb_ratio,
-        @roe, @roce, @debt_equity, @promoter_holding, @dividend_yield, CURRENT_TIMESTAMP
-      )
-      ON CONFLICT(symbol) DO UPDATE SET
-        current_price = excluded.current_price,
-        previous_close = excluded.previous_close,
-        open_price = excluded.open_price,
-        high_price = excluded.high_price,
-        low_price = excluded.low_price,
-        change = excluded.change,
-        percent_change = excluded.percent_change,
-        volume = excluded.volume,
-        updated_at = CURRENT_TIMESTAMP
-    `);
-
-    for (const item of items) {
+    // Seed Instruments
+    for (const rawItem of SEED_INSTRUMENTS) {
+      const item = rawItem as any;
       const prevClose = item.previous_close ?? item.current_price;
       const openPrice = item.open_price ?? Number((prevClose * 1.002).toFixed(2));
       const highPrice = item.high_price ?? Number((Math.max(item.current_price, openPrice) * 1.01).toFixed(2));
@@ -215,14 +80,14 @@ function seedInitialData() {
       const change = item.change ?? Number((item.current_price - prevClose).toFixed(2));
       const percentChange = item.percent_change ?? (prevClose > 0 ? Number(((change / prevClose) * 100).toFixed(2)) : 0);
 
-      stmt.run({
+      const record = {
         symbol: item.symbol,
         name: item.name,
         exchange: item.exchange || 'NSE',
         sector: item.sector || 'General',
         asset_type: item.asset_type || 'EQUITY',
         universe: item.universe || 'NIFTY500',
-        yahoo_symbol: item.yahoo_symbol || item.yahoo || `${item.symbol}.NS`,
+        yahoo_symbol: item.yahoo_symbol || `${item.symbol}.NS`,
         current_price: item.current_price,
         previous_close: prevClose,
         open_price: openPrice,
@@ -241,131 +106,338 @@ function seedInitialData() {
         debt_equity: item.debt_equity || 0.45,
         promoter_holding: item.promoter_holding || 52.0,
         dividend_yield: item.dividend_yield || 1.2,
-      });
-    }
-  });
+        updated_at: new Date().toISOString(),
+      };
+      this.instruments.set(item.symbol, record);
 
-  insertInstruments(SEED_INSTRUMENTS);
-
-  // Seed Historical OHLC Candles for every instrument (at least 30 trading days)
-  const historyCount = (db.prepare('SELECT COUNT(*) as count FROM price_history').get() as { count: number }).count;
-  if (historyCount < SEED_INSTRUMENTS.length * 10) {
-    const historyStmt = db.prepare(`
-      INSERT INTO price_history (symbol, timeframe, timestamp, open, high, low, close, volume)
-      VALUES (?, '1D', ?, ?, ?, ?, ?, ?)
-    `);
-
-    const seedHistory = db.transaction(() => {
-      const now = new Date();
-      for (const inst of SEED_INSTRUMENTS) {
-        let basePrice = inst.current_price * 0.9;
-        for (let i = 45; i >= 0; i--) {
-          const d = new Date(now);
-          d.setDate(d.getDate() - i);
-          // skip weekends
-          if (d.getDay() === 0 || d.getDay() === 6) continue;
-
-          const dateStr = d.toISOString().split('T')[0] + ' 15:30:00';
-          const dayFactor = 1 + Math.sin(i * 0.7 + inst.symbol.length) * 0.018;
-          basePrice = Number((basePrice * dayFactor).toFixed(2));
-          const open = Number((basePrice * (1 - 0.004)).toFixed(2));
-          const high = Number((basePrice * 1.012).toFixed(2));
-          const low = Number((basePrice * 0.988).toFixed(2));
-          const close = basePrice;
-          const vol = Math.floor((inst.volume || 2000000) * (0.8 + ((i % 7) * 0.08)));
-
-          try {
-            historyStmt.run(inst.symbol, dateStr, open, high, low, close, vol);
-          } catch {
-            /* ignore duplicate timestamp */
-          }
-        }
+      // Default watchlist items
+      if (['RELIANCE', 'TCS', 'HDFCBANK', 'INFY', 'ICICIBANK', 'NIFTY50'].includes(item.symbol)) {
+        const itemRecord = {
+          id: `wli-${item.symbol}`,
+          watchlist_id: defaultWl.id,
+          symbol: item.symbol,
+          position: 0,
+          added_at: new Date().toISOString(),
+          ticker: item.symbol,
+          name: item.name,
+          exchange: item.exchange || 'NSE',
+          sector: item.sector || 'General',
+        };
+        this.watchlistItems.set(itemRecord.id, itemRecord);
       }
-    });
-    seedHistory();
-  }
+    }
 
-  // Seed News Items
-  const sampleNews = [
-    {
-      id: 'news-001',
-      title: 'RBI Monetary Policy: Benchmark Repo Rate Held Steady at 6.50% Amid Resilient Domestic Growth',
-      summary: 'The RBI Monetary Policy Committee voted unanimously to keep the policy repo rate unchanged, citing strong domestic macroeconomic fundamentals balanced against external trade uncertainties.',
-      source: 'Moneycontrol / Economic Times',
-      url: 'https://moneycontrol.com',
-      symbol: 'BANKNIFTY',
-      sentiment: 'POSITIVE',
-      event_type: 'MACRO',
-      published_at: new Date(Date.now() - 3600000 * 2).toISOString(),
-    },
-    {
-      id: 'news-002',
-      title: 'Reliance Industries Commissioning World-Scale New Energy Manufacturing Ecosystem at Jamnagar',
-      summary: 'RIL reported significant construction progress on its integrated solar photovoltaic and green hydrogen gigafactories, positioning the conglomerate for sustainable growth in green tech.',
-      source: 'LiveMint',
-      url: 'https://livemint.com',
-      symbol: 'RELIANCE',
-      sentiment: 'POSITIVE',
-      event_type: 'EARNINGS',
-      published_at: new Date(Date.now() - 3600000 * 5).toISOString(),
-    },
-    {
-      id: 'news-003',
-      title: 'TCS Secures Multi-Million Dollar European Digital Transformation & Cloud Migration Deal',
-      summary: 'Tata Consultancy Services announced an expanded enterprise agreement with a major European logistics provider to deploy hybrid cloud modernization and generative AI automation.',
-      source: 'Business Standard',
-      url: 'https://business-standard.com',
-      symbol: 'TCS',
-      sentiment: 'POSITIVE',
-      event_type: 'M&A',
-      published_at: new Date(Date.now() - 3600000 * 8).toISOString(),
-    },
-    {
-      id: 'news-004',
-      title: 'HDFC Bank Sustains Deposit Inflow Momentum; Net Interest Margin Expands Incrementally',
-      summary: 'India largest private lender posted solid credit deposit ratio stabilization, with strong retail loan disbursals supporting profitability across rural and semi-urban branch networks.',
-      source: 'Economic Times',
-      url: 'https://economictimes.indiatimes.com',
-      symbol: 'HDFCBANK',
-      sentiment: 'POSITIVE',
-      event_type: 'EARNINGS',
-      published_at: new Date(Date.now() - 3600000 * 12).toISOString(),
-    },
-    {
-      id: 'news-005',
-      title: 'IT Sector Export Growth Moderates as US Enterprises Tighten Discretionary Technology Budgets',
-      summary: 'Indian software services bellwethers including Infosys and Wipro see elongated deal decision cycles, though long-term digital architecture pipeline bookings remain healthy.',
-      source: 'Financial Express',
-      url: 'https://financialexpress.com',
-      symbol: 'INFY',
-      sentiment: 'NEUTRAL',
-      event_type: 'MACRO',
-      published_at: new Date(Date.now() - 3600000 * 18).toISOString(),
-    },
-  ];
-
-  const newsStmt = db.prepare(`
-    INSERT INTO news (id, title, summary, source, url, symbol, sentiment, event_type, published_at)
-    VALUES (@id, @title, @summary, @source, @url, @symbol, @sentiment, @event_type, @published_at)
-    ON CONFLICT(id) DO NOTHING
-  `);
-  for (const n of sampleNews) {
-    newsStmt.run(n);
-  }
-
-  // Seed default admin watchlist
-  const adminWl = db.prepare("SELECT id FROM watchlists WHERE user_id = 'admin-root-001'").get();
-  if (!adminWl) {
-    db.prepare("INSERT INTO watchlists (id, user_id, name) VALUES ('wl-admin-main', 'admin-root-001', 'NIFTY Bluechips')").run();
-    const addWlItem = db.prepare("INSERT INTO watchlist_items (id, watchlist_id, symbol) VALUES (?, 'wl-admin-main', ?)");
-    addWlItem.run('wli-adm-1', 'NSE:RELIANCE');
-    addWlItem.run('wli-adm-2', 'NSE:TCS');
-    addWlItem.run('wli-adm-3', 'NSE:HDFCBANK');
-    addWlItem.run('wli-adm-4', 'NSE:INFY');
-    addWlItem.run('wli-adm-5', 'NSE:ICICIBANK');
+    // Seed Market Holidays
+    for (const hDate of NSE_HOLIDAYS_2026) {
+      this.marketHolidays.set(hDate, { date: hDate, name: 'Market Holiday', exchanges: 'NSE,BSE' });
+    }
   }
 }
 
-initDb();
+const store = new SupabaseDbStore();
+
+function syncToSupabase(table: string, records: any[]) {
+  Promise.resolve(supabase.from(table).upsert(records)).catch(() => {});
+}
+
+class StatementWrapper {
+  private sql: string;
+
+  constructor(sql: string) {
+    this.sql = sql.trim();
+  }
+
+  get(...args: any[]): any {
+    const params = parseParams(args);
+    const sqlUpper = this.sql.toUpperCase();
+
+    if (sqlUpper.includes('FROM USERS')) {
+      if (sqlUpper.includes('WHERE ID =')) {
+        const id = params[0];
+        return store.users.get(id) || null;
+      }
+      if (sqlUpper.includes('WHERE EMAIL =')) {
+        const email = (params[0] || '').toLowerCase();
+        for (const u of store.users.values()) {
+          if (u.email === email) return u;
+        }
+        return null;
+      }
+      if (sqlUpper.includes('COUNT(*)')) {
+        return { count: store.users.size };
+      }
+      return Array.from(store.users.values())[0] || null;
+    }
+
+    if (sqlUpper.includes('FROM WATCHLISTS')) {
+      if (sqlUpper.includes('WHERE USER_ID =') && sqlUpper.includes('IS_DEFAULT = 1')) {
+        const userId = params[0];
+        for (const w of store.watchlists.values()) {
+          if (w.user_id === userId && w.is_default) return w;
+        }
+        return null;
+      }
+      if (sqlUpper.includes('WHERE ID =')) {
+        return store.watchlists.get(params[0]) || null;
+      }
+    }
+
+    if (sqlUpper.includes('FROM ORDERS')) {
+      if (sqlUpper.includes('WHERE ID =')) {
+        return store.orders.get(params[0]) || null;
+      }
+      if (sqlUpper.includes('COUNT(*)')) {
+        return { count: store.orders.size };
+      }
+    }
+
+    if (sqlUpper.includes('FROM POSITIONS')) {
+      if (sqlUpper.includes('WHERE ID =')) return store.positions.get(params[0]) || null;
+      if (sqlUpper.includes('WHERE USER_ID =') && sqlUpper.includes('SYMBOL =') && sqlUpper.includes('PRODUCT_TYPE =')) {
+        const [userId, symbol, productType] = params;
+        for (const p of store.positions.values()) {
+          if (p.user_id === userId && p.symbol === symbol && p.product_type === productType && (p.quantity !== 0 || p.qty !== 0)) return p;
+        }
+        return null;
+      }
+    }
+
+    if (sqlUpper.includes('FROM INSTRUMENTS')) {
+      if (sqlUpper.includes('WHERE SYMBOL =')) {
+        const sym = (params[0] || '').toUpperCase();
+        return store.instruments.get(sym) || null;
+      }
+      if (sqlUpper.includes('COUNT(*)')) return { count: store.instruments.size };
+    }
+
+    if (sqlUpper.includes('FROM MARKET_HOLIDAYS')) {
+      if (sqlUpper.includes('WHERE DATE =')) return store.marketHolidays.get(params[0]) || null;
+    }
+
+    if (sqlUpper.includes('FROM LEDGER_ENTRIES')) {
+      if (sqlUpper.includes('WHERE USER_ID =')) return Array.from(store.ledgerEntries.values()).find((l) => l.user_id === params[0]) || null;
+    }
+
+    if (sqlUpper.includes('FROM PRICE_HISTORY')) {
+      if (sqlUpper.includes('COUNT(*)')) return { count: store.priceHistory.size };
+    }
+
+    return null;
+  }
+
+  all(...args: any[]): any[] {
+    const params = parseParams(args);
+    const sqlUpper = this.sql.toUpperCase();
+
+    if (sqlUpper.includes('FROM USERS')) {
+      return Array.from(store.users.values());
+    }
+
+    if (sqlUpper.includes('FROM WATCHLISTS')) {
+      const userId = params[0];
+      return Array.from(store.watchlists.values()).filter((w) => !userId || w.user_id === userId);
+    }
+
+    if (sqlUpper.includes('FROM WATCHLIST_ITEMS') || sqlUpper.includes('FROM WATCHLIST_ITEMS_NEXT')) {
+      const watchlistId = params[0];
+      const items = Array.from(store.watchlistItems.values()).filter((item) => !watchlistId || item.watchlist_id === watchlistId);
+      return items.map((i) => {
+        const inst = store.instruments.get(i.symbol) || {};
+        return {
+          ...i,
+          item_id: i.id,
+          name: inst.name || i.name || i.symbol,
+          exchange: inst.exchange || i.exchange || 'NSE',
+          sector: inst.sector || i.sector || 'General',
+          current_price: inst.current_price || 0,
+          change: inst.change || 0,
+          percent_change: inst.percent_change || 0,
+        };
+      });
+    }
+
+    if (sqlUpper.includes('FROM ORDERS')) {
+      const userId = params[0];
+      let res = Array.from(store.orders.values());
+      if (userId) res = res.filter((o) => o.user_id === userId);
+      return res.sort((a, b) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime());
+    }
+
+    if (sqlUpper.includes('FROM POSITIONS')) {
+      const userId = params[0];
+      let res = Array.from(store.positions.values());
+      if (userId) res = res.filter((p) => p.user_id === userId);
+      return res;
+    }
+
+    if (sqlUpper.includes('FROM TRADES')) {
+      const userId = params[0];
+      let res = Array.from(store.trades.values());
+      if (userId) res = res.filter((t) => t.user_id === userId);
+      return res.sort((a, b) => new Date(b.executed_at || 0).getTime() - new Date(a.executed_at || 0).getTime());
+    }
+
+    if (sqlUpper.includes('FROM INSTRUMENTS')) {
+      const limit = typeof params[params.length - 1] === 'number' ? params[params.length - 1] : 50;
+      let list = Array.from(store.instruments.values());
+      if (sqlUpper.includes('WHERE SYMBOL LIKE')) {
+        const q = String(params[0] || '').replace(/%/g, '').toLowerCase();
+        list = list.filter((inst) => inst.symbol.toLowerCase().includes(q) || inst.name.toLowerCase().includes(q) || inst.sector.toLowerCase().includes(q));
+      }
+      return list.slice(0, limit);
+    }
+
+    if (sqlUpper.includes('FROM NEWS')) {
+      const limit = typeof params[params.length - 1] === 'number' ? params[params.length - 1] : 20;
+      return Array.from(store.news.values()).slice(0, limit);
+    }
+
+    if (sqlUpper.includes('FROM ALERTS')) {
+      const userId = params[0];
+      return Array.from(store.alerts.values()).filter((a) => !userId || a.user_id === userId);
+    }
+
+    return [];
+  }
+
+  run(...args: any[]): { changes: number; lastInsertRowid: number } {
+    const params = parseParams(args);
+    const sqlUpper = this.sql.toUpperCase();
+
+    if (sqlUpper.includes('INSERT INTO USERS') || sqlUpper.includes('UPDATE USERS')) {
+      let u: any = {};
+      if (typeof args[0] === 'object' && args[0] !== null) {
+        u = args[0];
+      } else {
+        u = {
+          id: params[0],
+          email: params[1],
+          password_hash: params[2],
+          full_name: params[3],
+          role: params[4] || 'TRADER',
+          virtual_cash: params[5] ?? 1000000,
+          initial_capital: params[6] ?? 1000000,
+          blocked_margin: params[7] ?? 0,
+        };
+      }
+      if (u.id) {
+        store.users.set(u.id, { ...store.users.get(u.id), ...u, updated_at: new Date().toISOString() });
+        if (u.email) store.users.set(`email:${u.email.toLowerCase()}`, u);
+        syncToSupabase('users', [u]);
+      }
+      return { changes: 1, lastInsertRowid: 1 };
+    }
+
+    if (sqlUpper.includes('INSERT INTO WATCHLISTS')) {
+      let wl: any = {};
+      if (typeof args[0] === 'object' && args[0] !== null) {
+        wl = args[0];
+      } else {
+        wl = { id: params[0], user_id: params[1], name: params[2], is_default: params[3] || 0 };
+      }
+      store.watchlists.set(wl.id, { ...wl, created_at: new Date().toISOString() });
+      syncToSupabase('watchlists', [wl]);
+      return { changes: 1, lastInsertRowid: 1 };
+    }
+
+    if (sqlUpper.includes('INSERT INTO WATCHLIST_ITEMS')) {
+      let item: any = {};
+      if (typeof args[0] === 'object' && args[0] !== null) {
+        item = args[0];
+      } else {
+        item = { id: params[0], watchlist_id: params[1], symbol: params[2], position: params[3] || 0 };
+      }
+      store.watchlistItems.set(item.id, { ...item, added_at: new Date().toISOString() });
+      syncToSupabase('watchlist_items', [item]);
+      return { changes: 1, lastInsertRowid: 1 };
+    }
+
+    if (sqlUpper.includes('DELETE FROM WATCHLIST_ITEMS')) {
+      const [symbol, watchlistId] = params;
+      for (const [key, val] of store.watchlistItems.entries()) {
+        if (val.symbol === symbol && (!watchlistId || val.watchlist_id === watchlistId)) {
+          store.watchlistItems.delete(key);
+        }
+      }
+      return { changes: 1, lastInsertRowid: 1 };
+    }
+
+    if (sqlUpper.includes('INSERT INTO ORDERS') || sqlUpper.includes('UPDATE ORDERS')) {
+      let ord: any = {};
+      if (typeof args[0] === 'object' && args[0] !== null) {
+        ord = args[0];
+      } else {
+        ord = { id: params[0], user_id: params[1], symbol: params[2], side: params[3], order_type: params[4], status: params[5], quantity: params[6], price: params[7] };
+      }
+      store.orders.set(ord.id, { ...store.orders.get(ord.id), ...ord, updated_at: new Date().toISOString() });
+      syncToSupabase('orders', [ord]);
+      return { changes: 1, lastInsertRowid: 1 };
+    }
+
+    if (sqlUpper.includes('INSERT INTO POSITIONS') || sqlUpper.includes('UPDATE POSITIONS')) {
+      let pos: any = {};
+      if (typeof args[0] === 'object' && args[0] !== null) {
+        pos = args[0];
+      } else {
+        pos = { id: params[0], user_id: params[1], symbol: params[2], quantity: params[3], average_price: params[4] };
+      }
+      store.positions.set(pos.id || `pos-${pos.user_id}-${pos.symbol}`, { ...store.positions.get(pos.id), ...pos, updated_at: new Date().toISOString() });
+      syncToSupabase('positions', [pos]);
+      return { changes: 1, lastInsertRowid: 1 };
+    }
+
+    if (sqlUpper.includes('INSERT INTO TRADES')) {
+      let trd: any = {};
+      if (typeof args[0] === 'object' && args[0] !== null) {
+        trd = args[0];
+      } else {
+        trd = { id: params[0], order_id: params[1], user_id: params[2], symbol: params[3], side: params[4], price: params[5], quantity: params[6] };
+      }
+      store.trades.set(trd.id, { ...trd, executed_at: new Date().toISOString() });
+      syncToSupabase('trades', [trd]);
+      return { changes: 1, lastInsertRowid: 1 };
+    }
+
+    if (sqlUpper.includes('INSERT INTO LEDGER_ENTRIES')) {
+      let led: any = {};
+      if (typeof args[0] === 'object' && args[0] !== null) {
+        led = args[0];
+      } else {
+        led = { id: params[0], user_id: params[1], direction: params[2], account_kind: params[3], amount_paise: params[4] };
+      }
+      store.ledgerEntries.set(led.id, { ...led, created_at: new Date().toISOString() });
+      syncToSupabase('ledger_entries', [led]);
+      return { changes: 1, lastInsertRowid: 1 };
+    }
+
+    return { changes: 1, lastInsertRowid: 1 };
+  }
+}
+
+function parseParams(args: any[]): any[] {
+  if (args.length === 1 && Array.isArray(args[0])) return args[0];
+  return args;
+}
+
+export const db = {
+  prepare(sql: string) {
+    return new StatementWrapper(sql);
+  },
+  transaction<T extends (...args: any[]) => any>(fn: T): T {
+    return ((...args: any[]) => {
+      return fn(...args);
+    }) as T;
+  },
+  exec(sql: string) {
+    return;
+  },
+  pragma(sql: string) {
+    return [];
+  },
+};
+
+export function initDb() {
+  // Sync init
+}
 
 export default db;

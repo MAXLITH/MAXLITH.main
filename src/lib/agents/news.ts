@@ -1,6 +1,7 @@
 import { BaseAgent, BaseAgentRunParams } from './base';
 import db from '../db';
 import { z } from 'zod';
+import { fetchLiveNews } from '../news-service';
 
 export interface NewsArticleItem {
   id: string;
@@ -50,15 +51,19 @@ export class NewsAgent extends BaseAgent<BaseAgentRunParams, NewsAgentOutput> {
   readonly outputSchema = NewsOutputSchema;
 
   protected async execute(input: BaseAgentRunParams): Promise<NewsAgentOutput> {
-    const symbol = (input.symbol || 'NIFTY50').toUpperCase();
+    const symbol = (input.symbol || 'RELIANCE').toUpperCase();
 
-    // Query news matching symbol, or general macro news
-    const articles = db.prepare(`
-      SELECT * FROM news 
-      WHERE symbol = ? OR symbol = 'BANKNIFTY' OR symbol IS NULL
-      ORDER BY published_at DESC 
-      LIMIT 5
-    `).all(symbol) as any[];
+    const liveItems = await fetchLiveNews(symbol, 5);
+    let articles: any[] = liveItems;
+
+    if (!articles || articles.length === 0) {
+      articles = db.prepare(`
+        SELECT * FROM news 
+        WHERE symbol = ? OR symbol = 'BANKNIFTY' OR symbol IS NULL
+        ORDER BY published_at DESC 
+        LIMIT 5
+      `).all(symbol) as any[];
+    }
 
     if (articles.length === 0) {
       return {
@@ -68,7 +73,7 @@ export class NewsAgent extends BaseAgent<BaseAgentRunParams, NewsAgentOutput> {
         overallSentiment: 'NEUTRAL',
         topHeadlines: [],
         eventClassification: 'MACRO',
-        impactAssessment: `No specific corporate announcements logged recently for ${symbol}. Macro sentiment remains balanced.`,
+        impactAssessment: `No specific news headlines returned recently for ${symbol}. Macro sentiment remains balanced.`,
         disclaimer: 'Paper trading / educational, not investment advice.',
       };
     }

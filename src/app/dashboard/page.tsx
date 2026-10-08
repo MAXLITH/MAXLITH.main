@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { getAuthSession } from '@/lib/auth';
 import { getAllInstruments, getMarketSessionStatus, marketDataService } from '@/lib/market-data';
 import { getUserPortfolioSummary } from '@/lib/paper-trading';
+import { runTechAgent } from '@/lib/ai';
 import {
   TrendingUp,
   TrendingDown,
@@ -28,6 +29,7 @@ export default async function UserDashboard() {
   const sortedByChange = [...instruments].sort((a, b) => b.percent_change - a.percent_change);
   const topGainers = sortedByChange.slice(0, 3);
   const topLosers = sortedByChange.slice(-3).reverse();
+  const techReport = runTechAgent('RELIANCE');
 
   return (
     <div className="space-y-6">
@@ -251,48 +253,44 @@ export default async function UserDashboard() {
           <div className="fintech-card p-4 border-l-[3px] border-l-max-ai-primary">
             <div className="flex items-center justify-between mb-4">
               <div>
-                <div className="text-[10px] font-mono uppercase tracking-widest text-max-ai-secondary font-bold">AI Signal</div>
-                <div className="text-sm font-bold text-white mt-0.5">RELIANCE <span className="text-max-market-positive ml-1 text-[10px]">LONG</span></div>
+                <div className="text-[10px] font-mono uppercase tracking-widest text-max-ai-secondary font-bold">Tech Agent Signal</div>
+                <div className="text-sm font-bold text-white mt-0.5">RELIANCE <span className="text-max-market-positive ml-1 text-[10px] uppercase">{techReport.status}</span></div>
               </div>
               <Bot className="w-4 h-4 text-max-ai-primary" />
             </div>
             
             <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-[11px] font-mono mb-4">
               <div className="flex justify-between">
-                <span className="text-max-text-muted">Confidence</span>
-                <span className="text-max-ai-secondary font-bold">87%</span>
+                <span className="text-max-text-muted">RSI (14D)</span>
+                <span className="text-max-ai-secondary font-bold">{techReport.metrics.rsi14 || '—'}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-max-text-muted">Momentum</span>
-                <span className="text-max-market-positive">Strong</span>
+                <span className="text-max-text-muted">SMA (20D)</span>
+                <span className="text-white font-bold">{techReport.metrics.sma20 || '—'}</span>
               </div>
-              <div className="flex justify-between">
-                <span className="text-max-text-muted">Trend</span>
-                <span className="text-max-market-positive">Bullish</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-max-text-muted">Risk</span>
-                <span className="text-max-warning">Medium</span>
+              <div className="flex justify-between col-span-2">
+                <span className="text-max-text-muted">Structure</span>
+                <span className="text-max-market-positive">{techReport.metrics.trend || 'Calculated from OHLCV'}</span>
               </div>
             </div>
 
             <div className="grid grid-cols-1 gap-1.5 text-[11px] font-mono mb-4 border-y border-max-border py-2.5">
               <div className="flex justify-between">
-                <span className="text-max-text-muted">Entry</span>
-                <span className="text-white">2,965.00</span>
+                <span className="text-max-text-muted">LTP</span>
+                <span className="text-white font-bold">{techReport.metrics.currentPrice || '—'}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-max-text-muted">Target</span>
-                <span className="text-max-market-positive">3,050.00</span>
+                <span className="text-max-text-muted">30D Resistance</span>
+                <span className="text-max-market-positive">{techReport.metrics.resistance30d || '—'}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-max-text-muted">Stop Loss</span>
-                <span className="text-max-market-negative">2,940.00</span>
+                <span className="text-max-text-muted">30D Support</span>
+                <span className="text-max-market-negative">{techReport.metrics.support30d || '—'}</span>
               </div>
             </div>
 
             <p className="text-[10px] text-max-text-primary leading-relaxed mb-4">
-              Momentum strengthened after 2,965 support. Technical Agent detects 20-day SMA holding.
+              {techReport.analysis}
             </p>
             
             <Link
