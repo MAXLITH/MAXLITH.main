@@ -3,7 +3,7 @@ import { cacheGet, cacheSet } from '../cache';
 import { config } from '../config';
 import { getMarketSessionStatus, MarketSessionStatus } from '../market-hours';
 import { LiveQuote, IndexQuote, OHLCV, MarketDataProvider } from './types';
-import { YahooFinanceProvider } from './providers/yahoo';
+import { UpstoxProvider } from './providers/upstox';
 import { SupabaseFallbackProvider } from './providers/database';
 
 export class MarketDataService {
@@ -12,7 +12,7 @@ export class MarketDataService {
 
   constructor() {
     this.dbFallback = new SupabaseFallbackProvider();
-    this.providers = [new YahooFinanceProvider(), this.dbFallback];
+    this.providers = [new UpstoxProvider(), this.dbFallback];
   }
 
   normalizeSymbol(symbol: string): string {
