@@ -82,16 +82,16 @@ export default function Sidebar({ user }: { user: any }) {
   ];
 
   return (
-    <aside className="w-64 bg-[#0d121c] border-r border-slate-800/80 flex flex-col h-screen sticky top-0">
+    <aside className="w-64 bg-max-bg-elevated border-r border-max-border flex flex-col h-screen sticky top-0">
       {/* Brand Header */}
-      <div className="p-4 border-b border-slate-800/80 flex items-center justify-between">
+      <div className="p-4 border-b border-max-border flex items-center justify-between">
         <Link href="/dashboard" className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center text-white font-bold text-sm shadow-md shadow-blue-500/20">
+          <div className="w-7 h-7 rounded bg-max-brand-primary/20 flex items-center justify-center text-max-brand-primary font-bold text-xs">
             M
           </div>
           <div>
             <div className="font-bold text-white tracking-tight leading-none text-base">MAXLITH</div>
-            <div className="text-[9px] font-mono text-blue-400 tracking-wider">PAPER TRADING V1</div>
+            <div className="text-[9px] font-mono text-max-brand-primary tracking-wider">PAPER TRADING V1</div>
           </div>
         </Link>
       </div>
@@ -105,23 +105,23 @@ export default function Sidebar({ user }: { user: any }) {
             <Link
               key={item.href}
               href={item.href}
-              className={`flex items-center justify-between px-3 py-2.5 rounded-lg text-xs font-medium transition-all ${
+              className={`flex items-center justify-between px-3 py-2 rounded-sm text-[11px] font-medium transition-all ${
                 isActive
-                  ? 'bg-blue-600 text-white font-semibold shadow-md shadow-blue-600/30'
-                  : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
+                  ? 'bg-max-surface-hover text-max-brand-primary font-semibold'
+                  : 'text-max-text-secondary hover:text-white hover:bg-max-surface-hover/50'
               }`}
             >
               <div className="flex items-center gap-3">
-                <Icon className={`w-4 h-4 ${isActive ? 'text-white' : item.highlight ? 'text-blue-400' : 'text-slate-400'}`} />
+                <Icon className={`w-3.5 h-3.5 ${isActive ? 'text-max-brand-primary' : item.highlight ? 'text-max-brand-secondary' : 'text-max-text-muted'}`} />
                 <span>{item.name}</span>
               </div>
               <div className="flex items-center gap-1.5">
                 {item.badgeCount && item.badgeCount > 0 ? (
-                  <span className="px-1.5 py-0.5 rounded-full text-[10px] font-mono bg-rose-500 text-white font-bold leading-none animate-pulse">
+                  <span className="px-1.5 py-0.5 rounded text-[10px] font-mono bg-rose-500 text-white font-bold leading-none animate-pulse">
                     {item.badgeCount}
                   </span>
                 ) : item.highlight && !isActive ? (
-                  <span className="w-1.5 h-1.5 rounded-full bg-blue-400"></span>
+                  <span className="w-1.5 h-1.5 rounded bg-blue-400"></span>
                 ) : null}
               </div>
             </Link>
@@ -130,16 +130,16 @@ export default function Sidebar({ user }: { user: any }) {
 
         {/* Admin Link if role is ADMIN */}
         {user?.role === 'ADMIN' && (
-          <div className="pt-3 mt-3 border-t border-slate-800/60">
+          <div className="pt-3 mt-3 border-t border-max-border">
             <Link
               href="/admin"
-              className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs font-medium transition-all ${
+              className={`flex items-center gap-3 px-3 py-2 rounded-sm text-[11px] font-medium transition-all ${
                 pathname.startsWith('/admin')
-                  ? 'bg-purple-600 text-white font-semibold shadow-md shadow-purple-600/30'
-                  : 'text-purple-400 hover:bg-purple-950/40 border border-purple-500/20'
+                  ? 'bg-max-brand-primary/10 text-max-brand-primary font-semibold'
+                  : 'text-max-brand-secondary hover:bg-max-surface-hover/50'
               }`}
             >
-              <ShieldAlert className="w-4 h-4 text-purple-400" />
+              <ShieldAlert className="w-3.5 h-3.5 text-max-brand-secondary" />
               <span>Admin Telemetry</span>
             </Link>
           </div>
@@ -147,21 +147,21 @@ export default function Sidebar({ user }: { user: any }) {
       </nav>
 
       {/* User Footer Account Menu */}
-      <div className="p-3 border-t border-slate-800/80 bg-[#0a0e16]">
+      <div className="p-3 border-t border-max-border bg-max-bg-elevated">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2.5 overflow-hidden">
-            <div className="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center font-bold text-xs text-slate-300 border border-slate-700">
+            <div className="w-8 h-8 rounded bg-max-surface flex items-center justify-center font-bold text-xs text-max-text-primary border border-max-border-strong">
               {user?.fullName?.charAt(0) || 'U'}
             </div>
             <div className="truncate">
               <p className="text-xs font-semibold text-white truncate">{user?.fullName || 'Trader'}</p>
-              <p className="text-[10px] font-mono text-slate-500 truncate">{user?.email}</p>
+              <p className="text-[10px] font-mono text-max-text-muted truncate">{user?.email}</p>
             </div>
           </div>
           <button
             onClick={handleLogout}
             title="Sign Out"
-            className="p-1.5 rounded-lg text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 transition-colors"
+            className="p-1.5 rounded text-max-text-secondary hover:text-rose-400 hover:bg-rose-500/10 transition-colors"
           >
             <LogOut className="w-4 h-4" />
           </button>

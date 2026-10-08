@@ -25,20 +25,20 @@ export default function ChartToolbar({
         id="chart-type"
         value={chartType}
         onChange={(event) => onChartTypeChange(event.target.value as ChartType)}
-        className="h-8 rounded border border-slate-700 bg-[#101723] px-2 text-[11px] text-slate-200 outline-none focus:border-blue-500"
+        className="h-7 rounded border border-max-border bg-max-surface px-2 text-[11px] text-max-text-primary outline-none focus:border-max-brand-primary"
       >
         {CHART_TYPES.map((type) => <option key={type.value} value={type.value}>{type.label}</option>)}
       </select>
       <details className="relative">
-        <summary className="flex h-8 cursor-pointer list-none items-center rounded border border-slate-700 bg-[#101723] px-2 text-[11px] text-slate-300 hover:border-slate-600">Indicators{indicators.length ? ` · ${indicators.length}` : ''}</summary>
-        <div className="absolute left-0 top-9 z-20 w-40 rounded border border-slate-700 bg-[#111821] p-2 shadow-xl">
+        <summary className="flex h-7 cursor-pointer list-none items-center rounded border border-max-border bg-max-surface px-2 text-[11px] text-max-text-primary hover:bg-max-surface-hover">Indicators{indicators.length ? ` · ${indicators.length}` : ''}</summary>
+        <div className="absolute left-0 top-8 z-20 w-44 rounded border border-max-border bg-max-bg-elevated p-2 shadow-lg font-mono">
           {(['SMA20', 'EMA20', 'VWAP'] as const).map((indicator) => (
-            <label key={indicator} className="flex cursor-pointer items-center gap-2 rounded px-1.5 py-1.5 text-[10px] text-slate-300 hover:bg-slate-800">
-              <input type="checkbox" checked={indicators.includes(indicator)} onChange={(event) => onIndicatorsChange(event.target.checked ? [...indicators, indicator] : indicators.filter((item) => item !== indicator))} />
+            <label key={indicator} className="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-[10px] text-max-text-primary hover:bg-max-surface-hover">
+              <input type="checkbox" checked={indicators.includes(indicator)} onChange={(event) => onIndicatorsChange(event.target.checked ? [...indicators, indicator] : indicators.filter((item) => item !== indicator))} className="accent-max-brand-primary" />
               {indicator}
             </label>
           ))}
-          <p className="px-1.5 pt-1 text-[8px] text-slate-600">Overlay indicators · calculated from verified OHLCV</p>
+          <p className="px-1.5 pt-1 text-[8px] text-max-text-muted border-t border-max-border mt-1">Calculated from verified OHLCV</p>
         </div>
       </details>
       <div className="flex items-center gap-0.5 overflow-x-auto" role="group" aria-label="Chart timeframe">
@@ -48,8 +48,8 @@ export default function ChartToolbar({
             type="button"
             aria-pressed={resolution === item.value}
             onClick={() => onResolutionChange(item.value)}
-            className={`h-8 min-w-8 rounded px-2 text-[11px] font-medium transition-colors ${
-              resolution === item.value ? 'bg-blue-600/20 text-blue-300' : 'text-slate-400 hover:bg-slate-800 hover:text-white'
+            className={`h-7 min-w-7 rounded px-2 text-[11px] font-mono font-medium transition-colors ${
+              resolution === item.value ? 'bg-max-brand-primary/20 text-max-brand-primary font-bold' : 'text-max-text-secondary hover:bg-max-surface-hover hover:text-white'
             }`}
           >
             {item.label}

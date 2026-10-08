@@ -99,10 +99,10 @@ export default function WatchlistPage() {
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-xl font-bold text-white flex items-center gap-2">
-            <Bookmark className="w-5 h-5 text-blue-400" />
+            <Bookmark className="w-5 h-5 text-max-brand-primary" />
             <span>Personal Stock Watchlist</span>
           </h1>
-          <p className="text-xs text-slate-400 mt-1">
+          <p className="text-xs text-max-text-secondary mt-1">
             Monitor real-time price movements, daily % change, and volumes with live SSE feeds for your preferred Indian market instruments.
           </p>
         </div>
@@ -113,11 +113,11 @@ export default function WatchlistPage() {
             placeholder="Add symbol (e.g. INFY)..."
             value={newSymbol}
             onChange={(e) => setNewSymbol(e.target.value)}
-            className="bg-[#121824] border border-slate-800 focus:border-blue-500 text-xs text-white placeholder-slate-500 rounded-lg px-3.5 py-2 outline-none font-mono uppercase"
+            className="bg-max-surface border border-max-border focus:border-blue-500 text-xs text-white placeholder-slate-500 rounded px-3.5 py-2 outline-none font-mono uppercase"
           />
           <button
             type="submit"
-            className="px-3.5 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-medium text-xs transition-all flex items-center gap-1"
+            className="px-3.5 py-2 rounded bg-blue-600 hover:bg-blue-500 text-white font-medium text-xs transition-all flex items-center gap-1"
           >
             <Plus className="w-4 h-4" />
             <span>Add Stock</span>
@@ -125,19 +125,19 @@ export default function WatchlistPage() {
         </form>
       </div>
 
-      {message && <p role="status" className="rounded-lg border border-amber-900/50 bg-amber-950/20 px-3 py-2 text-[11px] text-amber-200">{message}</p>}
+      {message && <p role="status" className="rounded border border-amber-900/50 bg-amber-950/20 px-3 py-2 text-[11px] text-amber-200">{message}</p>}
 
       {/* MULTIPLE NAMED WATCHLISTS BAR */}
-      <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+      <div className="flex items-center justify-between border-b border-max-border pb-3">
         <div className="flex items-center gap-2 overflow-x-auto text-xs font-mono">
           {watchlists.map((wl) => (
             <button
               key={wl.id}
               onClick={() => fetchWatchlist(wl.id)}
-              className={`px-3 py-1.5 rounded-lg transition-all ${
+              className={`px-3 py-1.5 rounded transition-all ${
                 activeWatchlist?.id === wl.id
                   ? 'bg-blue-600 text-white font-semibold'
-                  : 'bg-[#121824] text-slate-400 hover:text-white border border-slate-800'
+                  : 'bg-max-surface text-max-text-secondary hover:text-white border border-max-border'
               }`}
             >
               {wl.name}
@@ -145,7 +145,7 @@ export default function WatchlistPage() {
           ))}
           <button
             onClick={() => setShowNewListForm(!showNewListForm)}
-            className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs transition-colors"
+            className="flex items-center gap-1 px-3 py-1.5 rounded bg-max-surface hover:bg-max-surface-hover text-max-text-primary text-xs transition-colors"
           >
             <ListPlus className="w-3.5 h-3.5" />
             <span>New List</span>
@@ -154,18 +154,18 @@ export default function WatchlistPage() {
       </div>
 
       {showNewListForm && (
-        <form onSubmit={handleCreateList} className="p-3.5 rounded-xl bg-slate-900 border border-slate-800 flex items-center gap-2 max-w-md">
+        <form onSubmit={handleCreateList} className="p-3.5 rounded bg-max-bg border border-max-border flex items-center gap-2 max-w-md">
           <input
             type="text"
             required
             placeholder="Watchlist name (e.g. Banking Stocks)..."
             value={newListName}
             onChange={(e) => setNewListName(e.target.value)}
-            className="flex-1 bg-[#0d121c] border border-slate-800 focus:border-blue-500 text-xs text-white px-3 py-1.5 rounded-lg outline-none font-mono"
+            className="flex-1 bg-[#0d121c] border border-max-border focus:border-blue-500 text-xs text-white px-3 py-1.5 rounded outline-none font-mono"
           />
           <button
             type="submit"
-            className="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold font-mono transition-all"
+            className="px-3 py-1.5 rounded bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold font-mono transition-all"
           >
             Create
           </button>
@@ -175,15 +175,15 @@ export default function WatchlistPage() {
       {/* WATCHLIST ITEMS TABLE */}
       <div className="fintech-card overflow-hidden">
         {loading ? (
-          <div className="p-8 text-center text-slate-500 font-mono text-xs">Loading watchlist...</div>
+          <div className="p-4 text-center text-max-text-muted font-mono text-xs">Loading watchlist...</div>
         ) : items.length === 0 ? (
-          <div className="p-8 text-center text-slate-500 font-mono text-xs">
+          <div className="p-4 text-center text-max-text-muted font-mono text-xs">
             Your watchlist is empty. Add ticker symbols above to track stock prices with live SSE ticks.
           </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs font-mono">
-              <thead className="bg-[#0d121c] text-slate-400 text-[10px] uppercase border-b border-slate-800">
+              <thead className="bg-[#0d121c] text-max-text-secondary text-[10px] uppercase border-b border-max-border">
                 <tr>
                   <th className="py-3 px-4">Instrument</th>
                   <th className="py-3 px-4">Sector</th>
@@ -194,49 +194,49 @@ export default function WatchlistPage() {
                   <th className="py-3 px-4 text-right">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-800/60">
+              <tbody className="divide-y divide-max-border">
                 {items.map((item) => (
-                  <tr key={item.symbol} className="hover:bg-slate-800/30">
+                  <tr key={item.symbol} className="hover:bg-max-surface/30">
                     <td className="py-3.5 px-4">
                       <div className="flex items-center gap-2">
-                        <Link href={`/dashboard/markets/${encodeURIComponent(item.symbol)}`} className="font-bold text-white hover:text-blue-400 transition-colors">
+                        <Link href={`/dashboard/markets/${encodeURIComponent(item.symbol)}`} className="font-bold text-white hover:text-max-brand-primary transition-colors">
                           {item.ticker || item.symbol}
                         </Link>
                         {item.exchange && (
-                          <span className="text-[9px] px-1.5 py-0.5 rounded bg-slate-800 text-slate-400">{item.exchange}</span>
+                          <span className="text-[9px] px-1.5 py-0.5 rounded bg-max-surface text-max-text-secondary">{item.exchange}</span>
                         )}
                       </div>
-                      <div className="text-[10px] text-slate-400 font-sans truncate max-w-[160px]">{item.name}</div>
+                      <div className="text-[10px] text-max-text-secondary font-sans truncate max-w-[160px]">{item.name}</div>
                     </td>
-                    <td className="py-3.5 px-4 text-slate-400 text-[11px] font-sans">{item.sector}</td>
+                    <td className="py-3.5 px-4 text-max-text-secondary text-[11px] font-sans">{item.sector}</td>
                     <td className="py-3.5 px-4 text-right font-bold text-white">{quotes[item.symbol] ? `₹${quotes[item.symbol]!.last.toLocaleString('en-IN', { minimumFractionDigits: 2 })}` : '—'}</td>
-                    <td className={`py-3.5 px-4 text-right font-bold ${quotes[item.symbol] ? quotes[item.symbol]!.change >= 0 ? 'text-emerald-400' : 'text-rose-400' : 'text-slate-600'}`}>
+                    <td className={`py-3.5 px-4 text-right font-bold ${quotes[item.symbol] ? quotes[item.symbol]!.change >= 0 ? 'text-max-market-positive' : 'text-rose-400' : 'text-slate-600'}`}>
                       {quotes[item.symbol] ? `${quotes[item.symbol]!.change > 0 ? '+' : ''}${quotes[item.symbol]!.changePercent.toFixed(2)}%` : 'No quote'}
                     </td>
-                    <td className="py-3.5 px-4 text-right text-slate-300">
+                    <td className="py-3.5 px-4 text-right text-max-text-primary">
                       {quotes[item.symbol] ? quotes[item.symbol]!.volume.toLocaleString('en-IN') : '—'}
                     </td>
-                    <td className="py-3.5 px-4 text-right text-slate-400 text-[11px]">
+                    <td className="py-3.5 px-4 text-right text-max-text-secondary text-[11px]">
                       —
                     </td>
                     <td className="py-3.5 px-4 text-right">
                       <div className="flex items-center justify-end gap-1.5">
                         <Link
                           href={`/dashboard/paper-trading?symbol=${item.symbol}`}
-                          className="px-2.5 py-1 rounded bg-emerald-600/20 hover:bg-emerald-600 text-emerald-400 hover:text-white transition-all text-[11px]"
+                          className="px-2.5 py-1 rounded bg-emerald-600/20 hover:bg-emerald-600 text-max-market-positive hover:text-white transition-all text-[11px]"
                         >
                           Trade
                         </Link>
                         <Link
                           href={`/dashboard/markets/${encodeURIComponent(item.symbol)}`}
-                          className="px-2.5 py-1 rounded bg-blue-600/20 hover:bg-blue-600 text-blue-400 hover:text-white transition-all text-[11px]"
+                          className="px-2.5 py-1 rounded bg-blue-600/20 hover:bg-blue-600 text-max-brand-primary hover:text-white transition-all text-[11px]"
                         >
                           Analyze
                         </Link>
                         <button
                           onClick={() => handleRemoveItem(item.symbol)}
                           title="Remove from Watchlist"
-                          className="p-1 rounded text-slate-500 hover:text-rose-400 hover:bg-rose-500/10 transition-colors"
+                          className="p-1 rounded text-max-text-muted hover:text-rose-400 hover:bg-rose-500/10 transition-colors"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
                         </button>

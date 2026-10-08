@@ -84,17 +84,17 @@ export default function OrdersPage() {
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-xl font-bold text-white flex items-center gap-2">
-            <FileText className="w-5 h-5 text-blue-400" />
+            <FileText className="w-5 h-5 text-max-brand-primary" />
             <span>Order Book &amp; Trade History</span>
           </h1>
-          <p className="text-xs text-slate-400 mt-1">
+          <p className="text-xs text-max-text-secondary mt-1">
             Complete audit ledger of market, limit, and stop-loss orders with live cancellation and trade executions.
           </p>
         </div>
 
         <button
           onClick={fetchOrdersAndTrades}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-mono transition-all border border-slate-700"
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded bg-max-surface hover:bg-max-surface-hover text-max-text-primary text-xs font-mono transition-all border border-max-border-strong"
         >
           <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
           <span>Refresh</span>
@@ -103,46 +103,46 @@ export default function OrdersPage() {
 
       {actionMsg && (
         <div
-          className={`p-3 rounded-lg text-xs flex items-center justify-between ${
-            actionMsg.success ? 'bg-emerald-500/10 border border-emerald-500/30 text-emerald-400' : 'bg-rose-500/10 border border-rose-500/30 text-rose-400'
+          className={`p-3 rounded text-xs flex items-center justify-between ${
+            actionMsg.success ? 'bg-emerald-500/10 border border-emerald-500/30 text-max-market-positive' : 'bg-rose-500/10 border border-rose-500/30 text-rose-400'
           }`}
         >
           <span>{actionMsg.message}</span>
-          <button onClick={() => setActionMsg(null)} className="text-slate-400 hover:text-white">
+          <button onClick={() => setActionMsg(null)} className="text-max-text-secondary hover:text-white">
             <X className="w-4 h-4" />
           </button>
         </div>
       )}
 
       {/* FILTER TABS */}
-      <div className="flex items-center gap-1.5 border-b border-slate-800 pb-2 overflow-x-auto text-xs font-mono">
+      <div className="flex items-center gap-1.5 border-b border-max-border pb-2 overflow-x-auto text-xs font-mono">
         <button
           onClick={() => setActiveTab('ALL')}
-          className={`px-3 py-1.5 rounded-lg transition-all ${activeTab === 'ALL' ? 'bg-blue-600 text-white font-semibold' : 'text-slate-400 hover:text-white'}`}
+          className={`px-3 py-1.5 rounded transition-all ${activeTab === 'ALL' ? 'bg-blue-600 text-white font-semibold' : 'text-max-text-secondary hover:text-white'}`}
         >
           All Orders ({orders.length})
         </button>
         <button
           onClick={() => setActiveTab('OPEN')}
-          className={`px-3 py-1.5 rounded-lg transition-all ${activeTab === 'OPEN' ? 'bg-blue-600 text-white font-semibold' : 'text-slate-400 hover:text-white'}`}
+          className={`px-3 py-1.5 rounded transition-all ${activeTab === 'OPEN' ? 'bg-blue-600 text-white font-semibold' : 'text-max-text-secondary hover:text-white'}`}
         >
           Open / Pending ({orders.filter((o) => o.status === 'PENDING' || o.status === 'AMO').length})
         </button>
         <button
           onClick={() => setActiveTab('EXECUTED')}
-          className={`px-3 py-1.5 rounded-lg transition-all ${activeTab === 'EXECUTED' ? 'bg-blue-600 text-white font-semibold' : 'text-slate-400 hover:text-white'}`}
+          className={`px-3 py-1.5 rounded transition-all ${activeTab === 'EXECUTED' ? 'bg-blue-600 text-white font-semibold' : 'text-max-text-secondary hover:text-white'}`}
         >
           Executed ({orders.filter((o) => o.status === 'EXECUTED').length})
         </button>
         <button
           onClick={() => setActiveTab('CANCELLED_REJECTED')}
-          className={`px-3 py-1.5 rounded-lg transition-all ${activeTab === 'CANCELLED_REJECTED' ? 'bg-blue-600 text-white font-semibold' : 'text-slate-400 hover:text-white'}`}
+          className={`px-3 py-1.5 rounded transition-all ${activeTab === 'CANCELLED_REJECTED' ? 'bg-blue-600 text-white font-semibold' : 'text-max-text-secondary hover:text-white'}`}
         >
           Cancelled / Rejected ({orders.filter((o) => o.status === 'CANCELLED' || o.status === 'REJECTED').length})
         </button>
         <button
           onClick={() => setActiveTab('TRADES')}
-          className={`px-3 py-1.5 rounded-lg transition-all ${activeTab === 'TRADES' ? 'bg-purple-600 text-white font-semibold' : 'text-purple-400 hover:text-white'}`}
+          className={`px-3 py-1.5 rounded transition-all ${activeTab === 'TRADES' ? 'bg-purple-600 text-white font-semibold' : 'text-purple-400 hover:text-white'}`}
         >
           Trade Book ({trades.length})
         </button>
@@ -150,33 +150,33 @@ export default function OrdersPage() {
 
       {/* MODAL FOR MODIFYING PENDING ORDER */}
       {editingOrder && (
-        <div className="p-4 rounded-xl bg-slate-900 border border-blue-500/40 space-y-3 font-mono text-xs">
+        <div className="p-4 rounded bg-max-bg border border-blue-500/40 space-y-3 font-mono text-xs">
           <div className="flex items-center justify-between">
             <span className="font-bold text-white">Modify Pending Order ({editingOrder.id})</span>
-            <button onClick={() => setEditingOrder(null)} className="text-slate-400 hover:text-white">
+            <button onClick={() => setEditingOrder(null)} className="text-max-text-secondary hover:text-white">
               <X className="w-4 h-4" />
             </button>
           </div>
           <form onSubmit={handleSaveModification} className="grid grid-cols-1 sm:grid-cols-3 gap-3 items-end">
             <div>
-              <label className="block text-[10px] text-slate-400 uppercase mb-1">Quantity</label>
+              <label className="block text-[10px] text-max-text-secondary uppercase mb-1">Quantity</label>
               <input
                 type="number"
                 min="1"
                 required
                 value={editQty}
                 onChange={(e) => setEditQty(parseInt(e.target.value) || 1)}
-                className="w-full bg-[#0d121c] border border-slate-800 rounded px-3 py-2 text-white outline-none focus:border-blue-500"
+                className="w-full bg-[#0d121c] border border-max-border rounded px-3 py-2 text-white outline-none focus:border-blue-500"
               />
             </div>
             <div>
-              <label className="block text-[10px] text-slate-400 uppercase mb-1">Limit Price (₹)</label>
+              <label className="block text-[10px] text-max-text-secondary uppercase mb-1">Limit Price (₹)</label>
               <input
                 type="number"
                 step="0.05"
                 value={editPrice}
                 onChange={(e) => setEditPrice(e.target.value)}
-                className="w-full bg-[#0d121c] border border-slate-800 rounded px-3 py-2 text-white outline-none focus:border-blue-500"
+                className="w-full bg-[#0d121c] border border-max-border rounded px-3 py-2 text-white outline-none focus:border-blue-500"
               />
             </div>
             <button
@@ -193,13 +193,13 @@ export default function OrdersPage() {
       <div className="fintech-card p-5">
         {activeTab === 'TRADES' ? (
           trades.length === 0 ? (
-            <div className="p-8 text-center text-slate-500 font-mono text-xs bg-[#0d121c] rounded-lg">
+            <div className="p-4 text-center text-max-text-muted font-mono text-xs bg-[#0d121c] rounded">
               No trade executions recorded yet.
             </div>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs font-mono">
-                <thead className="bg-[#0d121c] text-slate-400 text-[10px] uppercase border-b border-slate-800">
+                <thead className="bg-[#0d121c] text-max-text-secondary text-[10px] uppercase border-b border-max-border">
                   <tr>
                     <th className="py-3 px-4">Trade ID</th>
                     <th className="py-3 px-4">Timestamp</th>
@@ -211,7 +211,7 @@ export default function OrdersPage() {
                     <th className="py-3 px-4 text-right">Charges</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-800/60">
+                <tbody className="divide-y divide-max-border">
                   {trades.map((tr) => {
                     let totalCharges = 0;
                     if (tr.charges_json) {
@@ -220,19 +220,19 @@ export default function OrdersPage() {
                       } catch {}
                     }
                     return (
-                      <tr key={tr.id} className="hover:bg-slate-800/30">
-                        <td className="py-3.5 px-4 text-[10px] text-slate-400">{tr.id}</td>
-                        <td className="py-3.5 px-4 text-slate-400 text-[10px]">{tr.created_at}</td>
+                      <tr key={tr.id} className="hover:bg-max-surface/30">
+                        <td className="py-3.5 px-4 text-[10px] text-max-text-secondary">{tr.id}</td>
+                        <td className="py-3.5 px-4 text-max-text-secondary text-[10px]">{tr.created_at}</td>
                         <td className="py-3.5 px-4 font-bold text-white">{tr.symbol}</td>
-                        <td className={`py-3.5 px-4 font-bold ${tr.side === 'BUY' ? 'text-emerald-400' : 'text-rose-400'}`}>
+                        <td className={`py-3.5 px-4 font-bold ${tr.side === 'BUY' ? 'text-max-market-positive' : 'text-rose-400'}`}>
                           {tr.side}
                         </td>
                         <td className="py-3.5 px-4 text-right text-slate-200">{tr.quantity}</td>
                         <td className="py-3.5 px-4 text-right text-white">₹{Number(tr.price).toFixed(2)}</td>
-                        <td className="py-3.5 px-4 text-right text-slate-300">
+                        <td className="py-3.5 px-4 text-right text-max-text-primary">
                           ₹{(tr.quantity * tr.price).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                         </td>
-                        <td className="py-3.5 px-4 text-right text-slate-400">₹{totalCharges.toFixed(2)}</td>
+                        <td className="py-3.5 px-4 text-right text-max-text-secondary">₹{totalCharges.toFixed(2)}</td>
                       </tr>
                     );
                   })}
@@ -241,13 +241,13 @@ export default function OrdersPage() {
             </div>
           )
         ) : filteredOrders.length === 0 ? (
-          <div className="p-8 text-center text-slate-500 font-mono text-xs bg-[#0d121c] rounded-lg">
+          <div className="p-4 text-center text-max-text-muted font-mono text-xs bg-[#0d121c] rounded">
             No orders match the selected filter.
           </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs font-mono">
-              <thead className="bg-[#0d121c] text-slate-400 text-[10px] uppercase border-b border-slate-800">
+              <thead className="bg-[#0d121c] text-max-text-secondary text-[10px] uppercase border-b border-max-border">
                 <tr>
                   <th className="py-3 px-4">Order ID</th>
                   <th className="py-3 px-4">Timestamp</th>
@@ -262,19 +262,19 @@ export default function OrdersPage() {
                   <th className="py-3 px-4 text-right">Action</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-800/60">
+              <tbody className="divide-y divide-max-border">
                 {filteredOrders.map((ord: any) => (
-                  <tr key={ord.id} className="hover:bg-slate-800/30">
-                    <td className="py-3.5 px-4 text-[10px] text-slate-400">{ord.id}</td>
-                    <td className="py-3.5 px-4 text-slate-400 text-[10px]">{ord.created_at}</td>
+                  <tr key={ord.id} className="hover:bg-max-surface/30">
+                    <td className="py-3.5 px-4 text-[10px] text-max-text-secondary">{ord.id}</td>
+                    <td className="py-3.5 px-4 text-max-text-secondary text-[10px]">{ord.created_at}</td>
                     <td className="py-3.5 px-4 font-bold text-white">{ord.symbol}</td>
-                    <td className={`py-3.5 px-4 font-bold ${ord.side === 'BUY' ? 'text-emerald-400' : 'text-rose-400'}`}>
+                    <td className={`py-3.5 px-4 font-bold ${ord.side === 'BUY' ? 'text-max-market-positive' : 'text-rose-400'}`}>
                       {ord.side}
                     </td>
-                    <td className="py-3.5 px-4 text-slate-400 text-[10px]">{ord.product_type || 'CNC'}</td>
-                    <td className="py-3.5 px-4 text-slate-300">{ord.order_type}</td>
+                    <td className="py-3.5 px-4 text-max-text-secondary text-[10px]">{ord.product_type || 'CNC'}</td>
+                    <td className="py-3.5 px-4 text-max-text-primary">{ord.order_type}</td>
                     <td className="py-3.5 px-4 text-right text-slate-200">{ord.quantity}</td>
-                    <td className="py-3.5 px-4 text-right text-slate-300">
+                    <td className="py-3.5 px-4 text-right text-max-text-primary">
                       {ord.price ? `₹${Number(ord.price).toFixed(2)}` : 'Market'}
                     </td>
                     <td className="py-3.5 px-4 text-right text-white">
@@ -284,11 +284,11 @@ export default function OrdersPage() {
                       <span
                         className={`px-2 py-0.5 rounded text-[10px] ${
                           ord.status === 'EXECUTED'
-                            ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30'
+                            ? 'bg-emerald-500/10 text-max-market-positive border border-emerald-500/30'
                             : ord.status === 'REJECTED'
                             ? 'bg-rose-500/10 text-rose-400 border border-rose-500/30'
                             : ord.status === 'CANCELLED'
-                            ? 'bg-slate-800 text-slate-400'
+                            ? 'bg-max-surface text-max-text-secondary'
                             : 'bg-amber-500/10 text-amber-400 border border-amber-500/30'
                         }`}
                       >
@@ -304,7 +304,7 @@ export default function OrdersPage() {
                               setEditQty(ord.quantity);
                               setEditPrice(ord.price ? String(ord.price) : '');
                             }}
-                            className="p-1 rounded bg-blue-600/20 text-blue-400 hover:bg-blue-600 hover:text-white"
+                            className="p-1 rounded bg-blue-600/20 text-max-brand-primary hover:bg-blue-600 hover:text-white"
                             title="Modify Order"
                           >
                             <Edit3 className="w-3.5 h-3.5" />

@@ -18,7 +18,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
       <Sidebar user={session} />
       <div className="flex-1 flex flex-col min-w-0">
         <Header user={session} />
-        <main className="flex-1 p-6 overflow-y-auto">
+        <main className="flex-1 p-4 overflow-y-auto">
           {children}
         </main>
       </div>

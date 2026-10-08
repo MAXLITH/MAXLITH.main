@@ -124,48 +124,48 @@ export default function SettingsPage() {
     <div className="space-y-6 max-w-3xl">
       <div>
         <h1 className="text-xl font-bold text-white flex items-center gap-2">
-          <Settings className="w-5 h-5 text-blue-400" />
+          <Settings className="w-5 h-5 text-max-brand-primary" />
           <span>User &amp; Platform Settings</span>
         </h1>
-        <p className="text-xs text-slate-400 mt-1">
+        <p className="text-xs text-max-text-secondary mt-1">
           Account details, role verification, and virtual capital preferences.
         </p>
       </div>
 
       {/* Profile Information */}
-      <div className="fintech-card p-6 space-y-4">
-        <h2 className="text-sm font-bold text-white border-b border-slate-800 pb-3 flex items-center gap-2">
-          <User className="w-4 h-4 text-blue-400" />
+      <div className="fintech-card p-4 space-y-4">
+        <h2 className="text-sm font-bold text-white border-b border-max-border pb-3 flex items-center gap-2">
+          <User className="w-4 h-4 text-max-brand-primary" />
           <span>Profile Information</span>
         </h2>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs font-mono">
           <div>
-            <span className="text-slate-500 text-[10px] block uppercase">Full Name</span>
+            <span className="text-max-text-muted text-[10px] block uppercase">Full Name</span>
             <span className="text-white font-bold text-sm">{user?.fullName || 'Active User'}</span>
           </div>
 
           <div>
-            <span className="text-slate-500 text-[10px] block uppercase">Email Address</span>
+            <span className="text-max-text-muted text-[10px] block uppercase">Email Address</span>
             <span className="text-white font-bold text-sm">{user?.email || 'user@maxlith.com'}</span>
           </div>
 
           <div>
-            <span className="text-slate-500 text-[10px] block uppercase">Role Authorization</span>
-            <span className="text-blue-400 font-bold text-sm">{user?.role || 'USER'}</span>
+            <span className="text-max-text-muted text-[10px] block uppercase">Role Authorization</span>
+            <span className="text-max-brand-primary font-bold text-sm">{user?.role || 'USER'}</span>
           </div>
 
           <div>
-            <span className="text-slate-500 text-[10px] block uppercase">Environment Mode</span>
-            <span className="text-emerald-400 font-bold text-sm">MAXLITH PAPER V1</span>
+            <span className="text-max-text-muted text-[10px] block uppercase">Environment Mode</span>
+            <span className="text-max-market-positive font-bold text-sm">MAXLITH PAPER V1</span>
           </div>
         </div>
       </div>
 
       {/* Virtual Trading & Reset Settings */}
-      <div className="fintech-card p-6 space-y-4">
-        <h2 className="text-sm font-bold text-white border-b border-slate-800 pb-3 flex items-center gap-2">
-          <RefreshCw className="w-4 h-4 text-blue-400" />
+      <div className="fintech-card p-4 space-y-4">
+        <h2 className="text-sm font-bold text-white border-b border-max-border pb-3 flex items-center gap-2">
+          <RefreshCw className="w-4 h-4 text-max-brand-primary" />
           <span>Virtual Trading &amp; Reset Account</span>
         </h2>
 
@@ -173,15 +173,15 @@ export default function SettingsPage() {
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs font-mono">
             <div>
               <span className="text-white font-bold block">Starting Virtual Capital</span>
-              <span className="text-slate-400 text-[11px]">Allocation credited on initial setup or account reset</span>
+              <span className="text-max-text-secondary text-[11px]">Allocation credited on initial setup or account reset</span>
             </div>
             <div className="flex items-center gap-2">
-              <span className="text-slate-400 font-bold">₹</span>
+              <span className="text-max-text-secondary font-bold">₹</span>
               <input
                 type="number"
                 value={startingCapital}
                 onChange={(e) => setStartingCapital(e.target.value)}
-                className="w-36 bg-[#0d121c] border border-slate-800 focus:border-blue-500 text-xs font-mono font-bold text-emerald-400 rounded-lg px-3 py-1.5 outline-none"
+                className="w-36 bg-[#0d121c] border border-max-border focus:border-blue-500 text-xs font-mono font-bold text-max-market-positive rounded px-3 py-1.5 outline-none"
               />
             </div>
           </div>
@@ -194,7 +194,7 @@ export default function SettingsPage() {
           </div>
 
           {resetSuccess && (
-            <div className="p-3 rounded bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-mono flex items-center gap-2">
+            <div className="p-3 rounded bg-emerald-500/10 border border-emerald-500/20 text-max-market-positive text-xs font-mono flex items-center gap-2">
               <CheckCircle2 className="w-4 h-4" />
               <span>Paper trading account successfully reset to ₹{Number(startingCapital).toLocaleString('en-IN')}.</span>
             </div>
@@ -210,7 +210,7 @@ export default function SettingsPage() {
             <button
               onClick={handleResetAccount}
               disabled={resetting}
-              className="px-4 py-2 rounded-lg bg-rose-600/20 hover:bg-rose-600 text-rose-400 hover:text-white border border-rose-500/30 text-xs font-mono font-semibold transition-all disabled:opacity-50 flex items-center gap-1.5"
+              className="px-4 py-2 rounded bg-rose-600/20 hover:bg-rose-600 text-rose-400 hover:text-white border border-rose-500/30 text-xs font-mono font-semibold transition-all disabled:opacity-50 flex items-center gap-1.5"
             >
               <RefreshCw className={`w-3.5 h-3.5 ${resetting ? 'animate-spin' : ''}`} />
               <span>{resetting ? 'Resetting Account...' : 'Reset Paper Account'}</span>
@@ -220,50 +220,50 @@ export default function SettingsPage() {
       </div>
 
       {/* Password Change */}
-      <div className="fintech-card p-6 space-y-4">
-        <h2 className="text-sm font-bold text-white border-b border-slate-800 pb-3 flex items-center gap-2">
-          <Lock className="w-4 h-4 text-blue-400" />
+      <div className="fintech-card p-4 space-y-4">
+        <h2 className="text-sm font-bold text-white border-b border-max-border pb-3 flex items-center gap-2">
+          <Lock className="w-4 h-4 text-max-brand-primary" />
           <span>Security &amp; Password</span>
         </h2>
 
         <form onSubmit={handleUpdatePassword} className="space-y-3 font-mono text-xs">
           <div>
-            <label className="block text-[10px] uppercase text-slate-400 mb-1">Current Password</label>
+            <label className="block text-[10px] uppercase text-max-text-secondary mb-1">Current Password</label>
             <input
               type="password"
               required
               value={currentPassword}
               onChange={(e) => setCurrentPassword(e.target.value)}
-              className="w-full sm:w-80 bg-[#0d121c] border border-slate-800 focus:border-blue-500 text-xs text-white rounded-lg px-3 py-2 outline-none"
+              className="w-full sm:w-80 bg-[#0d121c] border border-max-border focus:border-blue-500 text-xs text-white rounded px-3 py-2 outline-none"
             />
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label className="block text-[10px] uppercase text-slate-400 mb-1">New Password</label>
+              <label className="block text-[10px] uppercase text-max-text-secondary mb-1">New Password</label>
               <input
                 type="password"
                 required
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
-                className="w-full bg-[#0d121c] border border-slate-800 focus:border-blue-500 text-xs text-white rounded-lg px-3 py-2 outline-none"
+                className="w-full bg-[#0d121c] border border-max-border focus:border-blue-500 text-xs text-white rounded px-3 py-2 outline-none"
               />
             </div>
 
             <div>
-              <label className="block text-[10px] uppercase text-slate-400 mb-1">Confirm New Password</label>
+              <label className="block text-[10px] uppercase text-max-text-secondary mb-1">Confirm New Password</label>
               <input
                 type="password"
                 required
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
-                className="w-full bg-[#0d121c] border border-slate-800 focus:border-blue-500 text-xs text-white rounded-lg px-3 py-2 outline-none"
+                className="w-full bg-[#0d121c] border border-max-border focus:border-blue-500 text-xs text-white rounded px-3 py-2 outline-none"
               />
             </div>
           </div>
 
           {passwordSuccess && (
-            <div className="p-3 rounded bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-mono flex items-center gap-2">
+            <div className="p-3 rounded bg-emerald-500/10 border border-emerald-500/20 text-max-market-positive text-xs font-mono flex items-center gap-2">
               <CheckCircle2 className="w-4 h-4" />
               <span>Password updated successfully.</span>
             </div>
@@ -279,7 +279,7 @@ export default function SettingsPage() {
             <button
               type="submit"
               disabled={passwordUpdating}
-              className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-medium text-xs transition-colors disabled:opacity-50"
+              className="px-4 py-2 rounded bg-blue-600 hover:bg-blue-500 text-white font-medium text-xs transition-colors disabled:opacity-50"
             >
               {passwordUpdating ? 'Updating Password...' : 'Change Password'}
             </button>
@@ -288,15 +288,15 @@ export default function SettingsPage() {
       </div>
 
       {/* Notification Preferences */}
-      <div className="fintech-card p-6 space-y-4">
-        <h2 className="text-sm font-bold text-white border-b border-slate-800 pb-3 flex items-center gap-2">
-          <Bell className="w-4 h-4 text-blue-400" />
+      <div className="fintech-card p-4 space-y-4">
+        <h2 className="text-sm font-bold text-white border-b border-max-border pb-3 flex items-center gap-2">
+          <Bell className="w-4 h-4 text-max-brand-primary" />
           <span>Notification Preferences</span>
         </h2>
 
         <div className="space-y-3 text-xs font-mono">
-          <label className="flex items-center justify-between p-2.5 rounded bg-[#0d121c] border border-slate-800 cursor-pointer">
-            <span className="text-slate-300">Price Breakout &amp; Threshold Alerts</span>
+          <label className="flex items-center justify-between p-2.5 rounded bg-[#0d121c] border border-max-border cursor-pointer">
+            <span className="text-max-text-primary">Price Breakout &amp; Threshold Alerts</span>
             <input
               type="checkbox"
               checked={notifAlerts}
@@ -305,8 +305,8 @@ export default function SettingsPage() {
             />
           </label>
 
-          <label className="flex items-center justify-between p-2.5 rounded bg-[#0d121c] border border-slate-800 cursor-pointer">
-            <span className="text-slate-300">Order Execution &amp; Fill Confirmations</span>
+          <label className="flex items-center justify-between p-2.5 rounded bg-[#0d121c] border border-max-border cursor-pointer">
+            <span className="text-max-text-primary">Order Execution &amp; Fill Confirmations</span>
             <input
               type="checkbox"
               checked={notifFills}
@@ -315,8 +315,8 @@ export default function SettingsPage() {
             />
           </label>
 
-          <label className="flex items-center justify-between p-2.5 rounded bg-[#0d121c] border border-slate-800 cursor-pointer">
-            <span className="text-slate-300">NSE/BSE Market Session Status Transitions</span>
+          <label className="flex items-center justify-between p-2.5 rounded bg-[#0d121c] border border-max-border cursor-pointer">
+            <span className="text-max-text-primary">NSE/BSE Market Session Status Transitions</span>
             <input
               type="checkbox"
               checked={notifMarket}

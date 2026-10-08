@@ -22,7 +22,7 @@ export default function StockChart({
 }) {
   if (!data || data.length === 0) {
     return (
-      <div className="h-64 flex items-center justify-center text-slate-500 text-xs font-mono border border-slate-800 rounded-lg">
+      <div className="h-64 flex items-center justify-center text-max-text-muted text-xs font-mono border border-max-border rounded">
         No historical chart candles available for {symbol}
       </div>
     );

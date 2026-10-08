@@ -106,43 +106,43 @@ export default function Header({ user }: { user: any }) {
   };
 
   return (
-    <header className="h-16 bg-[#0d121c] border-b border-slate-800/80 px-6 flex items-center justify-between sticky top-0 z-40">
+    <header className="h-14 bg-max-bg-elevated border-b border-max-border px-4 flex items-center justify-between sticky top-0 z-40">
       {/* Quick Instrument Search Bar with Autocomplete Dropdown */}
       <div className="relative w-80" ref={dropdownRef}>
         <form onSubmit={handleSearchSubmit} className="relative w-full">
-          <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+          <Search className="w-3.5 h-3.5 text-max-text-secondary absolute left-3 top-1/2 -translate-y-1/2" />
           <input
             type="text"
             placeholder="Search NSE/BSE stocks (e.g. RELIANCE, TCS)..."
             value={searchQuery}
             onFocus={() => searchQuery.trim() && setShowDropdown(true)}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full bg-[#121824] border border-slate-800 focus:border-blue-500 text-xs text-white placeholder-slate-500 rounded-lg pl-9 pr-4 py-2 outline-none transition-colors"
+            className="w-full bg-max-surface border border-max-border focus:border-max-brand-primary text-xs text-white placeholder-max-text-muted rounded pl-9 pr-4 py-1.5 outline-none transition-colors"
           />
         </form>
 
         {/* Autocomplete Dropdown Results */}
         {showDropdown && searchResults.length > 0 && (
-          <div className="absolute left-0 top-full mt-1.5 w-full bg-[#121824] border border-slate-800 rounded-lg shadow-2xl py-1.5 z-50 overflow-hidden divide-y divide-slate-800/60 font-mono">
+          <div className="absolute left-0 top-full mt-1.5 w-full bg-max-bg-elevated border border-max-border rounded py-1.5 z-50 overflow-hidden divide-y divide-max-border font-mono shadow-xl">
             {searchResults.map((item) => (
               <button
                 key={item.symbol}
                 type="button"
                 onClick={() => handleSelectSymbol(item.symbol)}
-                className="w-full px-3.5 py-2 flex items-center justify-between text-left hover:bg-slate-800/60 transition-colors"
+                className="w-full px-3 py-2 flex items-center justify-between text-left hover:bg-max-surface-hover transition-colors"
               >
                 <div>
                   <div className="flex items-center gap-1.5">
                     <span className="text-xs font-bold text-white">{item.symbol}</span>
-                    <span className="text-[10px] text-slate-400 uppercase font-sans">({item.exchange})</span>
+                    <span className="text-[10px] text-max-text-muted uppercase font-sans">({item.exchange})</span>
                   </div>
-                  <div className="text-[11px] text-slate-400 font-sans truncate max-w-[180px]">{item.name}</div>
+                  <div className="text-[11px] text-max-text-secondary font-sans truncate max-w-[180px]">{item.name}</div>
                 </div>
                 <div className="text-right">
                   <div className="text-xs font-bold text-white">₹{Number(item.current_price).toFixed(2)}</div>
                   <div
                     className={`text-[10px] ${
-                      item.percent_change >= 0 ? 'text-emerald-400' : 'text-rose-400'
+                      item.percent_change >= 0 ? 'text-max-market-positive' : 'text-max-market-negative'
                     }`}
                   >
                     {item.percent_change >= 0 ? '+' : ''}
@@ -156,25 +156,25 @@ export default function Header({ user }: { user: any }) {
       </div>
 
       {/* Right Telemetry & Virtual Cash */}
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-3">
         {/* Central Market Session Status Indicator */}
         {sessionStatus && (
-          <div className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-800 text-xs">
-            <span className={`w-2 h-2 rounded-full ${sessionStatus.isOpen ? 'bg-emerald-400 animate-pulse' : 'bg-amber-400'}`}></span>
-            <span className="font-semibold text-slate-200">
+          <div className="hidden md:flex items-center gap-2 px-2.5 py-1 rounded bg-max-surface border border-max-border text-xs">
+            <span className={`w-2 h-2 rounded-full ${sessionStatus.isOpen ? 'bg-max-market-positive animate-pulse' : 'bg-max-warning'}`}></span>
+            <span className="font-semibold text-white text-[11px]">
               NSE/BSE: {sessionStatus.session}
             </span>
-            <span className="text-slate-500 font-mono text-[10px]">
+            <span className="text-max-text-muted font-mono text-[10px]">
               ({sessionStatus.currentTimeIST})
             </span>
           </div>
         )}
 
         {/* Virtual Capital Chip */}
-        <div className="flex items-center gap-2.5 px-3.5 py-1.5 rounded-lg bg-blue-950/40 border border-blue-500/30 text-xs">
-          <Wallet className="w-4 h-4 text-blue-400" />
-          <div className="flex flex-col">
-            <span className="text-[9px] uppercase tracking-wider text-blue-400 font-mono">Virtual Cash</span>
+        <div className="flex items-center gap-2 px-3 py-1 rounded bg-max-brand-primary/10 border border-max-brand-primary/20 text-xs">
+          <Wallet className="w-3.5 h-3.5 text-max-brand-primary" />
+          <div className="flex items-center gap-1.5">
+            <span className="text-[9px] uppercase tracking-wider text-max-brand-primary font-mono font-semibold">Virtual Cash:</span>
             <span className="font-mono font-bold text-white text-xs">
               ₹{virtualCash.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
             </span>
@@ -182,8 +182,8 @@ export default function Header({ user }: { user: any }) {
         </div>
 
         {/* Environment Badge */}
-        <div className="hidden sm:flex items-center gap-1 px-2.5 py-1 rounded bg-slate-800 text-slate-300 text-[10px] font-mono border border-slate-700">
-          <ShieldCheck className="w-3.5 h-3.5 text-blue-400" />
+        <div className="hidden sm:flex items-center gap-1 px-2 py-1 rounded bg-max-surface text-max-text-primary text-[10px] font-mono border border-max-border">
+          <ShieldCheck className="w-3 h-3 text-max-brand-primary" />
           <span>PAPER V1</span>
         </div>
       </div>

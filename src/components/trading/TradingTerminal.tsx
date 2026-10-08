@@ -320,33 +320,33 @@ export default function TradingTerminal() {
   return (
     <div className="-m-6 min-h-[calc(100vh-4rem)] bg-[#090d12] p-3 text-slate-100 sm:p-4">
       <div className="mx-auto max-w-[1800px] space-y-3">
-        <header className="flex flex-wrap items-center gap-3 rounded-lg border border-slate-800 bg-[#0d131b] px-3 py-2.5">
+        <header className="flex flex-wrap items-center gap-3 rounded border border-max-border bg-[#0d131b] px-3 py-2.5">
           <div className="flex items-center gap-2 pr-1">
             <div className="flex h-7 w-7 items-center justify-center rounded-md bg-blue-500/15 text-blue-300"><Activity className="h-4 w-4" /></div>
-            <div><p className="text-[11px] font-bold tracking-[0.12em] text-slate-100">MAXLITH</p><p className="text-[8px] uppercase tracking-[0.16em] text-slate-500">Market terminal</p></div>
+            <div><p className="text-[11px] font-bold tracking-[0.12em] text-slate-100">MAXLITH</p><p className="text-[8px] uppercase tracking-[0.16em] text-max-text-muted">Market terminal</p></div>
           </div>
-          <div className="flex h-8 items-center rounded border border-slate-800 bg-[#101723] px-2">
-            <select value={exchange} onChange={(event) => setExchange(event.target.value as 'NSE' | 'BSE')} aria-label="Exchange selector" className="bg-transparent text-[10px] font-semibold text-slate-300 outline-none"><option>NSE</option><option>BSE</option></select><ChevronDown className="ml-1 h-3 w-3 text-slate-600" />
+          <div className="flex h-8 items-center rounded border border-max-border bg-[#101723] px-2">
+            <select value={exchange} onChange={(event) => setExchange(event.target.value as 'NSE' | 'BSE')} aria-label="Exchange selector" className="bg-transparent text-[10px] font-semibold text-max-text-primary outline-none"><option>NSE</option><option>BSE</option></select><ChevronDown className="ml-1 h-3 w-3 text-slate-600" />
           </div>
           <SymbolSearch exchange={exchange} onSelect={handleSelect} />
           <div className="flex flex-wrap items-center gap-2 text-[9px]">
-            <span className="inline-flex items-center gap-1.5 rounded border border-slate-800 px-2 py-1.5 text-slate-400"><span className={`h-1.5 w-1.5 rounded-full ${connectionLabel === 'LIVE' ? 'bg-emerald-400' : connectionLabel === 'RECONNECTING' ? 'bg-amber-400' : 'bg-slate-600'}`} />{connectionLabel}</span>
-            <span className="rounded border border-slate-800 px-2 py-1.5 text-slate-400">{marketStatusLabel}</span>
+            <span className="inline-flex items-center gap-1.5 rounded border border-max-border px-2 py-1.5 text-max-text-secondary"><span className={`h-1.5 w-1.5 rounded ${connectionLabel === 'LIVE' ? 'bg-emerald-400' : connectionLabel === 'RECONNECTING' ? 'bg-amber-400' : 'bg-slate-600'}`} />{connectionLabel}</span>
+            <span className="rounded border border-max-border px-2 py-1.5 text-max-text-secondary">{marketStatusLabel}</span>
             <span className="rounded border border-blue-900/60 bg-blue-950/30 px-2 py-1.5 font-semibold text-blue-300">PAPER</span>
           </div>
           <div className="ml-auto flex items-center gap-3">
-            <div className="hidden text-right sm:block"><p className="text-[8px] uppercase tracking-wide text-slate-500">Available cash</p><p className="mt-0.5 text-[10px] tabular-nums text-slate-200">{availableCash === null ? '—' : formatRupees(availableCash)}</p></div>
-            <button type="button" onClick={() => { void loadMarketData(instrument || toTradingSymbol({ symbol: 'RELIANCE', exchange }), resolution); void loadAccountData(); }} title="Refresh market and account data" className="rounded border border-slate-800 p-2 text-slate-500 hover:bg-slate-800 hover:text-white"><RefreshCw className={`h-3.5 w-3.5 ${loadingMarket ? 'animate-spin' : ''}`} /></button>
-            <button type="button" title="Alerts" onClick={() => setActiveTab('ALERTS')} className="rounded border border-slate-800 p-2 text-slate-500 hover:bg-slate-800 hover:text-white"><Bell className="h-3.5 w-3.5" /></button>
+            <div className="hidden text-right sm:block"><p className="text-[8px] uppercase tracking-wide text-max-text-muted">Available cash</p><p className="mt-0.5 text-[10px] tabular-nums text-slate-200">{availableCash === null ? '—' : formatRupees(availableCash)}</p></div>
+            <button type="button" onClick={() => { void loadMarketData(instrument || toTradingSymbol({ symbol: 'RELIANCE', exchange }), resolution); void loadAccountData(); }} title="Refresh market and account data" className="rounded border border-max-border p-2 text-max-text-muted hover:bg-max-surface hover:text-white"><RefreshCw className={`h-3.5 w-3.5 ${loadingMarket ? 'animate-spin' : ''}`} /></button>
+            <button type="button" title="Alerts" onClick={() => setActiveTab('ALERTS')} className="rounded border border-max-border p-2 text-max-text-muted hover:bg-max-surface hover:text-white"><Bell className="h-3.5 w-3.5" /></button>
           </div>
         </header>
 
         <div className="flex items-center justify-between px-0.5">
-          <div><h1 className="text-sm font-semibold tracking-wide text-slate-100">Professional trading terminal</h1><p className="mt-0.5 text-[9px] text-slate-500">NSE · BSE · verified provider data only · orders route to MAXLITH paper trading</p></div>
+          <div><h1 className="text-sm font-semibold tracking-wide text-slate-100">Professional trading terminal</h1><p className="mt-0.5 text-[9px] text-max-text-muted">NSE · BSE · verified provider data only · orders route to MAXLITH paper trading</p></div>
           <div className="hidden items-center gap-1 md:flex">
-            <button onClick={() => setShowWatchlist((value) => !value)} aria-label="Toggle watchlist" className="rounded border border-slate-800 p-1.5 text-slate-500 hover:text-slate-200"><PanelLeftClose className="h-3.5 w-3.5" /></button>
-            <button onClick={() => setShowOrderPanel((value) => !value)} aria-label="Toggle order panel" className="rounded border border-slate-800 p-1.5 text-slate-500 hover:text-slate-200"><PanelRightClose className="h-3.5 w-3.5" /></button>
-            <button onClick={() => setShowAccountPanel((value) => !value)} aria-label="Toggle account panel" className="rounded border border-slate-800 p-1.5 text-slate-500 hover:text-slate-200"><PanelBottomClose className="h-3.5 w-3.5" /></button>
+            <button onClick={() => setShowWatchlist((value) => !value)} aria-label="Toggle watchlist" className="rounded border border-max-border p-1.5 text-max-text-muted hover:text-slate-200"><PanelLeftClose className="h-3.5 w-3.5" /></button>
+            <button onClick={() => setShowOrderPanel((value) => !value)} aria-label="Toggle order panel" className="rounded border border-max-border p-1.5 text-max-text-muted hover:text-slate-200"><PanelRightClose className="h-3.5 w-3.5" /></button>
+            <button onClick={() => setShowAccountPanel((value) => !value)} aria-label="Toggle account panel" className="rounded border border-max-border p-1.5 text-max-text-muted hover:text-slate-200"><PanelBottomClose className="h-3.5 w-3.5" /></button>
           </div>
         </div>
 
@@ -359,25 +359,25 @@ export default function TradingTerminal() {
           />}
 
           <main className="min-w-0 space-y-3">
-            <section className="rounded-lg border border-slate-800 bg-[#0d131b]">
-              <div className="flex flex-wrap items-start justify-between gap-3 border-b border-slate-800 px-3 py-3">
+            <section className="rounded border border-max-border bg-[#0d131b]">
+              <div className="flex flex-wrap items-start justify-between gap-3 border-b border-max-border px-3 py-3">
                 <div className="min-w-0">
-                  <div className="flex flex-wrap items-center gap-x-2 gap-y-1"><h2 className="text-sm font-bold text-white">{instrument?.symbol || 'Select instrument'}</h2>{instrument && <span className="rounded border border-slate-800 px-1.5 py-0.5 text-[8px] text-slate-500">{instrument.exchange}</span>}<span className="truncate text-[10px] text-slate-500">{instrument?.name || 'Search NSE or BSE symbols above'}</span></div>
-                  <div className="mt-1.5 flex items-baseline gap-2"><span className="text-xl font-semibold tabular-nums tracking-tight">{quote ? formatRupees(quote.last) : '—'}</span><span className={`text-[10px] tabular-nums ${quote ? isPositive ? 'text-emerald-400' : 'text-rose-400' : 'text-slate-600'}`}>{changeLabel}</span>{quote && <span className="text-[8px] text-slate-600">{quote.delaySeconds > 0 ? `${quote.delaySeconds}s delayed` : 'provider snapshot'}</span>}</div>
+                  <div className="flex flex-wrap items-center gap-x-2 gap-y-1"><h2 className="text-sm font-bold text-white">{instrument?.symbol || 'Select instrument'}</h2>{instrument && <span className="rounded border border-max-border px-1.5 py-0.5 text-[8px] text-max-text-muted">{instrument.exchange}</span>}<span className="truncate text-[10px] text-max-text-muted">{instrument?.name || 'Search NSE or BSE symbols above'}</span></div>
+                  <div className="mt-1.5 flex items-baseline gap-2"><span className="text-xl font-semibold tabular-nums tracking-tight">{quote ? formatRupees(quote.last) : '—'}</span><span className={`text-[10px] tabular-nums ${quote ? isPositive ? 'text-max-market-positive' : 'text-rose-400' : 'text-slate-600'}`}>{changeLabel}</span>{quote && <span className="text-[8px] text-slate-600">{quote.delaySeconds > 0 ? `${quote.delaySeconds}s delayed` : 'provider snapshot'}</span>}</div>
                 </div>
-                <div className="flex items-center gap-1.5"><span className={`rounded px-2 py-1 text-[8px] font-semibold ${quoteLive ? 'bg-emerald-950/50 text-emerald-300' : 'bg-slate-800 text-slate-500'}`}>{quoteLive ? 'QUOTE CURRENT' : 'NO VERIFIED QUOTE'}</span><button type="button" onClick={() => setMaxChart((value) => !value)} title="Toggle chart focus" className="rounded border border-slate-800 p-1.5 text-slate-500 hover:text-white"><Maximize2 className="h-3.5 w-3.5" /></button></div>
+                <div className="flex items-center gap-1.5"><span className={`rounded px-2 py-1 text-[8px] font-semibold ${quoteLive ? 'bg-emerald-950/50 text-emerald-300' : 'bg-max-surface text-max-text-muted'}`}>{quoteLive ? 'QUOTE CURRENT' : 'NO VERIFIED QUOTE'}</span><button type="button" onClick={() => setMaxChart((value) => !value)} title="Toggle chart focus" className="rounded border border-max-border p-1.5 text-max-text-muted hover:text-white"><Maximize2 className="h-3.5 w-3.5" /></button></div>
               </div>
-              <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-800 px-2.5 py-2"><ChartToolbar chartType={chartType} resolution={resolution} indicators={indicators} onChartTypeChange={setChartType} onResolutionChange={setResolution} onIndicatorsChange={setIndicators} /><div className="flex gap-1"><button disabled title="Drawing tools are not enabled until chart drawing persistence is available" className="h-8 rounded border border-slate-800 px-2 text-[10px] text-slate-600">Draw</button><button disabled title="Compare requires provider-backed symbol series" className="h-8 rounded border border-slate-800 px-2 text-[10px] text-slate-600">Compare</button></div></div>
+              <div className="flex flex-wrap items-center justify-between gap-2 border-b border-max-border px-2.5 py-2"><ChartToolbar chartType={chartType} resolution={resolution} indicators={indicators} onChartTypeChange={setChartType} onResolutionChange={setResolution} onIndicatorsChange={setIndicators} /><div className="flex gap-1"><button disabled title="Drawing tools are not enabled until chart drawing persistence is available" className="h-8 rounded border border-max-border px-2 text-[10px] text-slate-600">Draw</button><button disabled title="Compare requires provider-backed symbol series" className="h-8 rounded border border-max-border px-2 text-[10px] text-slate-600">Compare</button></div></div>
               <div className={`${maxChart ? 'h-[70vh]' : 'h-[390px] sm:h-[470px]'}`}><TradingChart bars={bars} chartType={chartType} indicators={indicators} symbol={instrument?.id || 'NSE'} height="100%" /></div>
-              <div className="flex flex-wrap items-center justify-between gap-2 border-t border-slate-800 px-3 py-2 text-[9px]">
-                <span className={quote || bars.length ? 'text-slate-500' : 'text-amber-300/80'}>{loadingMarket ? 'Loading provider data…' : chartMessage || feedMessage}</span>
+              <div className="flex flex-wrap items-center justify-between gap-2 border-t border-max-border px-3 py-2 text-[9px]">
+                <span className={quote || bars.length ? 'text-max-text-muted' : 'text-amber-300/80'}>{loadingMarket ? 'Loading provider data…' : chartMessage || feedMessage}</span>
                 <span className="text-slate-600">{quote?.asOf ? `As of ${new Date(quote.asOf).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', dateStyle: 'short', timeStyle: 'medium' })}` : 'Times shown in Asia/Kolkata'}</span>
               </div>
             </section>
 
-            {showAccountPanel && <section className="overflow-hidden rounded-lg border border-slate-800 bg-[#0d131b]">
-              <div className="flex items-center gap-1 overflow-x-auto border-b border-slate-800 px-2 pt-1.5" role="tablist" aria-label="Account and market panels">
-                {TABS.map((tab) => <button key={tab.id} type="button" role="tab" aria-selected={activeTab === tab.id} onClick={() => setActiveTab(tab.id)} className={`shrink-0 border-b-2 px-2.5 py-2 text-[9px] font-medium ${activeTab === tab.id ? 'border-blue-400 text-blue-300' : 'border-transparent text-slate-500 hover:text-slate-200'}`}>{tab.label}</button>)}
+            {showAccountPanel && <section className="overflow-hidden rounded border border-max-border bg-[#0d131b]">
+              <div className="flex items-center gap-1 overflow-x-auto border-b border-max-border px-2 pt-1.5" role="tablist" aria-label="Account and market panels">
+                {TABS.map((tab) => <button key={tab.id} type="button" role="tab" aria-selected={activeTab === tab.id} onClick={() => setActiveTab(tab.id)} className={`shrink-0 border-b-2 px-2.5 py-2 text-[9px] font-medium ${activeTab === tab.id ? 'border-blue-400 text-blue-300' : 'border-transparent text-max-text-muted hover:text-slate-200'}`}>{tab.label}</button>)}
                 <span className="ml-auto hidden pr-2 text-[8px] text-slate-600 sm:inline-flex sm:items-center sm:gap-1"><CircleDollarSign className="h-3 w-3" />Virtual account</span>
               </div>
               {activeTab === 'POSITIONS' && <PositionsPanel positions={positions} quotes={quoteBySymbol} onSelect={(symbol) => handleSelect(toTradingSymbol({ symbol: symbol.split(':')[1], exchange: 'NSE' }))} />}
@@ -388,7 +388,7 @@ export default function TradingTerminal() {
               {activeTab === 'NEWS' && <NewsPanel symbol={selectedId || 'NSE'} />}
               {activeTab === 'FUNDAMENTALS' && <FundamentalsPanel symbol={selectedId || 'NSE'} />}
               {activeTab === 'AI' && <AIAnalysisPanel quote={quote} bars={bars} />}
-              {portfolioError && <div className="border-t border-slate-800 px-3 py-1.5 text-[9px] text-slate-600">Account data: {portfolioError}</div>}
+              {portfolioError && <div className="border-t border-max-border px-3 py-1.5 text-[9px] text-slate-600">Account data: {portfolioError}</div>}
             </section>}
           </main>
 

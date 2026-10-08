@@ -62,8 +62,8 @@ export default function SymbolSearch({
 
   return (
     <div ref={rootRef} className="relative min-w-0 flex-1">
-      <div className="flex h-9 items-center gap-2 rounded-md border border-slate-700 bg-[#101723] px-2.5 focus-within:border-blue-500">
-        <Search className="h-4 w-4 shrink-0 text-slate-500" />
+      <div className="flex h-8 items-center gap-2 rounded border border-max-border bg-max-surface px-2.5 focus-within:border-max-brand-primary transition-colors">
+        <Search className="h-3.5 w-3.5 shrink-0 text-max-text-muted" />
         <input
           value={query}
           onChange={(event) => { setQuery(event.target.value); setIsOpen(true); }}
@@ -77,29 +77,29 @@ export default function SymbolSearch({
             }
           }}
           aria-label="Search NSE and BSE instruments"
-          placeholder="Search symbol or company"
-          className="min-w-0 flex-1 bg-transparent text-xs text-white outline-none placeholder:text-slate-500"
+          placeholder="Search symbol or company (e.g. RELIANCE)..."
+          className="min-w-0 flex-1 bg-transparent text-xs text-white outline-none placeholder:text-max-text-muted font-sans"
         />
-        {busy && <span className="text-[10px] text-slate-500">SEARCHING</span>}
-        {query && <button type="button" onClick={() => { setQuery(''); setResults([]); }} aria-label="Clear search"><X className="h-3.5 w-3.5 text-slate-500" /></button>}
+        {busy && <span className="text-[9px] font-mono text-max-brand-primary">SEARCHING</span>}
+        {query && <button type="button" onClick={() => { setQuery(''); setResults([]); }} aria-label="Clear search"><X className="h-3.5 w-3.5 text-max-text-muted hover:text-white" /></button>}
       </div>
       {isOpen && query.trim().length >= 2 && (
-        <div className="absolute left-0 right-0 top-10 z-30 overflow-hidden rounded-md border border-slate-700 bg-[#111821] shadow-xl">
+        <div className="absolute left-0 right-0 top-9 z-30 overflow-hidden rounded border border-max-border bg-max-bg-elevated shadow-xl font-mono">
           {results.map((instrument) => (
             <button
               key={instrument.id}
               type="button"
               onClick={() => { onSelect(instrument); setQuery(''); setResults([]); setIsOpen(false); }}
-              className="flex w-full items-center justify-between gap-3 border-b border-slate-800 px-3 py-2.5 text-left last:border-0 hover:bg-slate-800/70"
+              className="flex w-full items-center justify-between gap-3 border-b border-max-border px-3 py-2 text-left last:border-0 hover:bg-max-surface-hover transition-colors"
             >
               <span className="min-w-0">
-                <span className="block truncate text-xs font-semibold text-slate-100">{instrument.symbol}<span className="ml-2 text-[9px] text-slate-500">{instrument.exchange}</span></span>
-                <span className="block truncate text-[10px] text-slate-400">{instrument.name}</span>
+                <span className="block truncate text-xs font-bold text-white">{instrument.symbol}<span className="ml-2 text-[9px] text-max-text-muted font-sans">({instrument.exchange})</span></span>
+                <span className="block truncate text-[10px] text-max-text-secondary font-sans">{instrument.name}</span>
               </span>
-              <span className="text-[9px] uppercase tracking-wide text-slate-500">{instrument.type}</span>
+              <span className="text-[9px] uppercase tracking-wide text-max-text-muted">{instrument.type}</span>
             </button>
           ))}
-          {!results.length && <div className="px-3 py-3 text-[11px] text-slate-500">{message || 'Type at least two characters.'}</div>}
+          {!results.length && <div className="px-3 py-3 text-[11px] text-max-text-muted">{message || 'Type at least two characters.'}</div>}
         </div>
       )}
     </div>

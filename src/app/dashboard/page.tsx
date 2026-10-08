@@ -32,15 +32,15 @@ export default async function UserDashboard() {
   return (
     <div className="space-y-6">
       {/* Top Banner / Welcome */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-gradient-to-r from-[#121824] to-[#161e30] p-6 rounded-xl border border-slate-800">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-max-surface bg-max-surface p-4 rounded border border-max-border">
         <div>
           <div className="flex items-center gap-2">
             <h1 className="text-xl font-bold text-white">Welcome back, {session?.fullName}</h1>
-            <span className="px-2 py-0.5 rounded bg-blue-500/10 text-blue-400 text-[10px] font-mono border border-blue-500/20">
+            <span className="px-2 py-0.5 rounded bg-blue-500/10 text-max-brand-primary text-[10px] font-mono border border-blue-500/20">
               {session?.role === 'ADMIN' ? 'ADMIN V1' : 'TRADER V1'}
             </span>
           </div>
-          <p className="text-xs text-slate-400 mt-1">
+          <p className="text-xs text-max-text-secondary mt-1">
             Indian Equity Markets (NSE/BSE) • Paper Trading Account
           </p>
         </div>
@@ -48,16 +48,16 @@ export default async function UserDashboard() {
         <div className="flex items-center gap-2">
           <Link
             href="/dashboard/paper-trading"
-            className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-medium text-xs transition-all shadow-md shadow-blue-600/30"
+            className="flex items-center gap-1.5 px-4 py-2 rounded bg-blue-600 hover:bg-blue-500 text-white font-medium text-xs transition-all"
           >
             <Layers className="w-4 h-4" />
             <span>Paper Trade</span>
           </Link>
           <Link
             href="/dashboard/ai-copilot"
-            className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 font-medium text-xs border border-slate-700 transition-all"
+            className="flex items-center gap-1.5 px-4 py-2 rounded bg-max-surface hover:bg-max-surface-hover text-slate-200 font-medium text-xs border border-max-border-strong transition-all"
           >
-            <Bot className="w-4 h-4 text-blue-400" />
+            <Bot className="w-4 h-4 text-max-brand-primary" />
             <span>Ask MAXLITH AI</span>
           </Link>
         </div>
@@ -66,87 +66,87 @@ export default async function UserDashboard() {
       {/* PORTFOLIO SUMMARY CARDS */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="fintech-card p-4">
-          <div className="flex items-center justify-between text-slate-400 text-xs mb-2">
+          <div className="flex items-center justify-between text-max-text-secondary text-xs mb-2">
             <span className="font-medium">Total Portfolio Value</span>
-            <Wallet className="w-4 h-4 text-blue-400" />
+            <Wallet className="w-4 h-4 text-max-brand-primary" />
           </div>
           <div className="text-xl font-bold font-mono text-white">
             ₹{summary.currentPortfolioValue.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
           </div>
           <div className="flex items-center gap-1 text-[11px] font-mono mt-1">
-            <span className="text-slate-500">Capital: ₹{summary.initialCapital.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
+            <span className="text-max-text-muted">Capital: ₹{summary.initialCapital.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
           </div>
         </div>
 
         <div className="fintech-card p-4">
-          <div className="flex items-center justify-between text-slate-400 text-xs mb-2">
+          <div className="flex items-center justify-between text-max-text-secondary text-xs mb-2">
             <span className="font-medium">Available Virtual Cash</span>
-            <PieChart className="w-4 h-4 text-emerald-400" />
+            <PieChart className="w-4 h-4 text-max-market-positive" />
           </div>
           <div className="text-xl font-bold font-mono text-white">
             ₹{summary.availableCash.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
           </div>
-          <div className="text-[11px] font-mono text-slate-500 mt-1">
+          <div className="text-[11px] font-mono text-max-text-muted mt-1">
             Invested: ₹{summary.investedValue.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
           </div>
         </div>
 
         <div className="fintech-card p-4">
-          <div className="flex items-center justify-between text-slate-400 text-xs mb-2">
+          <div className="flex items-center justify-between text-max-text-secondary text-xs mb-2">
             <span className="font-medium">Today&apos;s P&amp;L</span>
             {summary.todayPnl >= 0 ? (
-              <ArrowUpRight className="w-4 h-4 text-emerald-400" />
+              <ArrowUpRight className="w-4 h-4 text-max-market-positive" />
             ) : (
               <ArrowDownRight className="w-4 h-4 text-rose-400" />
             )}
           </div>
-          <div className={`text-xl font-bold font-mono ${summary.todayPnl >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+          <div className={`text-xl font-bold font-mono ${summary.todayPnl >= 0 ? 'text-max-market-positive' : 'text-rose-400'}`}>
             {summary.todayPnl >= 0 ? '+' : ''}₹{summary.todayPnl.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
           </div>
-          <div className={`text-[11px] font-mono mt-1 ${summary.todayPnlPercent >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+          <div className={`text-[11px] font-mono mt-1 ${summary.todayPnlPercent >= 0 ? 'text-max-market-positive' : 'text-rose-400'}`}>
             ({summary.todayPnlPercent >= 0 ? '+' : ''}{summary.todayPnlPercent.toFixed(2)}%)
           </div>
         </div>
 
         <div className="fintech-card p-4">
-          <div className="flex items-center justify-between text-slate-400 text-xs mb-2">
+          <div className="flex items-center justify-between text-max-text-secondary text-xs mb-2">
             <span className="font-medium">Overall Return P&amp;L</span>
             <BarChart3 className="w-4 h-4 text-purple-400" />
           </div>
-          <div className={`text-xl font-bold font-mono ${summary.overallPnl >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+          <div className={`text-xl font-bold font-mono ${summary.overallPnl >= 0 ? 'text-max-market-positive' : 'text-rose-400'}`}>
             {summary.overallPnl >= 0 ? '+' : ''}₹{summary.overallPnl.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
           </div>
-          <div className={`text-[11px] font-mono mt-1 ${summary.overallPnlPercent >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+          <div className={`text-[11px] font-mono mt-1 ${summary.overallPnlPercent >= 0 ? 'text-max-market-positive' : 'text-rose-400'}`}>
             Return: {summary.overallPnlPercent >= 0 ? '+' : ''}{summary.overallPnlPercent.toFixed(2)}%
           </div>
         </div>
       </div>
 
       {/* MAIN TWO-COLUMN DASHBOARD GRID */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <div className="lg:col-span-2 space-y-6">
           <div className="fintech-card p-5">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-sm font-bold text-white flex items-center gap-2">
-                <TrendingUp className="w-4 h-4 text-blue-400" />
+                <TrendingUp className="w-4 h-4 text-max-brand-primary" />
                 <span>Market Indices Overview</span>
               </h2>
-              <span className="text-[10px] font-mono text-slate-500">NSE / BSE LIVE</span>
+              <span className="text-[10px] font-mono text-max-text-muted">NSE / BSE LIVE</span>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               {indices.map((idx) => (
-                <div key={idx.symbol} className="p-3.5 rounded-lg bg-[#0d121c] border border-slate-800">
-                  <div className="flex justify-between text-xs text-slate-400 font-mono">
+                <div key={idx.symbol} className="p-3.5 rounded bg-[#0d121c] border border-max-border">
+                  <div className="flex justify-between text-xs text-max-text-secondary font-mono">
                     <span>{idx.name}</span>
-                    <span className={idx.percentChange >= 0 ? 'text-emerald-400' : 'text-rose-400'}>
+                    <span className={idx.percentChange >= 0 ? 'text-max-market-positive' : 'text-rose-400'}>
                       {idx.percentChange >= 0 ? '+' : ''}{idx.percentChange.toFixed(2)}%
                     </span>
                   </div>
                   <div className="text-lg font-bold font-mono text-white mt-1">
                     {idx.value.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                   </div>
-                  <div className="text-[10px] font-mono text-slate-500 mt-0.5">
+                  <div className="text-[10px] font-mono text-max-text-muted mt-0.5">
                     {idx.change >= 0 ? '+' : ''}{idx.change.toFixed(2)} pts
                   </div>
                 </div>
@@ -158,16 +158,16 @@ export default async function UserDashboard() {
             <div className="flex items-center justify-between mb-4">
               <div>
                 <h2 className="text-sm font-bold text-white">Live Market Quotes</h2>
-                <p className="text-[11px] text-slate-400">NIFTY 50 Bluechips</p>
+                <p className="text-[11px] text-max-text-secondary">NIFTY 50 Bluechips</p>
               </div>
-              <Link href="/dashboard/markets" className="text-xs text-blue-400 hover:underline font-mono">
+              <Link href="/dashboard/markets" className="text-xs text-max-brand-primary hover:underline font-mono">
                 View All Markets →
               </Link>
             </div>
 
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs">
-                <thead className="bg-[#0d121c] text-slate-400 font-mono text-[10px] uppercase border-b border-slate-800">
+                <thead className="bg-[#0d121c] text-max-text-secondary font-mono text-[10px] uppercase border-b border-max-border">
                   <tr>
                     <th className="py-2.5 px-3">Symbol</th>
                     <th className="py-2.5 px-3">Sector</th>
@@ -176,29 +176,29 @@ export default async function UserDashboard() {
                     <th className="py-2.5 px-3 text-right">Action</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-800/60 font-mono">
+                <tbody className="divide-y divide-max-border font-mono">
                   {instruments.slice(0, 5).map((inst) => (
-                    <tr key={inst.symbol} className="hover:bg-slate-800/30">
+                    <tr key={inst.symbol} className="hover:bg-max-surface/30">
                       <td className="py-3 px-3">
                         <div className="font-bold text-white">{inst.symbol}</div>
-                        <div className="text-[10px] text-slate-500 truncate max-w-[140px]">{inst.name}</div>
+                        <div className="text-[10px] text-max-text-muted truncate max-w-[140px]">{inst.name}</div>
                       </td>
-                      <td className="py-3 px-3 text-slate-400 text-[11px]">{inst.sector}</td>
+                      <td className="py-3 px-3 text-max-text-secondary text-[11px]">{inst.sector}</td>
                       <td className="py-3 px-3 text-right font-bold text-white">₹{inst.current_price.toFixed(2)}</td>
-                      <td className={`py-3 px-3 text-right font-bold ${inst.change >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                      <td className={`py-3 px-3 text-right font-bold ${inst.change >= 0 ? 'text-max-market-positive' : 'text-rose-400'}`}>
                         {inst.change >= 0 ? '+' : ''}{inst.percent_change.toFixed(2)}%
                       </td>
                       <td className="py-3 px-3 text-right">
                         <div className="flex items-center justify-end gap-1.5">
                           <Link
                             href={`/dashboard/paper-trading?symbol=${inst.symbol}`}
-                            className="px-2.5 py-1 rounded bg-emerald-600/20 hover:bg-emerald-600 text-emerald-400 hover:text-white transition-all text-[11px]"
+                            className="px-2.5 py-1 rounded bg-emerald-600/20 hover:bg-emerald-600 text-max-market-positive hover:text-white transition-all text-[11px]"
                           >
                             Trade
                           </Link>
                           <Link
                             href={`/dashboard/markets/${inst.symbol}`}
-                            className="px-2.5 py-1 rounded bg-blue-600/20 hover:bg-blue-600 text-blue-400 hover:text-white transition-all text-[11px]"
+                            className="px-2.5 py-1 rounded bg-blue-600/20 hover:bg-blue-600 text-max-brand-primary hover:text-white transition-all text-[11px]"
                           >
                             Analyze
                           </Link>
@@ -217,14 +217,14 @@ export default async function UserDashboard() {
             <h2 className="text-sm font-bold text-white mb-3">Market Movers</h2>
             <div className="space-y-4">
               <div>
-                <span className="text-[10px] font-mono uppercase text-emerald-400 font-bold block mb-2">Top Gainers</span>
+                <span className="text-[10px] font-mono uppercase text-max-market-positive font-bold block mb-2">Top Gainers</span>
                 <div className="space-y-2">
                   {topGainers.map((gainer) => (
                     <div key={gainer.symbol} className="flex justify-between items-center text-xs font-mono p-2 rounded bg-[#0d121c]">
                       <span className="font-bold text-white">{gainer.symbol}</span>
                       <div className="text-right">
                         <span className="text-white">₹{gainer.current_price.toFixed(2)}</span>
-                        <span className="text-emerald-400 ml-2 font-bold">+{gainer.percent_change.toFixed(2)}%</span>
+                        <span className="text-max-market-positive ml-2 font-bold">+{gainer.percent_change.toFixed(2)}%</span>
                       </div>
                     </div>
                   ))}
@@ -248,20 +248,59 @@ export default async function UserDashboard() {
             </div>
           </div>
 
-          <div className="fintech-card p-5 border-l-4 border-l-blue-500">
-            <div className="flex items-center gap-2 mb-2">
-              <Sparkles className="w-4 h-4 text-blue-400" />
-              <h2 className="text-sm font-bold text-white">MAXLITH AI Insights</h2>
+          <div className="fintech-card p-4 border-l-[3px] border-l-max-ai-primary">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <div className="text-[10px] font-mono uppercase tracking-widest text-max-ai-secondary font-bold">AI Signal</div>
+                <div className="text-sm font-bold text-white mt-0.5">RELIANCE <span className="text-max-market-positive ml-1 text-[10px]">LONG</span></div>
+              </div>
+              <Bot className="w-4 h-4 text-max-ai-primary" />
             </div>
-            <p className="text-xs text-slate-300 leading-relaxed mb-4">
-              Technical Agent detects 20-day SMA support holding on <strong>RELIANCE</strong> at ₹2,965. Relative Strength Index (RSI 14) stands at 58.2 (Neutral). Multi-agent consensus rating: <strong>CONSTRUCTIVE</strong>.
+            
+            <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-[11px] font-mono mb-4">
+              <div className="flex justify-between">
+                <span className="text-max-text-muted">Confidence</span>
+                <span className="text-max-ai-secondary font-bold">87%</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-max-text-muted">Momentum</span>
+                <span className="text-max-market-positive">Strong</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-max-text-muted">Trend</span>
+                <span className="text-max-market-positive">Bullish</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-max-text-muted">Risk</span>
+                <span className="text-max-warning">Medium</span>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 gap-1.5 text-[11px] font-mono mb-4 border-y border-max-border py-2.5">
+              <div className="flex justify-between">
+                <span className="text-max-text-muted">Entry</span>
+                <span className="text-white">2,965.00</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-max-text-muted">Target</span>
+                <span className="text-max-market-positive">3,050.00</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-max-text-muted">Stop Loss</span>
+                <span className="text-max-market-negative">2,940.00</span>
+              </div>
+            </div>
+
+            <p className="text-[10px] text-max-text-primary leading-relaxed mb-4">
+              Momentum strengthened after 2,965 support. Technical Agent detects 20-day SMA holding.
             </p>
+            
             <Link
               href="/dashboard/ai-copilot"
-              className="w-full py-2 rounded bg-blue-600/20 hover:bg-blue-600 text-blue-400 hover:text-white font-medium text-xs transition-all flex items-center justify-center gap-1.5"
+              className="w-full py-1.5 rounded border border-max-border bg-max-surface-hover hover:bg-max-border text-max-text-primary hover:text-white font-medium text-xs transition-all flex items-center justify-center gap-1.5"
             >
-              <span>Launch AI Copilot</span>
-              <Bot className="w-3.5 h-3.5" />
+              <span>View Full AI Analysis</span>
+              <Bot className="w-3 h-3" />
             </Link>
           </div>
         </div>

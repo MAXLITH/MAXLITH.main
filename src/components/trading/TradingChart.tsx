@@ -135,7 +135,7 @@ export default function TradingChart({
     <div className="relative w-full overflow-hidden bg-[#0b0e14]" style={{ height }} aria-label={`${symbol} market chart`}>
       <div ref={containerRef} className="absolute inset-0" />
       {bars.length === 0 && (
-        <div className="pointer-events-none absolute inset-0 flex items-center justify-center text-xs text-slate-500">
+        <div className="pointer-events-none absolute inset-0 flex items-center justify-center text-xs text-max-text-muted">
           Waiting for verified historical market data
         </div>
       )}

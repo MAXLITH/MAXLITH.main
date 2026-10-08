@@ -74,19 +74,19 @@ export default function AICopilotPage() {
 
   return (
     <div className="h-[calc(100vh-7rem)] flex flex-col space-y-4">
-      <div className="flex items-center justify-between pb-3 border-b border-slate-800">
+      <div className="flex items-center justify-between pb-3 border-b border-max-border">
         <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-lg bg-indigo-600/30 text-indigo-400 border border-indigo-500/30 flex items-center justify-center">
+          <div className="w-8 h-8 rounded bg-indigo-600/30 text-indigo-400 border border-indigo-500/30 flex items-center justify-center">
             <Bot className="w-5 h-5" />
           </div>
           <div>
             <h1 className="text-base font-bold text-white flex items-center gap-2">
               <span>MAXLITH AI Copilot</span>
-              <span className="px-2 py-0.5 rounded bg-blue-500/10 text-blue-400 text-[9px] font-mono border border-blue-500/20">
+              <span className="px-2 py-0.5 rounded bg-blue-500/10 text-max-brand-primary text-[9px] font-mono border border-blue-500/20">
                 MULTI-AGENT ENGINE
               </span>
             </h1>
-            <p className="text-[11px] text-slate-400">Conversational Financial Market Intelligence System</p>
+            <p className="text-[11px] text-max-text-secondary">Conversational Financial Market Intelligence System</p>
           </div>
         </div>
       </div>
@@ -98,28 +98,28 @@ export default function AICopilotPage() {
             className={`flex gap-3 ${msg.sender === 'USER' ? 'justify-end' : 'justify-start'}`}
           >
             {msg.sender === 'ASSISTANT' && (
-              <div className="w-7 h-7 rounded-lg bg-blue-600 flex items-center justify-center text-white font-bold text-xs flex-shrink-0 mt-1">
+              <div className="w-7 h-7 rounded bg-blue-600 flex items-center justify-center text-white font-bold text-xs flex-shrink-0 mt-1">
                 AI
               </div>
             )}
 
-            <div className={`max-w-2xl rounded-xl p-4 text-xs ${
+            <div className={`max-w-2xl rounded p-4 text-xs ${
               msg.sender === 'USER'
                 ? 'bg-blue-600 text-white font-medium'
-                : 'fintech-card text-slate-200 border border-slate-800'
+                : 'fintech-card text-slate-200 border border-max-border'
             }`}>
               <div className="whitespace-pre-wrap leading-relaxed font-sans">{msg.text}</div>
 
               {msg.agentReports && msg.agentReports.length > 0 && (
-                <div className="mt-4 pt-3 border-t border-slate-800/80 space-y-2 font-mono">
-                  <span className="text-[10px] uppercase tracking-wider text-blue-400 font-bold block">
+                <div className="mt-4 pt-3 border-t border-max-border/80 space-y-2 font-mono">
+                  <span className="text-[10px] uppercase tracking-wider text-max-brand-primary font-bold block">
                     Orchestrated Specialized Agent Evidence
                   </span>
                   <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
                     {msg.agentReports.map((rep) => (
-                      <div key={rep.agentName} className="p-2 rounded bg-[#0d121c] border border-slate-800 text-[10px]">
+                      <div key={rep.agentName} className="p-2 rounded bg-[#0d121c] border border-max-border text-[10px]">
                         <span className="font-bold text-white block">{rep.agentName} AGENT</span>
-                        <span className="text-emerald-400 block">{rep.status}</span>
+                        <span className="text-max-market-positive block">{rep.status}</span>
                       </div>
                     ))}
                   </div>
@@ -132,11 +132,11 @@ export default function AICopilotPage() {
                 </div>
               )}
 
-              <div className="mt-2 text-[9px] font-mono text-slate-500 text-right">{msg.timestamp}</div>
+              <div className="mt-2 text-[9px] font-mono text-max-text-muted text-right">{msg.timestamp}</div>
             </div>
 
             {msg.sender === 'USER' && (
-              <div className="w-7 h-7 rounded-full bg-slate-800 flex items-center justify-center text-slate-300 font-bold text-xs flex-shrink-0 mt-1">
+              <div className="w-7 h-7 rounded bg-max-surface flex items-center justify-center text-max-text-primary font-bold text-xs flex-shrink-0 mt-1">
                 U
               </div>
             )}
@@ -145,11 +145,11 @@ export default function AICopilotPage() {
 
         {loading && (
           <div className="flex gap-3 justify-start">
-            <div className="w-7 h-7 rounded-lg bg-blue-600 flex items-center justify-center text-white font-bold text-xs animate-pulse">
+            <div className="w-7 h-7 rounded bg-blue-600 flex items-center justify-center text-white font-bold text-xs animate-pulse">
               AI
             </div>
-            <div className="fintech-card p-4 text-xs font-mono text-slate-400 flex items-center gap-2">
-              <RefreshCw className="w-3.5 h-3.5 animate-spin text-blue-400" />
+            <div className="fintech-card p-4 text-xs font-mono text-max-text-secondary flex items-center gap-2">
+              <RefreshCw className="w-3.5 h-3.5 animate-spin text-max-brand-primary" />
               <span>Orchestrating Tech, News, Risk, Fundamental &amp; Info agents...</span>
             </div>
           </div>
@@ -157,12 +157,12 @@ export default function AICopilotPage() {
       </div>
 
       <div className="flex items-center gap-2 overflow-x-auto pb-1">
-        <span className="text-[10px] font-mono uppercase text-slate-500 flex-shrink-0">Suggested:</span>
+        <span className="text-[10px] font-mono uppercase text-max-text-muted flex-shrink-0">Suggested:</span>
         {samplePrompts.map((p) => (
           <button
             key={p}
             onClick={() => handleSendMessage(p)}
-            className="px-3 py-1 rounded-full bg-[#121824] hover:bg-slate-800 border border-slate-800 text-[11px] text-slate-300 font-mono flex-shrink-0 transition-colors"
+            className="px-3 py-1 rounded bg-max-surface hover:bg-max-surface border border-max-border text-[11px] text-max-text-primary font-mono flex-shrink-0 transition-colors"
           >
             {p}
           </button>
@@ -181,12 +181,12 @@ export default function AICopilotPage() {
           value={prompt}
           onChange={(e) => setPrompt(e.target.value)}
           placeholder="Ask MAXLITH AI (e.g. 'Analyze RELIANCE technical structure')..."
-          className="w-full bg-[#121824] border border-slate-800 focus:border-blue-500 text-xs text-white placeholder-slate-500 rounded-xl pl-4 pr-12 py-3 outline-none transition-colors"
+          className="w-full bg-max-surface border border-max-border focus:border-blue-500 text-xs text-white placeholder-slate-500 rounded pl-4 pr-12 py-3 outline-none transition-colors"
         />
         <button
           type="submit"
           disabled={!prompt.trim() || loading}
-          className="absolute right-2 top-1/2 -translate-y-1/2 p-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-white disabled:opacity-40 transition-colors"
+          className="absolute right-2 top-1/2 -translate-y-1/2 p-2 rounded bg-blue-600 hover:bg-blue-500 text-white disabled:opacity-40 transition-colors"
         >
           <Send className="w-4 h-4" />
         </button>

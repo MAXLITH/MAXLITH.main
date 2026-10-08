@@ -112,10 +112,10 @@ export default function AIAgentsPage() {
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-xl font-bold text-white flex items-center gap-2">
-            <Cpu className="w-5 h-5 text-blue-400" />
+            <Cpu className="w-5 h-5 text-max-brand-primary" />
             <span>Specialized AI Agent Ecosystem</span>
           </h1>
-          <p className="text-xs text-slate-400 mt-1">
+          <p className="text-xs text-max-text-secondary mt-1">
             Decoupled multi-agent orchestration architecture to eliminate single-model hallucination.
           </p>
         </div>
@@ -124,7 +124,7 @@ export default function AIAgentsPage() {
           <button
             onClick={handleRunAll}
             disabled={runningAgent !== null}
-            className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-medium text-xs shadow-md shadow-blue-600/30 transition-all disabled:opacity-50"
+            className="flex items-center gap-1.5 px-4 py-2 rounded bg-blue-600 hover:bg-blue-500 text-white font-medium text-xs transition-all disabled:opacity-50"
           >
             {runningAgent ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4" />}
             <span>Run All Agents</span>
@@ -135,18 +135,18 @@ export default function AIAgentsPage() {
       {/* Symbol Target Selector Bar */}
       <div className="fintech-card p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div className="flex items-center gap-2">
-          <span className="text-xs font-mono uppercase text-slate-400 font-bold">Target Stock:</span>
+          <span className="text-xs font-mono uppercase text-max-text-secondary font-bold">Target Stock:</span>
           <input
             type="text"
             value={symbol}
             onChange={(e) => setSymbol(e.target.value.toUpperCase())}
             placeholder="RELIANCE"
-            className="w-32 bg-[#0d121c] border border-slate-800 focus:border-blue-500 text-xs font-mono font-bold text-white rounded-lg px-3 py-1.5 outline-none uppercase"
+            className="w-32 bg-[#0d121c] border border-max-border focus:border-blue-500 text-xs font-mono font-bold text-white rounded px-3 py-1.5 outline-none uppercase"
           />
         </div>
 
         <div className="flex items-center gap-1.5 flex-wrap">
-          <span className="text-[10px] font-mono uppercase text-slate-500 mr-1">Quick Select:</span>
+          <span className="text-[10px] font-mono uppercase text-max-text-muted mr-1">Quick Select:</span>
           {popularSymbols.map((sym) => (
             <button
               key={sym}
@@ -154,7 +154,7 @@ export default function AIAgentsPage() {
               className={`px-2.5 py-1 rounded text-[11px] font-mono transition-colors ${
                 symbol === sym
                   ? 'bg-blue-600 text-white font-bold'
-                  : 'bg-[#0d121c] text-slate-400 hover:text-white border border-slate-800'
+                  : 'bg-[#0d121c] text-max-text-secondary hover:text-white border border-max-border'
               }`}
             >
               {sym}
@@ -176,33 +176,33 @@ export default function AIAgentsPage() {
                 <div className="flex items-center justify-between">
                   <span className="font-bold text-white font-mono text-sm">{agent.name}</span>
                   <div className="flex items-center gap-1.5">
-                    <span className={`w-2 h-2 rounded-full ${isRunning ? 'bg-amber-400 animate-ping' : 'bg-emerald-400 animate-pulse'}`}></span>
-                    <span className="text-[10px] font-mono text-slate-400">
+                    <span className={`w-2 h-2 rounded ${isRunning ? 'bg-amber-400 animate-ping' : 'bg-emerald-400 animate-pulse'}`}></span>
+                    <span className="text-[10px] font-mono text-max-text-secondary">
                       {isRunning ? 'RUNNING' : telem ? 'READY' : 'STANDBY'}
                     </span>
                   </div>
                 </div>
 
-                <div className="text-xs font-semibold text-blue-400 font-sans mt-1">{agent.role}</div>
-                <p className="text-xs text-slate-400 leading-relaxed font-sans mt-1">{agent.description}</p>
+                <div className="text-xs font-semibold text-max-brand-primary font-sans mt-1">{agent.role}</div>
+                <p className="text-xs text-max-text-secondary leading-relaxed font-sans mt-1">{agent.description}</p>
 
-                <div className="p-2.5 rounded bg-[#0d121c] border border-slate-800 text-[10px] font-mono text-slate-300 mt-3 space-y-1">
-                  <div className="flex justify-between text-slate-500 uppercase">
+                <div className="p-2.5 rounded bg-[#0d121c] border border-max-border text-[10px] font-mono text-max-text-primary mt-3 space-y-1">
+                  <div className="flex justify-between text-max-text-muted uppercase">
                     <span>Lifetime Runs: {telem?.totalRuns || 0}</span>
                     <span>{telem?.lastExecutionMs ? `${telem.lastExecutionMs}ms` : 'Cached'}</span>
                   </div>
-                  <div className="text-slate-400 truncate">
+                  <div className="text-max-text-secondary truncate">
                     {agent.metrics}
                   </div>
                 </div>
               </div>
 
-              <div className="pt-2 border-t border-slate-800/80 space-y-2">
+              <div className="pt-2 border-t border-max-border/80 space-y-2">
                 <div className="flex items-center justify-between gap-2">
                   <button
                     onClick={() => handleRunAgent(agent.id)}
                     disabled={isRunning}
-                    className="flex-1 py-1.5 px-3 rounded bg-blue-600/20 hover:bg-blue-600 text-blue-400 hover:text-white transition-all text-xs font-mono font-medium flex items-center justify-center gap-1.5 disabled:opacity-50"
+                    className="flex-1 py-1.5 px-3 rounded bg-blue-600/20 hover:bg-blue-600 text-max-brand-primary hover:text-white transition-all text-xs font-mono font-medium flex items-center justify-center gap-1.5 disabled:opacity-50"
                   >
                     {isRunning ? (
                       <>
@@ -220,7 +220,7 @@ export default function AIAgentsPage() {
                   {telem?.lastOutput && (
                     <button
                       onClick={() => setExpandedAgent(isExpanded ? null : agent.id)}
-                      className="p-1.5 rounded bg-[#0d121c] text-slate-400 hover:text-white border border-slate-800 transition-colors"
+                      className="p-1.5 rounded bg-[#0d121c] text-max-text-secondary hover:text-white border border-max-border transition-colors"
                       title="Inspect Latest Output"
                     >
                       {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
@@ -229,9 +229,9 @@ export default function AIAgentsPage() {
                 </div>
 
                 {isExpanded && telem?.lastOutput && (
-                  <div className="p-3 rounded bg-[#0b0e14] border border-slate-800 text-[11px] font-mono text-slate-300 max-h-48 overflow-y-auto">
-                    <div className="text-[10px] text-blue-400 font-bold mb-1 uppercase">Latest Execution Output:</div>
-                    <pre className="whitespace-pre-wrap leading-tight text-slate-300">
+                  <div className="p-3 rounded bg-[#0b0e14] border border-max-border text-[11px] font-mono text-max-text-primary max-h-48 overflow-y-auto">
+                    <div className="text-[10px] text-max-brand-primary font-bold mb-1 uppercase">Latest Execution Output:</div>
+                    <pre className="whitespace-pre-wrap leading-tight text-max-text-primary">
                       {typeof telem.lastOutput === 'object'
                         ? JSON.stringify(telem.lastOutput, null, 2)
                         : telem.lastOutput}

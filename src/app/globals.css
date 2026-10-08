@@ -1,22 +1,201 @@
 @import "tailwindcss";
 
+@theme {
+  --color-max-bg: var(--max-bg);
+  --color-max-bg-elevated: var(--max-bg-elevated);
+  --color-max-surface: var(--max-surface);
+  --color-max-surface-elevated: var(--max-surface-elevated);
+  --color-max-surface-hover: var(--max-surface-hover);
+  
+  --color-max-border: var(--max-border);
+  --color-max-border-strong: var(--max-border-strong);
+  
+  --color-max-text-primary: var(--max-text-primary);
+  --color-max-text-secondary: var(--max-text-secondary);
+  --color-max-text-muted: var(--max-text-muted);
+  --color-max-text-disabled: var(--max-text-disabled);
+
+  --color-max-brand-primary: var(--max-brand-primary);
+  --color-max-brand-secondary: var(--max-brand-secondary);
+
+  --color-max-market-positive: var(--max-market-positive);
+  --color-max-market-negative: var(--max-market-negative);
+  --color-max-market-neutral: var(--max-market-neutral);
+  --color-max-market-positive-soft: var(--max-market-positive-soft);
+  --color-max-market-negative-soft: var(--max-market-negative-soft);
+
+  --color-max-buy: var(--max-buy);
+  --color-max-buy-hover: var(--max-buy-hover);
+  --color-max-buy-soft: var(--max-buy-soft);
+
+  --color-max-sell: var(--max-sell);
+  --color-max-sell-hover: var(--max-sell-hover);
+  --color-max-sell-soft: var(--max-sell-soft);
+
+  --color-max-ai-primary: var(--max-ai-primary);
+  --color-max-ai-secondary: var(--max-ai-secondary);
+  --color-max-ai-confidence-high: var(--max-ai-confidence-high);
+  --color-max-ai-confidence-medium: var(--max-ai-confidence-medium);
+  --color-max-ai-confidence-low: var(--max-ai-confidence-low);
+
+  --color-max-success: var(--max-success);
+  --color-max-warning: var(--max-warning);
+  --color-max-error: var(--max-error);
+  --color-max-info: var(--max-info);
+  
+  /* Chart Colors */
+  --color-max-chart-bg: var(--max-chart-bg);
+  --color-max-chart-grid: var(--max-chart-grid);
+  --color-max-chart-crosshair: var(--max-chart-crosshair);
+  --color-max-chart-bull: var(--max-chart-bull);
+  --color-max-chart-bear: var(--max-chart-bear);
+  --color-max-chart-volume-up: var(--max-chart-volume-up);
+  --color-max-chart-volume-down: var(--max-chart-volume-down);
+
+  /* Indicator Colors */
+  --color-indicator-ema20: var(--indicator-ema20);
+  --color-indicator-ema50: var(--indicator-ema50);
+  --color-indicator-vwap: var(--indicator-vwap);
+  --color-indicator-secondary: var(--indicator-secondary);
+  
+  --color-max-focus: var(--max-focus);
+  --color-max-selection: var(--max-selection);
+  --color-max-hover: var(--max-hover);
+  --color-max-active: var(--max-active);
+  --color-max-disabled: var(--max-disabled);
+}
+
 @layer base {
   :root {
-    --bg-main: #0b0e14;
-    --bg-card: #121824;
-    --bg-card-hover: #182030;
-    --border-color: #1e293b;
-    --text-primary: #f8fafc;
-    --text-secondary: #94a3b8;
-    --text-muted: #64748b;
-    --accent-blue: #3b82f6;
-    --accent-green: #10b981;
-    --accent-red: #ef4444;
+    --max-bg: #0B0F14;
+    --max-bg-elevated: #10161F;
+    --max-surface: #141B24;
+    --max-surface-elevated: #19222D;
+    --max-surface-hover: #1D2835;
+    
+    --max-border: #26313D;
+    --max-border-strong: #354250;
+    
+    --max-text-primary: #F4F7FA;
+    --max-text-secondary: #A9B4C0;
+    --max-text-muted: #74808D;
+    --max-text-disabled: #4E5A67;
+    
+    --max-brand-primary: #7C6FF2;
+    --max-brand-secondary: #A78BFA;
+    
+    --max-market-positive: #22C55E;
+    --max-market-negative: #F05252;
+    --max-market-neutral: #94A3B8;
+    --max-market-positive-soft: #163B29;
+    --max-market-negative-soft: #3E2024;
+    
+    --max-buy: #16A36B;
+    --max-buy-hover: #1AB77A;
+    --max-buy-soft: #123A2C;
+    
+    --max-sell: #E05A5A;
+    --max-sell-hover: #ED6B6B;
+    --max-sell-soft: #402326;
+    
+    --max-ai-primary: #8B7CF6;
+    --max-ai-secondary: #22D3EE;
+    --max-ai-confidence-high: #22D3EE;
+    --max-ai-confidence-medium: #F2B84B;
+    --max-ai-confidence-low: #8B95A5;
+    
+    --max-success: #22C55E;
+    --max-warning: #F2B84B;
+    --max-error: #F05252;
+    --max-info: #4DA3FF;
+    
+    --max-chart-bg: #0B0F14;
+    --max-chart-grid: rgba(38,49,61,0.45);
+    --max-chart-crosshair: rgba(203,213,225,0.65);
+    --max-chart-bull: #22C55E;
+    --max-chart-bear: #F05252;
+    --max-chart-volume-up: rgba(34,197,94,0.35);
+    --max-chart-volume-down: rgba(240,82,82,0.35);
+    
+    --indicator-ema20: #F2B84B;
+    --indicator-ema50: #4DA3FF;
+    --indicator-vwap: #22D3EE;
+    --indicator-secondary: #8B7CF6;
+    
+    --max-focus: #60A5FA;
+    --max-selection: #2B3B55;
+    --max-hover: #334158;
+    --max-active: #7C6FF2;
+    --max-disabled: #4E5A67;
+  }
+
+  @media (prefers-color-scheme: light) {
+    :root {
+      --max-bg: #F7F9FC;
+      --max-bg-elevated: #FFFFFF;
+      --max-surface: #FFFFFF;
+      --max-surface-elevated: #F2F5F9;
+      --max-surface-hover: #EEF2F7;
+      
+      --max-border: #D9E0E8;
+      --max-border-strong: #C5CED9;
+      
+      --max-text-primary: #17202B;
+      --max-text-secondary: #4B5A6A;
+      --max-text-muted: #6F7D8C;
+      --max-text-disabled: #AAB4BF;
+      
+      --max-brand-primary: #6657D9;
+      --max-brand-secondary: #6657D9;
+      
+      --max-market-positive: #148A52;
+      --max-market-negative: #C83E48;
+      --max-market-neutral: #94A3B8;
+      --max-market-positive-soft: #E8F5E9;
+      --max-market-negative-soft: #FFEBEE;
+      
+      --max-buy: #128159;
+      --max-buy-hover: #0E6B49;
+      --max-buy-soft: #E8F5E9;
+      
+      --max-sell: #C84949;
+      --max-sell-hover: #A83A3A;
+      --max-sell-soft: #FFEBEE;
+      
+      --max-ai-primary: #6657D9;
+      --max-ai-secondary: #087F95;
+      --max-ai-confidence-high: #087F95;
+      --max-ai-confidence-medium: #A86B00;
+      --max-ai-confidence-low: #6F7D8C;
+      
+      --max-warning: #A86B00;
+      --max-error: #C83E48;
+      --max-info: #2563EB;
+
+      --max-chart-bg: #F7F9FC;
+      --max-chart-grid: rgba(217,224,232,0.45);
+      --max-chart-crosshair: rgba(75,90,106,0.65);
+      --max-chart-bull: #148A52;
+      --max-chart-bear: #C83E48;
+      --max-chart-volume-up: rgba(20,138,82,0.35);
+      --max-chart-volume-down: rgba(200,62,72,0.35);
+
+      --indicator-ema20: #A86B00;
+      --indicator-ema50: #2563EB;
+      --indicator-vwap: #087F95;
+      --indicator-secondary: #6657D9;
+
+      --max-focus: #2563EB;
+      --max-selection: #E2E8F0;
+      --max-hover: #EEF2F7;
+      --max-active: #6657D9;
+      --max-disabled: #AAB4BF;
+    }
   }
 
   body {
-    background-color: var(--bg-main);
-    color: var(--text-primary);
+    background-color: var(--max-bg);
+    color: var(--max-text-primary);
     font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
     min-height: 100dvh;
     overflow-x: hidden;
@@ -29,21 +208,15 @@
 }
 
 .fintech-card {
-  background-color: #121824;
-  border: 1px solid rgba(255, 255, 255, 0.07);
-  border-radius: 0.75rem;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
-}
-
-.fintech-card:hover {
-  border-color: rgba(255, 255, 255, 0.15);
+  background-color: var(--max-surface);
+  border: 1px solid var(--max-border);
+  border-radius: 4px;
 }
 
 .fintech-glass {
-  background: rgba(18, 24, 36, 0.85);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--max-surface);
+  border: 1px solid var(--max-border);
+  border-radius: 4px;
 }
 
 ::-webkit-scrollbar {
@@ -52,14 +225,14 @@
 }
 
 ::-webkit-scrollbar-track {
-  background: #0b0e14;
+  background: var(--max-bg);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #1e293b;
+  background: var(--max-border-strong);
   border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #334155;
+  background: var(--max-text-disabled);
 }
