@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { redirect } from 'next/navigation';
 import { getAuthSession } from '@/lib/auth';
 import { getAllInstruments, getMarketSessionStatus, marketDataService } from '@/lib/market-data';
 import { getUserPortfolioSummary } from '@/lib/paper-trading';
@@ -21,7 +22,10 @@ export const dynamic = 'force-dynamic';
 
 export default async function UserDashboard() {
   const session = await getAuthSession();
-  const summary = getUserPortfolioSummary(session!.id);
+  if (!session) {
+    redirect('/login');
+  }
+  const summary = getUserPortfolioSummary(session.id);
   const instruments = getAllInstruments();
   const sessionStatus = getMarketSessionStatus();
   const indices = await marketDataService.getIndices();
