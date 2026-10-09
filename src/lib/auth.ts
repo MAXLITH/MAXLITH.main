@@ -34,8 +34,13 @@ export async function verifySessionToken(token: string) {
 }
 
 export async function getAuthSession(): Promise<UserSession | null> {
-  const cookieStore = await cookies();
-  const token = cookieStore.get('maxlith_session')?.value;
+  let token: string | undefined;
+  try {
+    const cookieStore = await cookies();
+    token = cookieStore.get('maxlith_session')?.value;
+  } catch {
+    return null;
+  }
   if (!token) return null;
 
   const payload = await verifySessionToken(token);

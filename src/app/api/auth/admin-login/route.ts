@@ -9,7 +9,7 @@ export async function POST(request: Request) {
     const { email, password } = body;
 
     if (!email || !password) {
-      return NextResponse.json({ error: 'Please provide email and password.' }, { status: 400 });
+      return NextResponse.json({ error: 'Please provide administrator credentials.' }, { status: 400 });
     }
 
     const normalizedEmail = email.toLowerCase().trim();
@@ -23,13 +23,19 @@ export async function POST(request: Request) {
       virtual_cash: number;
     } | undefined;
 
+    // Secure authentication failure response - prevent account enumeration
     if (!user) {
-      return NextResponse.json({ error: 'Invalid email or password.' }, { status: 401 });
+      return NextResponse.json({ error: 'Invalid administrator credentials.' }, { status: 401 });
     }
 
     const isValidPassword = await bcrypt.compare(password, user.password_hash);
     if (!isValidPassword) {
-      return NextResponse.json({ error: 'Invalid email or password.' }, { status: 401 });
+      return NextResponse.json({ error: 'Invalid administrator credentials.' }, { status: 401 });
+    }
+
+    // SERVER-SIDE ROLE ENFORCEMENT: Only ADMIN role is authorized for admin authentication route
+    if (user.role !== 'ADMIN') {
+      return NextResponse.json({ error: 'Invalid administrator credentials.' }, { status: 401 });
     }
 
     const token = await createSessionToken({ id: user.id, email: user.email, role: user.role });
@@ -41,7 +47,6 @@ export async function POST(request: Request) {
         email: user.email,
         fullName: user.full_name,
         role: user.role,
-        virtualCash: user.virtual_cash
       }
     });
 
@@ -57,7 +62,7 @@ export async function POST(request: Request) {
 
     return response;
   } catch (error: any) {
-    console.error('Login error', error);
-    return NextResponse.json({ error: 'Authentication failed.' }, { status: 500 });
+    console.error('Admin authentication error', error);
+    return NextResponse.json({ error: 'Administrator authentication failed.' }, { status: 500 });
   }
 }

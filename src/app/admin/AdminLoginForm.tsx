@@ -1,0 +1,146 @@
+'use client';
+
+import { useState } from 'react';
+import Link from 'next/link';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { ShieldCheck, ArrowRight, AlertCircle, Eye, EyeOff, Lock, Server } from 'lucide-react';
+
+export default function AdminLoginForm() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const redirectTo = searchParams.get('redirect') || '/admin/dashboard';
+
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    setLoading(true);
+
+    try {
+      const res = await fetch('/api/auth/admin-login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || 'Administrator authentication failed');
+      }
+
+      router.push(redirectTo);
+      router.refresh();
+    } catch (err: any) {
+      setError(err.message || 'Authentication failed. Verify credentials.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-[#06080d] text-slate-100 flex flex-col justify-center items-center px-4 relative font-sans">
+      <div className="w-full max-w-md">
+        {/* Brand Header */}
+        <div className="text-center mb-8">
+          <Link href="/" className="inline-flex items-center gap-2.5 mb-4 group">
+            <div className="w-10 h-10 rounded bg-purple-600 flex items-center justify-center text-white font-bold text-lg group-hover:scale-105 transition-transform shadow-lg shadow-purple-900/40">
+              M
+            </div>
+            <span className="text-2xl font-bold tracking-tight text-white">MAXLITH</span>
+          </Link>
+          <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded bg-purple-950/60 border border-purple-500/30 text-purple-300 text-[10px] font-mono uppercase tracking-widest mb-3">
+            <Lock className="w-3 h-3 text-purple-400" />
+            <span>SECURE CONTROL CENTER</span>
+          </div>
+          <h1 className="text-xl font-bold text-white">Administrator Access</h1>
+          <p className="text-xs text-max-text-secondary mt-1">
+            Secure access to the MAXLITH AI control center.
+          </p>
+        </div>
+
+        {/* Login Form Card */}
+        <div className="fintech-card p-6 border border-purple-500/20 bg-[#0c0f17] shadow-xl shadow-purple-950/20">
+          {error && (
+            <div className="mb-4 p-3 rounded bg-rose-500/10 border border-rose-500/30 text-rose-400 text-xs flex items-center gap-2 font-mono">
+              <AlertCircle className="w-4 h-4 flex-shrink-0 text-rose-400" />
+              <span>{error}</span>
+            </div>
+          )}
+
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <label className="block text-xs font-semibold text-max-text-primary mb-1.5 font-mono">
+                Administrator Identifier
+              </label>
+              <input
+                type="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="admin@maxlith.com"
+                className="w-full bg-[#080b11] border border-max-border focus:border-purple-500 text-xs text-white placeholder-slate-600 rounded px-3.5 py-2.5 outline-none transition-colors font-mono"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-max-text-primary mb-1.5 font-mono">
+                Administrator Key / Password
+              </label>
+              <div className="relative">
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="••••••••••••"
+                  className="w-full bg-[#080b11] border border-max-border focus:border-purple-500 text-xs text-white placeholder-slate-600 rounded px-3.5 py-2.5 pr-10 outline-none transition-colors font-mono"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white transition-colors p-1"
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
+                >
+                  {showPassword ? (
+                    <EyeOff className="w-4 h-4" />
+                  ) : (
+                    <Eye className="w-4 h-4" />
+                  )}
+                </button>
+              </div>
+            </div>
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full py-2.5 rounded bg-purple-600 hover:bg-purple-500 text-white font-medium text-xs transition-all flex items-center justify-center gap-2 disabled:opacity-50 active:scale-[0.98] shadow-md shadow-purple-900/30"
+            >
+              {loading ? (
+                <span className="font-mono">Verifying Security Credentials...</span>
+              ) : (
+                <>
+                  <ShieldCheck className="w-4 h-4" />
+                  <span>Authenticate Admin Access</span>
+                </>
+              )}
+            </button>
+          </form>
+
+          <div className="mt-6 pt-4 border-t border-max-border/80 flex items-center justify-between text-[11px] text-max-text-secondary">
+            <Link href="/login" className="text-max-text-muted hover:text-white transition-colors flex items-center gap-1 font-mono">
+              <Server className="w-3.5 h-3.5" />
+              <span>Trader Login</span>
+            </Link>
+            <span className="font-mono text-[10px] text-purple-400/80">RBAC PROTECTED</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}

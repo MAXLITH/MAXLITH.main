@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
-import { requireAdminSession } from '@/lib/auth';
-import db from '@/lib/db';
-import { getMarketSessionStatus } from '@/lib/market-hours';
+import { requireAdminSession } from '../../../../lib/auth';
+import db from '../../../../lib/db';
+import { getMarketSessionStatus } from '../../../../lib/market-hours';
 
 export const dynamic = 'force-dynamic';
 
