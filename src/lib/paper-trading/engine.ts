@@ -487,11 +487,11 @@ export function getUserPortfolioSummary(userId: string): PortfolioSummary {
     }
   }
 
-  const currentPortfolioValue = roundRupee(virtualCash + currentPositionsValue);
+  const currentPortfolioValue = roundRupee((Number(virtualCash) || 0) + (Number(currentPositionsValue) || 0));
   const overallPnl = roundRupee(currentPortfolioValue - initialCapital);
   const overallPnlPercent = initialCapital > 0 ? Number(((overallPnl / initialCapital) * 100).toFixed(2)) : 0;
 
-  const todayPnl = roundRupee(dayHoldingsPnl + todayRealizedPnl);
+  const todayPnl = roundRupee((Number(dayHoldingsPnl) || 0) + (Number(todayRealizedPnl) || 0));
   const prevPortfolioValue = currentPortfolioValue - todayPnl;
   const todayPnlPercent = prevPortfolioValue > 0 ? Number(((todayPnl / prevPortfolioValue) * 100).toFixed(2)) : 0;
 

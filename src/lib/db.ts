@@ -187,7 +187,9 @@ class StatementWrapper {
         return store.orders.get(params[0]) || null;
       }
       if (sqlUpper.includes('COUNT(*)')) {
-        return { count: store.orders.size };
+        const userId = params[0];
+        const count = userId ? Array.from(store.orders.values()).filter((o) => o.user_id === userId).length : store.orders.size;
+        return { count, cnt: count };
       }
     }
 
@@ -267,7 +269,18 @@ class StatementWrapper {
       const userId = params[0];
       let res = Array.from(store.positions.values());
       if (userId) res = res.filter((p) => p.user_id === userId);
-      return res;
+      return res.map((p) => {
+        const inst = store.instruments.get(p.symbol) || {};
+        return {
+          ...p,
+          name: inst.name || p.symbol,
+          current_price: inst.current_price || p.average_price || 0,
+          previous_close: inst.previous_close || p.average_price || 0,
+          change: inst.change || 0,
+          percent_change: inst.percent_change || 0,
+          sector: inst.sector || 'General',
+        };
+      });
     }
 
     if (sqlUpper.includes('FROM TRADES')) {
@@ -292,6 +305,21 @@ class StatementWrapper {
       return Array.from(store.news.values()).slice(0, limit);
     }
 
+    if (sqlUpper.includes('FROM LEDGER_ENTRIES')) {
+      const userId = params[0];
+      const entries = Array.from(store.ledgerEntries.values()).filter((l) => !userId || l.user_id === userId);
+      if (sqlUpper.includes('GROUP BY DIRECTION')) {
+        const cashEntries = entries.filter((l) => l.account_kind === 'CASH');
+        const map = new Map<string, number>();
+        for (const e of cashEntries) {
+          const dir = e.direction;
+          map.set(dir, (map.get(dir) || 0) + (e.amount_paise || 0));
+        }
+        return Array.from(map.entries()).map(([direction, total_paise]) => ({ direction, total_paise }));
+      }
+      return entries;
+    }
+
     if (sqlUpper.includes('FROM ALERTS')) {
       const userId = params[0];
       return Array.from(store.alerts.values()).filter((a) => !userId || a.user_id === userId);
@@ -305,6 +333,36 @@ class StatementWrapper {
     const sqlUpper = this.sql.toUpperCase();
 
     if (sqlUpper.includes('INSERT INTO USERS') || sqlUpper.includes('UPDATE USERS')) {
+      if (sqlUpper.includes('SET VIRTUAL_CASH = VIRTUAL_CASH -')) {
+        const [amount, userId] = params;
+        const current = store.users.get(userId);
+        if (current) {
+          current.virtual_cash = Number((current.virtual_cash - amount).toFixed(2));
+          current.updated_at = new Date().toISOString();
+        }
+        return { changes: 1, lastInsertRowid: 1 };
+      }
+      if (sqlUpper.includes('SET BLOCKED_MARGIN = BLOCKED_MARGIN +')) {
+        const [amount, userId] = params;
+        const current = store.users.get(userId);
+        if (current) {
+          current.blocked_margin = Number(((current.blocked_margin || 0) + amount).toFixed(2));
+          current.updated_at = new Date().toISOString();
+        }
+        return { changes: 1, lastInsertRowid: 1 };
+      }
+      if (sqlUpper.includes('SET VIRTUAL_CASH = ?, INITIAL_CAPITAL = ?')) {
+        const [cash, cap, userId] = params;
+        const current = store.users.get(userId);
+        if (current) {
+          current.virtual_cash = cash;
+          current.initial_capital = cap;
+          current.blocked_margin = 0;
+          current.updated_at = new Date().toISOString();
+        }
+        return { changes: 1, lastInsertRowid: 1 };
+      }
+
       let u: any = {};
       if (typeof args[0] === 'object' && args[0] !== null) {
         u = args[0];
@@ -322,7 +380,7 @@ class StatementWrapper {
       }
       if (u.id) {
         store.users.set(u.id, { ...store.users.get(u.id), ...u, updated_at: new Date().toISOString() });
-        if (u.email) store.users.set(`email:${u.email.toLowerCase()}`, u);
+        if (u.email && typeof u.email === 'string') store.users.set(`email:${u.email.toLowerCase()}`, u);
         syncToSupabase('users', [u]);
       }
       return { changes: 1, lastInsertRowid: 1 };
@@ -358,6 +416,38 @@ class StatementWrapper {
         if (val.symbol === symbol && (!watchlistId || val.watchlist_id === watchlistId)) {
           store.watchlistItems.delete(key);
         }
+      }
+      return { changes: 1, lastInsertRowid: 1 };
+    }
+
+    if (sqlUpper.includes('DELETE FROM POSITIONS')) {
+      const userId = params[0];
+      for (const [key, val] of store.positions.entries()) {
+        if (val.user_id === userId) store.positions.delete(key);
+      }
+      return { changes: 1, lastInsertRowid: 1 };
+    }
+
+    if (sqlUpper.includes('DELETE FROM ORDERS')) {
+      const userId = params[0];
+      for (const [key, val] of store.orders.entries()) {
+        if (val.user_id === userId) store.orders.delete(key);
+      }
+      return { changes: 1, lastInsertRowid: 1 };
+    }
+
+    if (sqlUpper.includes('DELETE FROM TRADES')) {
+      const userId = params[0];
+      for (const [key, val] of store.trades.entries()) {
+        if (val.user_id === userId) store.trades.delete(key);
+      }
+      return { changes: 1, lastInsertRowid: 1 };
+    }
+
+    if (sqlUpper.includes('DELETE FROM LEDGER_ENTRIES')) {
+      const userId = params[0];
+      for (const [key, val] of store.ledgerEntries.entries()) {
+        if (val.user_id === userId) store.ledgerEntries.delete(key);
       }
       return { changes: 1, lastInsertRowid: 1 };
     }

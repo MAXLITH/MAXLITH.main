@@ -56,6 +56,24 @@ export class NormalizedRestMarketDataProvider implements MarketDataProvider {
 
   async searchSymbols(query: string, exchange?: string, limit = 20): Promise<TradingSymbol[]> {
     const q = query.toUpperCase().trim();
+    if (this.baseUrl && this.baseUrl.startsWith('http')) {
+      try {
+        const url = `${this.baseUrl}/symbols/search?q=${encodeURIComponent(query)}&exchange=${encodeURIComponent(exchange || 'NSE')}&limit=${limit}`;
+        const headers: Record<string, string> = { Accept: 'application/json' };
+        if (this.apiKey) headers['Authorization'] = `Bearer ${this.apiKey}`;
+        const res = await fetch(url, { headers });
+        if (res.ok) {
+          const json = await res.json();
+          const items = json.data || json || [];
+          if (Array.isArray(items) && items.length > 0) {
+            return items.map((f: any) => toTradingSymbol(f));
+          }
+        }
+      } catch {
+        /* fallback to defaults */
+      }
+    }
+
     const defaults = [
       { symbol: 'RELIANCE', exchange: 'NSE' as const, name: 'Reliance Industries Ltd', tradable: true },
       { symbol: 'TCS', exchange: 'NSE' as const, name: 'Tata Consultancy Services', tradable: true },
@@ -112,19 +130,59 @@ export class NormalizedRestMarketDataProvider implements MarketDataProvider {
     const id = normalizeSymbol(request.symbol);
     const { symbol } = parseSymbol(id);
 
-    const candles = await this.upstox.getHistory(symbol, request.resolution || '1D');
-    const bars: MarketBar[] = [];
-    for (const c of candles) {
-      const timeMs = new Date(c.timestamp).getTime();
-      if (isNaN(timeMs) || timeMs <= 0) continue;
-      bars.push({
-        time: Math.floor(timeMs / 1000),
+    let rawBars: any[] = [];
+    if (this.baseUrl && this.baseUrl.startsWith('http')) {
+      try {
+        const url = `${this.baseUrl}/history?symbol=${encodeURIComponent(symbol)}&resolution=${request.resolution || '1D'}`;
+        const headers: Record<string, string> = { Accept: 'application/json' };
+        if (this.apiKey) headers['Authorization'] = `Bearer ${this.apiKey}`;
+        const res = await fetch(url, { headers });
+        if (res.ok) {
+          const json = await res.json();
+          rawBars = json.data || json.candles || json || [];
+        }
+      } catch {
+        /* fallback to Upstox */
+      }
+    }
+
+    if (rawBars.length === 0) {
+      const candles = await this.upstox.getHistory(symbol, request.resolution || '1D');
+      rawBars = candles.map((c) => ({
+        time: Math.floor(new Date(c.timestamp).getTime() / 1000),
         open: c.open,
         high: c.high,
         low: c.low,
         close: c.close,
         volume: c.volume,
-      });
+      }));
+    }
+
+    const bars: MarketBar[] = [];
+    const seenTimes = new Set<number>();
+
+    for (const b of rawBars) {
+      const time = typeof b.time === 'number' ? b.time : Math.floor(new Date(b.timestamp || b.time).getTime() / 1000);
+      const open = Number(b.open);
+      const high = Number(b.high);
+      const low = Number(b.low);
+      const close = Number(b.close);
+      const volume = Number(b.volume || 0);
+
+      if (isNaN(time) || time <= 0) continue;
+      if (seenTimes.has(time)) {
+        throw new Error(`Invalid bar sequence: duplicate or unordered timestamp ${time}`);
+      }
+      seenTimes.add(time);
+
+      if (isNaN(open) || isNaN(high) || isNaN(low) || isNaN(close) || open <= 0 || close <= 0) {
+        throw new Error('Invalid bar: price non-positive or NaN');
+      }
+      if (high < Math.max(open, close) || low > Math.min(open, close) || high < low) {
+        throw new Error('Invalid bar: high/low bounds violated');
+      }
+
+      bars.push({ time, open, high, low, close, volume });
     }
 
     const inRange = bars.filter((bar) =>
