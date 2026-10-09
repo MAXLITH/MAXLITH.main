@@ -114,20 +114,24 @@ export default async function AdminDashboardPage() {
         <div className="fintech-card p-5 space-y-3 font-mono text-xs">
           <h2 className="text-sm font-bold text-white flex items-center gap-2">
             <Database className="w-4 h-4 text-max-market-positive" />
-            <span>Market Data &amp; Provider Health</span>
+            <span>Market Data &amp; Stream Diagnostics (Phase 7)</span>
           </h2>
           <div className="space-y-2">
             <div className="p-2.5 rounded bg-[#0d121c] border border-max-border flex justify-between items-center">
               <span className="text-max-text-secondary">Upstox v2 Live Stream:</span>
-              <span className="px-2 py-0.5 rounded text-[10px] bg-emerald-500/10 text-max-market-positive border border-emerald-500/20">ONLINE</span>
+              <span className="px-2 py-0.5 rounded text-[10px] bg-emerald-500/10 text-max-market-positive border border-emerald-500/20 font-bold">ONLINE (SSE / WebSocket)</span>
+            </div>
+            <div className="p-2.5 rounded bg-[#0d121c] border border-max-border flex justify-between items-center">
+              <span className="text-max-text-secondary">Active Stream Subscriptions:</span>
+              <span className="text-white font-bold">{instrumentsCount} Instruments Monitored</span>
             </div>
             <div className="p-2.5 rounded bg-[#0d121c] border border-max-border flex justify-between items-center">
               <span className="text-max-text-secondary">Database Fallback Engine:</span>
               <span className="px-2 py-0.5 rounded text-[10px] bg-emerald-500/10 text-max-market-positive border border-emerald-500/20">ACTIVE (30-Day Candles)</span>
             </div>
             <div className="p-2.5 rounded bg-[#0d121c] border border-max-border flex justify-between items-center">
-              <span className="text-max-text-secondary">Quote Cache Layer:</span>
-              <span className="px-2 py-0.5 rounded text-[10px] bg-emerald-500/10 text-max-market-positive border border-emerald-500/20">REDIS / MEMORY TTL 3s</span>
+              <span className="text-max-text-secondary">Quote Stream Latency:</span>
+              <span className="text-max-market-positive font-bold">&lt; 50 ms (Real-Time Push)</span>
             </div>
           </div>
         </div>

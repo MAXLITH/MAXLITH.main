@@ -45,6 +45,23 @@ function errorText(error: unknown) {
   return error instanceof Error ? error.message : 'Market data unavailable.';
 }
 
+function getResolutionSeconds(res: Resolution): number {
+  switch (res) {
+    case '1': return 60;
+    case '3': return 180;
+    case '5': return 300;
+    case '15': return 900;
+    case '30': return 1800;
+    case '60': return 3600;
+    case '120': return 7200;
+    case '240': return 14400;
+    case '1D': return 86400;
+    case '1W': return 604800;
+    case '1M': return 2592000;
+    default: return 86400;
+  }
+}
+
 export default function TradingTerminal() {
   const [instrument, setInstrument] = useState<TradingSymbol | null>(null);
   const [exchange, setExchange] = useState<'NSE' | 'BSE'>('NSE');
@@ -217,38 +234,138 @@ export default function TradingTerminal() {
   }, [provider.configured, watchlistEntries]);
 
   useEffect(() => {
-    const wsUrl = process.env.NEXT_PUBLIC_MARKET_WS_URL;
-    if (!provider.streamingAvailable || !wsUrl) {
+    if (!provider.configured) {
       setRealtimeStatus('OFFLINE');
       return;
     }
+
+    const wsUrl = process.env.NEXT_PUBLIC_MARKET_WS_URL;
     let socketClient: MarketRealtimeClient | null = null;
-    let unsubscribe = () => {};
-    const tokenProvider = async () => {
-      const response = await fetch('/api/market/stream-token', { cache: 'no-store' });
-      if (!response.ok) return null;
-      const payload = await response.json();
-      return typeof payload.token === 'string' ? payload.token : null;
-    };
-    if (selectedId) {
+    let eventSource: EventSource | null = null;
+    let unsubWs = () => {};
+
+    const activeSymbols = Array.from(
+      new Set([
+        selectedId,
+        ...watchlistEntries.map((e) => e.id),
+        ...positions.map((p) => `NSE:${p.symbol}`),
+      ].filter(Boolean))
+    );
+
+    if (wsUrl && selectedId) {
+      const tokenProvider = async () => {
+        const response = await fetch('/api/market/stream-token', { cache: 'no-store' });
+        if (!response.ok) return null;
+        const payload = await response.json();
+        return typeof payload.token === 'string' ? payload.token : null;
+      };
+
       socketClient = new MarketRealtimeClient(wsUrl, setRealtimeStatus, tokenProvider);
-      unsubscribe = socketClient.subscribe(selectedId, (message) => {
-        if (message.type === 'quote_update') setQuoteBySymbol((current) => ({ ...current, [selectedId]: message.data as unknown as MarketQuote }));
-        if (message.type === 'bar_update') setBars((current) => {
-          const next = message.data;
-          const last = current[current.length - 1];
-          if (!last) return [next];
-          if (next.time === last.time) return [...current.slice(0, -1), next];
-          if (next.time > last.time) return [...current, next];
-          return current;
-        });
-      }, resolution);
+      unsubWs = socketClient.subscribe(
+        selectedId,
+        (message) => {
+          if (message.type === 'quote_update') {
+            const liveQuote = message.data as unknown as MarketQuote;
+            setQuoteBySymbol((current) => ({ ...current, [selectedId]: liveQuote }));
+            setFeedMessage(`Upstox Live Stream · ${new Date(liveQuote.asOf || Date.now()).toLocaleTimeString('en-IN', { timeZone: 'Asia/Kolkata' })}`);
+          }
+          if (message.type === 'bar_update') {
+            setBars((current) => {
+              const next = message.data;
+              const last = current[current.length - 1];
+              if (!last) return [next];
+              if (next.time === last.time) return [...current.slice(0, -1), next];
+              if (next.time > last.time) return [...current, next];
+              return current;
+            });
+          }
+        },
+        resolution
+      );
+    } else if (activeSymbols.length > 0) {
+      const querySymbols = activeSymbols.join(',');
+      const sseUrl = `/api/stream/quotes?symbols=${encodeURIComponent(querySymbols)}`;
+      eventSource = new EventSource(sseUrl);
+
+      eventSource.onopen = () => {
+        setRealtimeStatus('LIVE');
+      };
+
+      eventSource.onerror = () => {
+        setRealtimeStatus('RECONNECTING');
+      };
+
+      eventSource.addEventListener('quotes', (event: MessageEvent) => {
+        try {
+          const payload = JSON.parse(event.data);
+          const quotesList: MarketQuote[] = payload.quotes || [];
+          if (!quotesList.length) return;
+
+          setRealtimeStatus('LIVE');
+
+          const updateMap: Record<string, MarketQuote> = {};
+          let selectedQuote: MarketQuote | null = null;
+
+          for (const q of quotesList) {
+            const symKey = q.symbol.includes(':') ? q.symbol : `NSE:${q.symbol}`;
+            updateMap[symKey] = q;
+            updateMap[q.symbol] = q;
+            if (symKey === selectedId || q.symbol === selectedId || q.symbol === instrument?.symbol) {
+              selectedQuote = q;
+            }
+          }
+
+          setQuoteBySymbol((current) => ({ ...current, ...updateMap }));
+
+          if (selectedQuote) {
+            const ltp = selectedQuote.last;
+            const quoteTime = new Date(selectedQuote.asOf || payload.timestamp || Date.now()).toLocaleTimeString('en-IN', { timeZone: 'Asia/Kolkata' });
+            setFeedMessage(`Upstox Live Stream · Updated ${quoteTime} IST`);
+
+            if (ltp && ltp > 0) {
+              setBars((currentBars) => {
+                if (!currentBars || currentBars.length === 0) return currentBars;
+                const lastBar = currentBars[currentBars.length - 1];
+                const nowSec = Math.floor(Date.now() / 1000);
+                const intervalSec = getResolutionSeconds(resolution);
+                const candleTime = Math.floor(nowSec / intervalSec) * intervalSec;
+
+                if (lastBar.time === candleTime) {
+                  const updatedBar: MarketBar = {
+                    ...lastBar,
+                    high: Math.max(lastBar.high, ltp),
+                    low: Math.min(lastBar.low, ltp),
+                    close: ltp,
+                    volume: Math.max(lastBar.volume, selectedQuote!.volume || lastBar.volume),
+                  };
+                  return [...currentBars.slice(0, -1), updatedBar];
+                } else if (candleTime > lastBar.time) {
+                  const newBar: MarketBar = {
+                    time: candleTime,
+                    open: ltp,
+                    high: ltp,
+                    low: ltp,
+                    close: ltp,
+                    volume: selectedQuote!.volume || 0,
+                  };
+                  return [...currentBars, newBar];
+                }
+                return currentBars;
+              });
+            }
+          }
+        } catch {
+          /* Parse error ignored */
+        }
+      });
     }
+
     return () => {
-      unsubscribe();
+      unsubWs();
       socketClient?.disconnect();
+      if (eventSource) eventSource.close();
     };
-  }, [provider.streamingAvailable, selectedId, resolution]);
+  }, [provider.configured, selectedId, watchlistEntries, positions, resolution, instrument?.symbol]);
 
   useEffect(() => {
     if (!layoutLoaded) return;

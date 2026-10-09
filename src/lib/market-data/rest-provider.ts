@@ -244,7 +244,7 @@ export function getMarketDataProviderStatus() {
   return {
     configured,
     provider: configured ? 'upstox' : null,
-    streamingAvailable: false,
+    streamingAvailable: configured,
     source: configured ? 'UPSTOX_OFFICIAL_API' : 'UNAVAILABLE',
   };
 }
