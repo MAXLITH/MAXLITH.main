@@ -3,6 +3,17 @@ import { getMarketSessionStatus as getStatusFromHours, MarketSessionStatus } fro
 import { marketDataService, MarketDataService } from './service';
 export * from './types';
 export * from './service';
+export * from './technical-indicators';
+export {
+  type MarketQuote,
+  type MarketStatus,
+  MarketDataUnavailableError,
+} from './provider';
+export {
+  NormalizedRestMarketDataProvider,
+  marketDataProviderFromEnvironment,
+  getMarketDataProviderStatus,
+} from './rest-provider';
 export type { MarketSessionStatus };
 
 export interface InstrumentData {

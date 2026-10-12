@@ -9,6 +9,8 @@ export const config = {
   quoteCacheTtlMsOpen: Number(process.env.QUOTE_CACHE_TTL_OPEN_MS || 3000),
   quoteCacheTtlMsClosed: Number(process.env.QUOTE_CACHE_TTL_CLOSED_MS || 60_000),
   redisUrl: process.env.REDIS_URL || '',
+  geminiApiKey: process.env.GEMINI_API_KEY || '',
+  geminiModel: process.env.GEMINI_MODEL || 'gemini-1.5-pro',
   anthropicApiKey: process.env.ANTHROPIC_API_KEY || '',
   anthropicModel: process.env.ANTHROPIC_MODEL || 'claude-sonnet-4-20250514',
   openaiApiKey: process.env.OPENAI_API_KEY || '',

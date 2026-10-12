@@ -19,6 +19,10 @@ class SupabaseDbStore {
   instruments: Map<string, any> = new Map();
   aiAgentRuns: Map<string, any> = new Map();
   marketHolidays: Map<string, any> = new Map();
+  aiConversations: Map<string, any> = new Map();
+  aiMessages: Map<string, any> = new Map();
+  marketQuotes: Map<string, any> = new Map();
+  aiAnalysisRuns: Map<string, any> = new Map();
 
   constructor() {
     this.seedInitial();
@@ -135,6 +139,7 @@ class SupabaseDbStore {
 }
 
 const store = new SupabaseDbStore();
+let messageSequence = 0;
 
 function syncToSupabase(table: string, records: any[]) {
   Promise.resolve(supabase.from(table).upsert(records)).catch(() => {});
@@ -222,6 +227,24 @@ class StatementWrapper {
       if (sqlUpper.includes('COUNT(*)')) return { count: store.priceHistory.size };
     }
 
+    if (sqlUpper.includes('FROM AI_CONVERSATIONS')) {
+      if (sqlUpper.includes('WHERE ID =')) return store.aiConversations.get(params[0]) || null;
+    }
+
+    if (sqlUpper.includes('FROM MARKET_QUOTES')) {
+      if (sqlUpper.includes('WHERE SYMBOL =')) {
+        const sym = (params[0] || '').toUpperCase();
+        const quotes = Array.from(store.marketQuotes.values())
+          .filter((q) => q.symbol === sym)
+          .sort((a, b) => new Date(b.received_at || 0).getTime() - new Date(a.received_at || 0).getTime());
+        return quotes[0] || null;
+      }
+    }
+
+    if (sqlUpper.includes('FROM AI_ANALYSIS_RUNS')) {
+      if (sqlUpper.includes('WHERE ID =')) return store.aiAnalysisRuns.get(params[0]) || null;
+    }
+
     return null;
   }
 
@@ -267,14 +290,54 @@ class StatementWrapper {
       const userId = params[0];
       let res = Array.from(store.positions.values());
       if (userId) res = res.filter((p) => p.user_id === userId);
-      return res;
+      return res.map((p) => {
+        const inst = store.instruments.get(p.symbol) || {};
+        return {
+          ...p,
+          name: inst.name || p.symbol,
+          current_price: inst.current_price || p.average_price || 0,
+          previous_close: inst.previous_close || p.average_price || 0,
+          change: inst.change || 0,
+          percent_change: inst.percent_change || 0,
+          sector: inst.sector || 'General',
+        };
+      });
     }
 
     if (sqlUpper.includes('FROM TRADES')) {
       const userId = params[0];
       let res = Array.from(store.trades.values());
       if (userId) res = res.filter((t) => t.user_id === userId);
-      return res.sort((a, b) => new Date(b.executed_at || 0).getTime() - new Date(a.executed_at || 0).getTime());
+      return res.map((t) => {
+        const ord = store.orders.get(t.order_id) || {};
+        return {
+          ...t,
+          order_type: ord.order_type || 'MARKET',
+          product_type: ord.product_type || 'CNC',
+          created_at: t.created_at || t.executed_at || new Date().toISOString(),
+        };
+      }).sort((a, b) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime());
+    }
+
+    if (sqlUpper.includes('FROM LEDGER_ENTRIES')) {
+      const userId = params[0];
+      let entries = Array.from(store.ledgerEntries.values());
+      if (userId) entries = entries.filter((e) => e.user_id === userId);
+      if (sqlUpper.includes('GROUP BY DIRECTION')) {
+        let credits = 0;
+        let debits = 0;
+        for (const e of entries) {
+          if (!sqlUpper.includes("ACCOUNT_KIND = 'CASH'") || e.account_kind === 'CASH') {
+            if (e.direction === 'CREDIT') credits += (e.amount_paise || 0);
+            if (e.direction === 'DEBIT') debits += (e.amount_paise || 0);
+          }
+        }
+        return [
+          { direction: 'CREDIT', total_paise: credits },
+          { direction: 'DEBIT', total_paise: debits },
+        ];
+      }
+      return entries;
     }
 
     if (sqlUpper.includes('FROM INSTRUMENTS')) {
@@ -297,6 +360,51 @@ class StatementWrapper {
       return Array.from(store.alerts.values()).filter((a) => !userId || a.user_id === userId);
     }
 
+    if (sqlUpper.includes('FROM AI_CONVERSATIONS')) {
+      const userId = params[0];
+      let convs = Array.from(store.aiConversations.values());
+      if (userId) convs = convs.filter((c) => c.user_id === userId);
+      return convs
+        .map((c) => {
+          const msgs = Array.from(store.aiMessages.values())
+            .filter((m) => m.conversation_id === c.id)
+            .sort((a, b) => {
+              const tDiff = new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime();
+              return tDiff !== 0 ? tDiff : (b._seq || 0) - (a._seq || 0);
+            });
+          return {
+            ...c,
+            last_message: msgs[0]?.content || null,
+          };
+        })
+        .sort((a, b) => new Date(b.updated_at || b.created_at || 0).getTime() - new Date(a.updated_at || a.created_at || 0).getTime())
+        .slice(0, 50);
+    }
+
+    if (sqlUpper.includes('FROM AI_MESSAGES')) {
+      const convId = params[0];
+      let msgs = Array.from(store.aiMessages.values());
+      if (convId) msgs = msgs.filter((m) => m.conversation_id === convId);
+      return msgs.sort((a, b) => {
+        const tDiff = new Date(a.created_at || 0).getTime() - new Date(b.created_at || 0).getTime();
+        return tDiff !== 0 ? tDiff : (a._seq || 0) - (b._seq || 0);
+      });
+    }
+
+    if (sqlUpper.includes('FROM MARKET_QUOTES')) {
+      const sym = params[0]?.toUpperCase();
+      let quotes = Array.from(store.marketQuotes.values());
+      if (sym) quotes = quotes.filter((q) => q.symbol === sym);
+      return quotes.sort((a, b) => new Date(b.received_at || 0).getTime() - new Date(a.received_at || 0).getTime());
+    }
+
+    if (sqlUpper.includes('FROM AI_ANALYSIS_RUNS')) {
+      const userId = params[0];
+      let runs = Array.from(store.aiAnalysisRuns.values());
+      if (userId) runs = runs.filter((r) => r.user_id === userId);
+      return runs.sort((a, b) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime());
+    }
+
     return [];
   }
 
@@ -304,7 +412,7 @@ class StatementWrapper {
     const params = parseParams(args);
     const sqlUpper = this.sql.toUpperCase();
 
-    if (sqlUpper.includes('INSERT INTO USERS') || sqlUpper.includes('UPDATE USERS')) {
+    if (sqlUpper.includes('INSERT INTO USERS')) {
       let u: any = {};
       if (typeof args[0] === 'object' && args[0] !== null) {
         u = args[0];
@@ -322,9 +430,38 @@ class StatementWrapper {
       }
       if (u.id) {
         store.users.set(u.id, { ...store.users.get(u.id), ...u, updated_at: new Date().toISOString() });
-        if (u.email) store.users.set(`email:${u.email.toLowerCase()}`, u);
+        if (u.email && typeof u.email === 'string') store.users.set(`email:${u.email.toLowerCase()}`, u);
         syncToSupabase('users', [u]);
       }
+      return { changes: 1, lastInsertRowid: 1 };
+    }
+
+    if (sqlUpper.includes('UPDATE USERS')) {
+      const userId = params[params.length - 1];
+      const user = store.users.get(userId) || {};
+      if (sqlUpper.includes('VIRTUAL_CASH = VIRTUAL_CASH -')) {
+        user.virtual_cash = (user.virtual_cash || 0) - Number(params[0]);
+      } else if (sqlUpper.includes('VIRTUAL_CASH = VIRTUAL_CASH +')) {
+        user.virtual_cash = (user.virtual_cash || 0) + Number(params[0]);
+      } else if (sqlUpper.includes('BLOCKED_MARGIN = BLOCKED_MARGIN +')) {
+        user.blocked_margin = (user.blocked_margin || 0) + Number(params[0]);
+      } else if (sqlUpper.includes('BLOCKED_MARGIN = MAX(0, BLOCKED_MARGIN -')) {
+        user.blocked_margin = Math.max(0, (user.blocked_margin || 0) - Number(params[0]));
+      } else if (sqlUpper.includes('VIRTUAL_CASH = ?, INITIAL_CAPITAL = ?')) {
+        user.virtual_cash = Number(params[0]);
+        user.initial_capital = Number(params[1]);
+        user.blocked_margin = 0.0;
+      } else if (sqlUpper.includes('PASSWORD_HASH = ?')) {
+        user.password_hash = params[0];
+      } else if (sqlUpper.includes('FULL_NAME = ?')) {
+        user.full_name = params[0];
+      }
+      user.updated_at = new Date().toISOString();
+      store.users.set(userId, user);
+      if (user.email && typeof user.email === 'string') {
+        store.users.set(`email:${user.email.toLowerCase()}`, user);
+      }
+      syncToSupabase('users', [user]);
       return { changes: 1, lastInsertRowid: 1 };
     }
 
@@ -362,24 +499,145 @@ class StatementWrapper {
       return { changes: 1, lastInsertRowid: 1 };
     }
 
-    if (sqlUpper.includes('INSERT INTO ORDERS') || sqlUpper.includes('UPDATE ORDERS')) {
+    if (sqlUpper.includes('UPDATE ORDERS')) {
+      if (sqlUpper.includes("STATUS = 'CANCELLED'")) {
+        const [orderId] = params;
+        const ord = store.orders.get(orderId);
+        if (ord) {
+          ord.status = 'CANCELLED';
+          ord.cancelled_at = new Date().toISOString();
+          ord.updated_at = new Date().toISOString();
+          store.orders.set(orderId, ord);
+          syncToSupabase('orders', [ord]);
+        }
+      } else if (sqlUpper.includes("STATUS = 'PENDING'")) {
+        const [orderId] = params;
+        const ord = store.orders.get(orderId);
+        if (ord) {
+          ord.status = 'PENDING';
+          ord.updated_at = new Date().toISOString();
+          store.orders.set(orderId, ord);
+          syncToSupabase('orders', [ord]);
+        }
+      } else if (sqlUpper.includes('QUANTITY = ?, PRICE = COALESCE(?, PRICE)')) {
+        const [newQty, newPrice, orderId] = params;
+        const ord = store.orders.get(orderId);
+        if (ord) {
+          ord.quantity = newQty;
+          if (newPrice !== null && newPrice !== undefined) ord.price = newPrice;
+          ord.updated_at = new Date().toISOString();
+          store.orders.set(orderId, ord);
+          syncToSupabase('orders', [ord]);
+        }
+      } else if (sqlUpper.includes('STATUS = ?, FILLED_QUANTITY = ?, AVERAGE_FILL_PRICE = ?')) {
+        const [status, filledQty, avgPrice, orderId] = params;
+        const ord = store.orders.get(orderId);
+        if (ord) {
+          ord.status = status;
+          ord.filled_quantity = filledQty;
+          ord.average_fill_price = avgPrice;
+          ord.updated_at = new Date().toISOString();
+          store.orders.set(orderId, ord);
+          syncToSupabase('orders', [ord]);
+        }
+      }
+      return { changes: 1, lastInsertRowid: 1 };
+    }
+
+    if (sqlUpper.includes('INSERT INTO ORDERS')) {
       let ord: any = {};
       if (typeof args[0] === 'object' && args[0] !== null) {
         ord = args[0];
+      } else if (sqlUpper.includes("'REJECTED'")) {
+        ord = {
+          id: params[0],
+          user_id: params[1],
+          symbol: params[2],
+          side: params[3],
+          order_type: params[4],
+          product_type: params[5] || 'CNC',
+          quantity: params[6],
+          price: params[7],
+          status: 'REJECTED',
+          rejection_reason: params[8],
+          idempotency_key: params[9],
+          created_at: new Date().toISOString(),
+        };
+      } else if (sqlUpper.includes('TRIGGER_PRICE')) {
+        ord = {
+          id: params[0],
+          user_id: params[1],
+          symbol: params[2],
+          side: params[3],
+          order_type: params[4],
+          product_type: params[5] || 'CNC',
+          quantity: params[6],
+          price: params[7],
+          trigger_price: params[8],
+          status: params[9] || 'PENDING',
+          amo: params[10],
+          idempotency_key: params[11],
+          charges_json: params[12],
+          created_at: new Date().toISOString(),
+        };
+      } else if (sqlUpper.includes('EXECUTED_PRICE')) {
+        ord = {
+          id: params[0],
+          user_id: params[1],
+          symbol: params[2],
+          side: params[3],
+          order_type: params[4],
+          product_type: params[5] || 'CNC',
+          quantity: params[6],
+          filled_qty: params[7] ?? params[6],
+          price: params[8],
+          executed_price: params[9],
+          status: 'EXECUTED',
+          idempotency_key: params[10],
+          charges_json: params[11],
+          created_at: new Date().toISOString(),
+          executed_at: new Date().toISOString(),
+        };
       } else {
-        ord = { id: params[0], user_id: params[1], symbol: params[2], side: params[3], order_type: params[4], status: params[5], quantity: params[6], price: params[7] };
+        ord = {
+          id: params[0],
+          user_id: params[1],
+          symbol: params[2],
+          side: params[3],
+          order_type: params[4] || 'MARKET',
+          product_type: params[5] || 'CNC',
+          quantity: params[6],
+          price: params[7],
+          status: params[8] || 'PENDING',
+          created_at: new Date().toISOString(),
+        };
       }
       store.orders.set(ord.id, { ...store.orders.get(ord.id), ...ord, updated_at: new Date().toISOString() });
       syncToSupabase('orders', [ord]);
       return { changes: 1, lastInsertRowid: 1 };
     }
 
-    if (sqlUpper.includes('INSERT INTO POSITIONS') || sqlUpper.includes('UPDATE POSITIONS')) {
+    if (sqlUpper.includes('UPDATE POSITIONS')) {
+      if (sqlUpper.includes('QUANTITY = ?, AVERAGE_PRICE = ?')) {
+        const [newQty, newAvg, id] = params;
+        const pos = store.positions.get(id);
+        if (pos) {
+          pos.quantity = newQty;
+          pos.average_price = newAvg;
+          pos.updated_at = new Date().toISOString();
+          store.positions.set(id, pos);
+          syncToSupabase('positions', [pos]);
+        }
+      }
+      return { changes: 1, lastInsertRowid: 1 };
+    }
+
+    if (sqlUpper.includes('INSERT INTO POSITIONS')) {
       let pos: any = {};
       if (typeof args[0] === 'object' && args[0] !== null) {
         pos = args[0];
       } else {
-        pos = { id: params[0], user_id: params[1], symbol: params[2], quantity: params[3], average_price: params[4] };
+        pos = { id: params[0], user_id: params[1], symbol: params[2], product_type: params[3], quantity: params[4], average_price: params[5], realized_pnl: params[6] || 0 };
       }
       store.positions.set(pos.id || `pos-${pos.user_id}-${pos.symbol}`, { ...store.positions.get(pos.id), ...pos, updated_at: new Date().toISOString() });
       syncToSupabase('positions', [pos]);
@@ -391,9 +649,20 @@ class StatementWrapper {
       if (typeof args[0] === 'object' && args[0] !== null) {
         trd = args[0];
       } else {
-        trd = { id: params[0], order_id: params[1], user_id: params[2], symbol: params[3], side: params[4], price: params[5], quantity: params[6] };
+        trd = {
+          id: params[0],
+          order_id: params[1],
+          user_id: params[2],
+          symbol: params[3],
+          side: params[4],
+          quantity: params[5],
+          price: params[6],
+          charges_json: params[7],
+          created_at: new Date().toISOString(),
+          executed_at: new Date().toISOString(),
+        };
       }
-      store.trades.set(trd.id, { ...trd, executed_at: new Date().toISOString() });
+      store.trades.set(trd.id, { ...trd });
       syncToSupabase('trades', [trd]);
       return { changes: 1, lastInsertRowid: 1 };
     }
@@ -403,10 +672,188 @@ class StatementWrapper {
       if (typeof args[0] === 'object' && args[0] !== null) {
         led = args[0];
       } else {
-        led = { id: params[0], user_id: params[1], direction: params[2], account_kind: params[3], amount_paise: params[4] };
+        led = { id: params[0], user_id: params[1], direction: params[2], account_kind: params[3], amount_paise: params[4], ref_type: params[5], ref_id: params[6], memo: params[7] };
       }
       store.ledgerEntries.set(led.id, { ...led, created_at: new Date().toISOString() });
       syncToSupabase('ledger_entries', [led]);
+      return { changes: 1, lastInsertRowid: 1 };
+    }
+
+    if (sqlUpper.includes('DELETE FROM TRADES')) {
+      const userId = params[0];
+      for (const [key, val] of store.trades.entries()) {
+        if (!userId || val.user_id === userId) store.trades.delete(key);
+      }
+      return { changes: 1, lastInsertRowid: 1 };
+    }
+
+    if (sqlUpper.includes('DELETE FROM TRANSACTIONS')) {
+      return { changes: 1, lastInsertRowid: 1 };
+    }
+
+    if (sqlUpper.includes('DELETE FROM LEDGER_ENTRIES')) {
+      const userId = params[0];
+      for (const [key, val] of store.ledgerEntries.entries()) {
+        if (!userId || val.user_id === userId) store.ledgerEntries.delete(key);
+      }
+      return { changes: 1, lastInsertRowid: 1 };
+    }
+
+    if (sqlUpper.includes('DELETE FROM POSITIONS')) {
+      const userId = params[0];
+      for (const [key, val] of store.positions.entries()) {
+        if (!userId || val.user_id === userId) store.positions.delete(key);
+      }
+      return { changes: 1, lastInsertRowid: 1 };
+    }
+
+    if (sqlUpper.includes('DELETE FROM ORDERS')) {
+      const userId = params[0];
+      for (const [key, val] of store.orders.entries()) {
+        if (!userId || val.user_id === userId) store.orders.delete(key);
+      }
+      return { changes: 1, lastInsertRowid: 1 };
+    }
+
+    if (sqlUpper.includes('INSERT INTO AI_CONVERSATIONS')) {
+      let conv: any = {};
+      if (typeof args[0] === 'object' && args[0] !== null) {
+        conv = args[0];
+      } else {
+        conv = {
+          id: params[0],
+          user_id: params[1],
+          title: params[2],
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        };
+      }
+      conv.created_at = conv.created_at || new Date().toISOString();
+      conv.updated_at = conv.updated_at || new Date().toISOString();
+      store.aiConversations.set(conv.id, conv);
+      syncToSupabase('ai_conversations', [conv]);
+      return { changes: 1, lastInsertRowid: 1 };
+    }
+
+    if (sqlUpper.includes('UPDATE AI_CONVERSATIONS')) {
+      const id = params[params.length - 1];
+      const conv = store.aiConversations.get(id);
+      if (conv) {
+        conv.updated_at = new Date().toISOString();
+        if (params.length > 1 && typeof params[0] === 'string' && params[0] !== id) {
+          conv.title = params[0];
+        }
+        store.aiConversations.set(id, conv);
+        syncToSupabase('ai_conversations', [conv]);
+      }
+      return { changes: 1, lastInsertRowid: 1 };
+    }
+
+    if (sqlUpper.includes('DELETE FROM AI_CONVERSATIONS')) {
+      const id = params[0];
+      const userId = params[1];
+      for (const [key, val] of store.aiConversations.entries()) {
+        if ((!id || val.id === id) && (!userId || val.user_id === userId)) {
+          store.aiConversations.delete(key);
+          for (const [mKey, mVal] of store.aiMessages.entries()) {
+            if (mVal.conversation_id === val.id) store.aiMessages.delete(mKey);
+          }
+        }
+      }
+      return { changes: 1, lastInsertRowid: 1 };
+    }
+
+    if (sqlUpper.includes('INSERT INTO AI_MESSAGES')) {
+      let msg: any = {};
+      if (typeof args[0] === 'object' && args[0] !== null) {
+        msg = args[0];
+      } else if (sqlUpper.includes("'USER'")) {
+        msg = {
+          id: params[0],
+          conversation_id: params[1],
+          sender: 'USER',
+          content: params[2],
+          agent_data: params[3] || null,
+          created_at: new Date().toISOString(),
+        };
+      } else if (sqlUpper.includes("'ASSISTANT'")) {
+        msg = {
+          id: params[0],
+          conversation_id: params[1],
+          sender: 'ASSISTANT',
+          content: params[2],
+          agent_data: params[3] || null,
+          created_at: new Date().toISOString(),
+        };
+      } else {
+        msg = {
+          id: params[0],
+          conversation_id: params[1],
+          sender: params[2] || 'USER',
+          content: params[3],
+          agent_data: params[4] || null,
+          created_at: new Date().toISOString(),
+        };
+      }
+      msg.created_at = msg.created_at || new Date().toISOString();
+      msg._seq = ++messageSequence;
+      store.aiMessages.set(msg.id, msg);
+      syncToSupabase('ai_messages', [msg]);
+      return { changes: 1, lastInsertRowid: 1 };
+    }
+
+    if (sqlUpper.includes('DELETE FROM AI_MESSAGES')) {
+      const convId = params[0];
+      for (const [key, val] of store.aiMessages.entries()) {
+        if (!convId || val.conversation_id === convId) {
+          store.aiMessages.delete(key);
+        }
+      }
+      return { changes: 1, lastInsertRowid: 1 };
+    }
+
+    if (sqlUpper.includes('INSERT INTO MARKET_QUOTES')) {
+      let q: any = {};
+      if (typeof args[0] === 'object' && args[0] !== null) {
+        q = args[0];
+      } else {
+        q = {
+          id: params[0],
+          symbol: params[1],
+          exchange: params[2],
+          price: params[3],
+          change: params[4],
+          change_percent: params[5],
+          provider_timestamp: params[6],
+          received_at: params[7] || new Date().toISOString(),
+          provider: params[8],
+          freshness_status: params[9],
+        };
+      }
+      store.marketQuotes.set(q.id, q);
+      syncToSupabase('market_quotes', [q]);
+      return { changes: 1, lastInsertRowid: 1 };
+    }
+
+    if (sqlUpper.includes('INSERT INTO AI_ANALYSIS_RUNS')) {
+      let run: any = {};
+      if (typeof args[0] === 'object' && args[0] !== null) {
+        run = args[0];
+      } else {
+        run = {
+          id: params[0],
+          user_id: params[1],
+          symbol: params[2],
+          analysis_type: params[3],
+          model: params[4],
+          source_timestamp: params[5],
+          result: params[6],
+          status: params[7] || 'SUCCESS',
+          created_at: new Date().toISOString(),
+        };
+      }
+      store.aiAnalysisRuns.set(run.id, run);
+      syncToSupabase('ai_analysis_runs', [run]);
       return { changes: 1, lastInsertRowid: 1 };
     }
 

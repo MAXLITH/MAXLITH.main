@@ -20,19 +20,22 @@ async function getFreePort() {
   if (!address || typeof address === 'string') throw new Error('Could not allocate a test port.');
   const value = address.port;
   await new Promise<void>((resolve, reject) => server.close((error) => error ? reject(error) : resolve()));
+  await sleep(100);
   return value;
 }
 
+let childStderr = '';
+
 async function waitForHealth() {
   for (let attempt = 0; attempt < 40; attempt += 1) {
-    if (child?.exitCode !== null && child?.exitCode !== undefined) throw new Error(`Market stream exited with ${child.exitCode}.`);
+    if (child?.exitCode !== null && child?.exitCode !== undefined) throw new Error(`Market stream exited with ${child.exitCode}. Stderr: ${childStderr}`);
     try {
       const response = await fetch(`${baseUrl}/health`);
       if (response.ok) return response.json() as Promise<{ status: string; providerConfigured: boolean }>;
     } catch { /* gateway is still starting */ }
     await sleep(50);
   }
-  throw new Error('Market stream did not become healthy.');
+  throw new Error(`Market stream did not become healthy. Stderr: ${childStderr}`);
 }
 
 async function signedToken() {
@@ -57,12 +60,23 @@ async function waitForMessage(messages: Record<string, unknown>[], predicate: (m
 
 describe('market stream gateway', () => {
   beforeAll(async () => {
-    port = await getFreePort();
-    baseUrl = `http://127.0.0.1:${port}`;
+    childStderr = '';
     child = spawn(process.execPath, [gatewayPath], {
-      env: { ...process.env, PORT: String(port), MARKET_STREAM_JWT_SECRET: secret, MARKET_DATA_WS_URL: '', MARKET_STREAM_ALLOWED_ORIGINS: '' },
-      stdio: 'ignore',
+      env: { ...process.env, PORT: '0', HOST: '127.0.0.1', MARKET_STREAM_JWT_SECRET: secret, MARKET_DATA_WS_URL: '', MARKET_STREAM_ALLOWED_ORIGINS: '' },
+      stdio: ['ignore', 'pipe', 'pipe'],
     });
+    child.stderr?.on('data', (d) => { childStderr += d.toString(); });
+
+    const portPromise = new Promise<number>((resolve, reject) => {
+      child!.stdout?.on('data', (data) => {
+        const match = data.toString().match(/listening on (?:[^:]+):(\d+)/);
+        if (match) resolve(Number(match[1]));
+      });
+      child!.once('exit', (code) => reject(new Error(`Market stream exited prematurely with ${code}. Stderr: ${childStderr}`)));
+    });
+
+    port = await portPromise;
+    baseUrl = `http://127.0.0.1:${port}`;
     await waitForHealth();
   });
 

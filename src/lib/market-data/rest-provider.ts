@@ -30,6 +30,13 @@ const ProviderQuoteSchema = z.object({
   delaySeconds: z.number().finite().nonnegative(),
 });
 
+const ProviderDepthSchema = z.object({
+  available: z.boolean(),
+  bids: z.array(z.object({ price: z.number().positive(), quantity: z.number().nonnegative() })),
+  asks: z.array(z.object({ price: z.number().positive(), quantity: z.number().nonnegative() })),
+  message: z.string().optional(),
+});
+
 const ProviderBarSchema = z.object({
   time: z.number().int().positive(),
   open: z.number().finite().positive(),
@@ -37,7 +44,10 @@ const ProviderBarSchema = z.object({
   low: z.number().finite().positive(),
   close: z.number().finite().positive(),
   volume: z.number().finite().nonnegative(),
-});
+}).refine(
+  (bar) => bar.high >= Math.max(bar.open, bar.close) && bar.low <= Math.min(bar.open, bar.close),
+  { message: 'Invalid OHLC bar structure' }
+);
 
 export class NormalizedRestMarketDataProvider implements MarketDataProvider {
   readonly name: string;
@@ -54,7 +64,40 @@ export class NormalizedRestMarketDataProvider implements MarketDataProvider {
     this.upstox = new UpstoxProvider(this.apiKey);
   }
 
+  private isGenericRest(): boolean {
+    return Boolean(this.baseUrl && !this.baseUrl.includes('upstox.com'));
+  }
+
+  private async request(path: string, query: Record<string, string | undefined> = {}): Promise<unknown> {
+    if (!this.baseUrl) throw new MarketDataUnavailableError();
+    const url = new URL(`${this.baseUrl}${path}`);
+    for (const [key, value] of Object.entries(query)) if (value !== undefined) url.searchParams.set(key, value);
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 8000);
+    try {
+      const response = await fetch(url, {
+        signal: controller.signal,
+        cache: 'no-store',
+        headers: {
+          Accept: 'application/json',
+          ...(this.apiKey ? { Authorization: `Bearer ${this.apiKey}` } : {}),
+        },
+      });
+      if (response.status === 404 && path.startsWith('/symbols/')) return { data: null };
+      if (!response.ok) throw new Error(`Configured market provider responded with ${response.status}.`);
+      return response.json();
+    } finally {
+      clearTimeout(timeout);
+    }
+  }
+
   async searchSymbols(query: string, exchange?: string, limit = 20): Promise<TradingSymbol[]> {
+    if (this.isGenericRest()) {
+      const payload = await this.request('/symbols/search', { q: query, exchange, limit: String(limit) });
+      const rows = z.object({ data: z.array(ProviderSymbolSchema) }).parse(payload).data;
+      return rows.map((row) => toTradingSymbol(row));
+    }
+
     const q = query.toUpperCase().trim();
     const defaults = [
       { symbol: 'RELIANCE', exchange: 'NSE' as const, name: 'Reliance Industries Ltd', tradable: true },
@@ -72,6 +115,12 @@ export class NormalizedRestMarketDataProvider implements MarketDataProvider {
 
   async resolveSymbol(symbolId: string): Promise<TradingSymbol | null> {
     const id = normalizeSymbol(symbolId);
+    if (this.isGenericRest()) {
+      const payload = await this.request(`/symbols/${encodeURIComponent(id)}`);
+      const result = z.object({ data: ProviderSymbolSchema.nullable() }).parse(payload).data;
+      return result ? toTradingSymbol(result) : null;
+    }
+
     const { symbol, exchange } = parseSymbol(id);
     return toTradingSymbol({
       symbol,
@@ -84,6 +133,14 @@ export class NormalizedRestMarketDataProvider implements MarketDataProvider {
   async getQuote(symbolId: string): Promise<MarketQuote | null> {
     const id = normalizeSymbol(symbolId);
     const { symbol, exchange } = parseSymbol(id);
+
+    if (this.isGenericRest()) {
+      const payload = await this.request('/quotes', { symbol: id });
+      const result = z.object({ data: ProviderQuoteSchema.nullable() }).parse(payload).data;
+      if (!result) return null;
+      if (normalizeSymbol(`${result.exchange}:${result.symbol}`) !== id) return null;
+      return { ...result, symbol, exchange, currency: 'INR' };
+    }
 
     const quotes = await this.upstox.getQuotes([symbol]);
     const live = quotes.get(symbol);
@@ -112,19 +169,31 @@ export class NormalizedRestMarketDataProvider implements MarketDataProvider {
     const id = normalizeSymbol(request.symbol);
     const { symbol } = parseSymbol(id);
 
-    const candles = await this.upstox.getHistory(symbol, request.resolution || '1D');
-    const bars: MarketBar[] = [];
-    for (const c of candles) {
-      const timeMs = new Date(c.timestamp).getTime();
-      if (isNaN(timeMs) || timeMs <= 0) continue;
-      bars.push({
-        time: Math.floor(timeMs / 1000),
-        open: c.open,
-        high: c.high,
-        low: c.low,
-        close: c.close,
-        volume: c.volume,
+    let bars: MarketBar[] = [];
+
+    if (this.isGenericRest()) {
+      const payload = await this.request('/history', {
+        symbol: id,
+        resolution: request.resolution,
+        from: request.from === undefined ? undefined : String(request.from),
+        to: request.to === undefined ? undefined : String(request.to),
+        countback: request.countback === undefined ? undefined : String(request.countback),
       });
+      bars = z.object({ data: z.array(ProviderBarSchema) }).parse(payload).data;
+    } else {
+      const candles = await this.upstox.getHistory(symbol, request.resolution || '1D');
+      for (const c of candles) {
+        const timeMs = new Date(c.timestamp).getTime();
+        if (isNaN(timeMs) || timeMs <= 0) continue;
+        bars.push({
+          time: Math.floor(timeMs / 1000),
+          open: c.open,
+          high: c.high,
+          low: c.low,
+          close: c.close,
+          volume: c.volume,
+        });
+      }
     }
 
     const inRange = bars.filter((bar) =>
@@ -133,6 +202,9 @@ export class NormalizedRestMarketDataProvider implements MarketDataProvider {
     );
 
     const ordered = inRange.slice().sort((left, right) => left.time - right.time);
+    for (let index = 1; index < ordered.length; index += 1) {
+      if (ordered[index].time <= ordered[index - 1].time) throw new Error('Market provider returned duplicate or unordered bars.');
+    }
     return request.countback === undefined ? ordered : ordered.slice(-request.countback);
   }
 
@@ -141,6 +213,11 @@ export class NormalizedRestMarketDataProvider implements MarketDataProvider {
   }
 
   async getDepth(symbolId: string): Promise<MarketDepth> {
+    if (this.isGenericRest()) {
+      const payload = await this.request('/depth', { symbol: normalizeSymbol(symbolId) });
+      return z.object({ data: ProviderDepthSchema }).parse(payload).data;
+    }
+
     const quote = await this.getQuote(symbolId);
     const p = quote?.last || 1000;
     return {
@@ -158,6 +235,28 @@ export class NormalizedRestMarketDataProvider implements MarketDataProvider {
   }
 
   async getMarketStatus(): Promise<MarketStatus> {
+    if (this.isGenericRest()) {
+      try {
+        const payload = await this.request('/status');
+        return z.object({ data: z.object({
+          session: z.enum(['PRE_MARKET', 'OPEN', 'POST_MARKET', 'CLOSED', 'UNKNOWN']),
+          isOpen: z.boolean(),
+          timezone: z.string(),
+          asOf: z.string().datetime({ offset: true }),
+          source: z.string(),
+        }) }).parse(payload).data;
+      } catch {
+        const status = getMarketSessionStatus();
+        return {
+          session: status.session,
+          isOpen: status.isOpen,
+          timezone: 'Asia/Kolkata',
+          asOf: new Date().toISOString(),
+          source: 'MAXLITH_EXCHANGE_CALENDAR',
+        };
+      }
+    }
+
     const status = getMarketSessionStatus();
     return {
       session: status.session,

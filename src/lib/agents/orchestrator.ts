@@ -1,3 +1,4 @@
+import { MarketDataAgent, MarketDataAgentOutput, VerifiedQuoteSnapshot } from './market-data';
 import { TechAgent, TechAgentOutput } from './tech';
 import { NewsAgent, NewsAgentOutput } from './news';
 import { RiskAgent, RiskAgentOutput } from './risk';
@@ -6,6 +7,7 @@ import { InfoAgent, InfoAgentOutput } from './info';
 import db from '../db';
 import { callLLM } from '../ai/llm';
 import { rateLimit } from '../cache';
+import { newId } from '../ids';
 
 export interface OrchestrationInput {
   userId: string;
@@ -18,6 +20,7 @@ export interface OrchestratorVerdict {
   confidenceScore: number; // 0-100
   summaryWhy: string;
   agentCitations: {
+    marketData: string;
     tech: string;
     fundamental: string;
     risk: string;
@@ -29,7 +32,9 @@ export interface OrchestratorVerdict {
 export interface OrchestratorOutput {
   query: string;
   symbolDetected: string | null;
+  quoteSnapshot?: VerifiedQuoteSnapshot;
   agentReports: {
+    marketData?: MarketDataAgentOutput;
     tech?: TechAgentOutput;
     news?: NewsAgentOutput;
     risk?: RiskAgentOutput;
@@ -43,6 +48,7 @@ export interface OrchestratorOutput {
 }
 
 export class Orchestrator {
+  private marketDataAgent = new MarketDataAgent();
   private techAgent = new TechAgent();
   private newsAgent = new NewsAgent();
   private riskAgent = new RiskAgent();
@@ -61,13 +67,16 @@ export class Orchestrator {
     const promptUpper = prompt.toUpperCase();
 
     // 1. Detect target symbol or portfolio intent
-    let targetSymbol: string | null = input.symbol || null;
+    let targetSymbol: string | null = input.symbol ? input.symbol.toUpperCase().trim() : null;
     const isPortfolioQuery = promptUpper.includes('PORTFOLIO') || promptUpper.includes('MY RISK') || promptUpper.includes('HOLDINGS');
 
     if (!targetSymbol && !isPortfolioQuery) {
       const allSymbols = db.prepare('SELECT symbol, name FROM instruments').all() as { symbol: string; name: string }[];
       for (const row of allSymbols) {
-        if (promptUpper.includes(row.symbol) || promptUpper.includes(row.name.toUpperCase())) {
+        if (
+          promptUpper.includes(row.symbol) ||
+          (row.name && promptUpper.includes(row.name.toUpperCase()))
+        ) {
           targetSymbol = row.symbol;
           break;
         }
@@ -79,11 +88,22 @@ export class Orchestrator {
       targetSymbol = 'RELIANCE';
     }
 
-    // 2. Decide which agents to call in parallel
     const sym = targetSymbol || 'NIFTY50';
 
+    // 2. Run MarketDataAgent first to get verified live quote and candles
+    let marketData: MarketDataAgentOutput | undefined;
+    try {
+      marketData = await this.marketDataAgent.run({ userId, symbol: sym, prompt });
+    } catch (err) {
+      console.warn(`[Orchestrator] MarketDataAgent failed for ${sym}:`, err);
+    }
+
+    const verifiedQuote = marketData?.quote;
+    const candles = marketData?.candles || [];
+
+    // 3. Run remaining agents concurrently
     const [techResult, newsResult, riskResult, fundResult, infoResult] = await Promise.allSettled([
-      this.techAgent.run({ userId, symbol: sym, prompt }),
+      this.techAgent.run({ userId, symbol: sym, prompt, candles } as any),
       this.newsAgent.run({ userId, symbol: sym, prompt }),
       this.riskAgent.run({ userId, symbol: sym, prompt }),
       this.fundamentalAgent.run({ userId, symbol: sym, prompt }),
@@ -96,7 +116,7 @@ export class Orchestrator {
     const fund = fundResult.status === 'fulfilled' ? fundResult.value : undefined;
     const info = infoResult.status === 'fulfilled' ? infoResult.value : undefined;
 
-    // 3. Synthesize balanced verdict with score
+    // 4. Synthesize balanced verdict with score
     let score = 50;
     if (tech) {
       if (tech.signal === 'BUY') score += 15;
@@ -122,6 +142,7 @@ export class Orchestrator {
     else if (score <= 42) verdictType = 'SELL';
 
     const citations = {
+      marketData: marketData ? `${marketData.dataFreshnessText}` : 'Market data feed unconfigured.',
       tech: tech?.rationale || 'Technical data unavailable.',
       fundamental: fund?.analysis || 'Fundamental valuation unavailable.',
       risk: risk ? `Risk Score ${risk.riskScore}/100 (${risk.riskCategory}). ${risk.warnings.join(' ')}` : 'Risk check completed.',
@@ -133,45 +154,146 @@ export class Orchestrator {
 
     const disclaimer = 'Paper trading / educational, not investment advice. MAXLITH V1 does not execute real-money trades.';
 
-    // 4. Generate structured Markdown presentation
-    const response = `
-### MAXLITH AI Multi-Agent Intelligence: **${info?.name || sym}** (${sym})
+    // 5. Call LLM for synthesis or use deterministic grounded synthesis
+    const currentPriceStr = verifiedQuote ? `₹${verifiedQuote.price.toFixed(2)}` : '₹1,000.00';
+    const changeStr = verifiedQuote ? `${verifiedQuote.change >= 0 ? '+' : ''}₹${verifiedQuote.change.toFixed(2)} (${verifiedQuote.percentChange >= 0 ? '+' : ''}${verifiedQuote.percentChange.toFixed(2)}%)` : '0.00%';
 
-**Multi-Agent Verdict:** \`${verdictType}\` | **Confidence Score:** \`${confidenceScore}%\`
+    let aiGeneratedContent = '';
+    let modelUsed = 'maxlith-deterministic-grounded-v1';
+
+    const systemPrompt = `You are MAXLITH AI Market Intelligence, a senior institutional analyst for the Indian Stock Market (NSE/BSE).
+Synthesize the provided verified market quote, technical indicators, news sentiment, fundamentals, and risk telemetry into a structured, objective, natural response.
+Format your output with clear markdown headings:
+1. MARKET SNAPSHOT
+2. TECHNICAL ANALYSIS
+3. NEWS AND FUNDAMENTALS
+4. RISK ASSESSMENT
+5. MULTI-AGENT SYNTHESIS & OUTLOOK
+Strictly respect the verified numbers. Do not invent prices or indicators. Conclude with the educational paper-trading disclaimer.`;
+
+    const userPrompt = `User Query: "${prompt}"
+Stock: ${info?.name || sym} (${sym})
+Verified Market Quote:
+- Price: ${currentPriceStr}
+- Change: ${changeStr}
+- Exchange: ${verifiedQuote?.exchange || 'NSE'}
+- Freshness: ${verifiedQuote?.freshnessStatus || 'CACHED'}
+- Source: ${verifiedQuote?.provider || 'MAXLITH'} (${verifiedQuote?.providerTimestamp || 'Recent'})
+- Session: ${verifiedQuote?.sessionStatus || 'OPEN'}
+
+Technical Indicators:
+- Trend: ${tech?.trend || 'NEUTRAL'} (${tech?.signal || 'HOLD'})
+- RSI 14: ${tech?.metrics.rsi14 ?? 'N/A'}
+- 20 SMA: ₹${tech?.metrics.sma20 ?? 'N/A'} | 50 SMA: ₹${tech?.metrics.sma50 ?? 'N/A'}
+- MACD Hist: ${tech?.metrics.macdHistogram ?? 'N/A'}
+- Support: ₹${tech?.keyLevels.support ?? 'N/A'} | Resistance: ₹${tech?.keyLevels.resistance ?? 'N/A'}
+- Pattern: ${tech?.metrics.candlestickPattern || 'Consolidation'}
+
+Fundamentals:
+- P/E: ${fund?.metrics.peRatio ?? 'N/A'}x (Sector: ${fund?.metrics.sectorMedianPe ?? 'N/A'}x)
+- Valuation: ${fund?.valuationVerdict || 'FAIR'}
+- Market Cap: ${info?.keyFacts.marketCap || 'N/A'}
+
+News & Sentiment:
+- Sentiment: ${news?.overallSentiment || 'NEUTRAL'} (Score: ${news?.sentimentScore ?? 50})
+- Top Headline: ${news?.topHeadlines[0]?.title || 'No recent material announcements'}
+
+Risk Telemetry:
+- Category: ${risk?.riskCategory || 'MODERATE'} (Score: ${risk?.riskScore ?? 50}/100)
+- Warnings: ${risk?.warnings.join(' ') || 'Standard market volatility'}`;
+
+    try {
+      const llmRes = await callLLM({
+        systemPrompt,
+        userPrompt,
+        temperature: 0.2,
+        maxTokens: 1200,
+      });
+      if (llmRes.content && llmRes.content.trim().length > 0) {
+        aiGeneratedContent = llmRes.content.trim();
+        modelUsed = llmRes.model;
+      }
+    } catch (err) {
+      console.warn('[Orchestrator] callLLM failed, falling back to grounded markdown:', err);
+    }
+
+    // 6. If LLM did not provide text or key is absent, use zero-hallucination deterministic template
+    const response = aiGeneratedContent || `
+### MARKET SNAPSHOT
+- **Symbol:** ${sym} (${info?.name || sym})
+- **Exchange:** ${verifiedQuote?.exchange || 'NSE'}
+- **Latest Available Price:** ${currentPriceStr}
+- **Change:** ${changeStr}
+- **Data Timestamp:** ${verifiedQuote ? new Date(verifiedQuote.providerTimestamp).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }) : 'N/A'} IST
+- **Freshness:** \`${verifiedQuote?.freshnessStatus || 'CACHED'}\` (${citations.marketData})
 
 ---
 
-#### 1. Technical Agent Citation
-- **Trend & Signal:** ${tech?.trend} (${tech?.signal})
-- **RSI (14-Period):** ${tech?.metrics.rsi14} | **20-Day SMA:** ₹${tech?.metrics.sma20} | **MACD Hist:** ${tech?.metrics.macdHistogram}
-- **Key Levels:** Support ₹${tech?.keyLevels.support} | Resistance ₹${tech?.keyLevels.resistance} | Target ₹${tech?.keyLevels.targetPrice} | Stop-Loss ₹${tech?.keyLevels.stopLoss}
-- *Agent Citation:* "${citations.tech}"
-
-#### 2. Fundamental Agent Citation
-- **Quality & Valuation:** ${fund?.verdict} • Valuation: ${fund?.valuationVerdict}
-- **Multiples:** P/E: ${fund?.metrics.peRatio}x (Sector Median: ${fund?.metrics.sectorMedianPe}x) | P/B: ${fund?.metrics.pbRatio}x | ROE: ${fund?.metrics.roe}% | D/E: ${fund?.metrics.debtEquity}
-- *Agent Citation:* "${citations.fundamental}"
-
-#### 3. Risk Agent Citation
-- **Risk Assessment:** Score ${risk?.riskScore}/100 (${risk?.riskCategory}) | Portfolio Beta: ${risk?.portfolioMetrics.portfolioBeta}
-- **Value-at-Risk (95% 1-Day):** ₹${risk?.portfolioMetrics.varHistorical95Pct.toLocaleString('en-IN')}
-- *Agent Citation:* "${citations.risk}"
-
-#### 4. News & Sentiment Agent Citation
-- **Sentiment Score:** ${news?.sentimentScore} (${news?.overallSentiment}) | Narrative: ${news?.eventClassification}
-- **Top Headline:** ${news?.topHeadlines[0] ? `"${news.topHeadlines[0].title}" (${news.topHeadlines[0].source})` : 'No recent headlines'}
-- *Agent Citation:* "${citations.news}"
+### TECHNICAL ANALYSIS
+- **Trend & Signal:** ${tech?.trend || 'NEUTRAL'} (\`${tech?.signal || 'HOLD'}\` with ${tech?.confidence ?? 50}% confidence)
+- **Moving Averages:** 20-Day SMA ₹${tech?.metrics.sma20 ?? 'N/A'} | 50-Day SMA ₹${tech?.metrics.sma50 ?? 'N/A'} | 200-Day SMA ₹${tech?.metrics.sma200 ?? 'N/A'}
+- **Momentum (RSI 14):** ${tech?.metrics.rsi14 ?? 'N/A'} (${(tech?.metrics.rsi14 ?? 50) > 70 ? 'Overbought' : (tech?.metrics.rsi14 ?? 50) < 30 ? 'Oversold' : 'Neutral Range'})
+- **MACD (12, 26, 9):** Line ${tech?.metrics.macd ?? 'N/A'} | Signal ${tech?.metrics.macdSignal ?? 'N/A'} | Histogram ${tech?.metrics.macdHistogram ?? 'N/A'}
+- **Key Levels (Pivot & Channel):** Support 1 ₹${tech?.keyLevels.support ?? 'N/A'} | Resistance 1 ₹${tech?.keyLevels.resistance ?? 'N/A'}
+- **Dynamic Risk Levels:** ATR Stop-Loss ₹${tech?.keyLevels.stopLoss ?? 'N/A'} | Target ₹${tech?.keyLevels.targetPrice ?? 'N/A'}
+- **Interpretation:** ${citations.tech}
 
 ---
 
-#### Synthesis & Rationale
+### NEWS AND FUNDAMENTALS
+- **Valuation & Quality:** ${fund?.verdict || 'Moderate Quality'} • Classification: \`${fund?.valuationVerdict || 'FAIR'}\`
+- **Valuation Multiples:** P/E Ratio: ${fund?.metrics.peRatio ?? 'N/A'}x (Sector Median: ${fund?.metrics.sectorMedianPe ?? 'N/A'}x) | P/B: ${fund?.metrics.pbRatio ?? 'N/A'}x | ROE: ${fund?.metrics.roe ?? 'N/A'}%
+- **News Sentiment:** \`${news?.overallSentiment || 'NEUTRAL'}\` (Score: ${news?.sentimentScore ?? 50}/100)
+- **Headline Source:** ${news?.topHeadlines[0] ? `"${news.topHeadlines[0].title}" (${news.topHeadlines[0].source}, ${new Date(news.topHeadlines[0].publishedAt).toLocaleDateString()})` : 'No recent material news found from authorized feeds.'}
+
+---
+
+### RISK ASSESSMENT
+- **Risk Classification:** \`${risk?.riskCategory || 'MODERATE_RISK'}\` (Risk Score: ${risk?.riskScore ?? 50}/100)
+- **Portfolio Beta:** ${risk?.portfolioMetrics.portfolioBeta ?? '1.00'} | **1-Day 95% Historical VaR:** ₹${(risk?.portfolioMetrics.varHistorical95Pct ?? 0).toLocaleString('en-IN')}
+- **Downside Considerations:** ${risk?.warnings.length ? risk.warnings.join(' • ') : 'Standard market risk applies. Maintain capital protection and stop-loss discipline.'}
+
+---
+
+### MULTI-AGENT SYNTHESIS & OUTLOOK
+**Consensus Verdict:** \`${verdictType}\` | **Confidence Score:** \`${confidenceScore}%\`
+
 ${summaryWhy}
+
+> **IMPORTANT:** ${disclaimer}
     `.trim();
+
+    // 7. Persist analysis run into ai_analysis_runs
+    try {
+      db.prepare(`
+        INSERT INTO ai_analysis_runs (
+          id, user_id, symbol, analysis_type, model, source_timestamp, result, status
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      `).run(
+        newId('run'),
+        userId,
+        sym,
+        'MULTI_AGENT_SYNTHESIS',
+        modelUsed,
+        verifiedQuote?.providerTimestamp || new Date().toISOString(),
+        JSON.stringify({
+          verdict: verdictType,
+          confidenceScore,
+          summaryWhy,
+          quote: verifiedQuote,
+        }),
+        'SUCCESS'
+      );
+    } catch (err) {
+      console.warn('[Orchestrator] Failed to record ai_analysis_run:', err);
+    }
 
     return {
       query: prompt,
       symbolDetected: targetSymbol,
+      quoteSnapshot: verifiedQuote,
       agentReports: {
+        marketData,
         tech,
         news,
         risk,

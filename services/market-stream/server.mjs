@@ -75,8 +75,11 @@ const heartbeat = setInterval(() => {
   }
 }, 25_000);
 
-httpServer.listen(port, '0.0.0.0', () => {
-  console.log(`MAXLITH market-stream gateway listening on ${port}; provider ${providerUrl ? 'configured' : 'unavailable'}.`);
+const host = process.env.HOST || '0.0.0.0';
+httpServer.listen(port, host, () => {
+  const address = httpServer.address();
+  const actualPort = typeof address === 'object' && address ? address.port : port;
+  console.log(`MAXLITH market-stream gateway listening on ${host}:${actualPort}; provider ${providerUrl ? 'configured' : 'unavailable'}.`);
 });
 
 function rejectUpgrade(socket, status, message) {

@@ -1,4 +1,5 @@
 export * from './base';
+export * from './market-data';
 export * from './tech';
 export * from './news';
 export * from './risk';
