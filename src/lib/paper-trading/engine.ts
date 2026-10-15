@@ -1,19 +1,16 @@
 import db from '../db';
 import { config } from '../config';
-import { calculateCharges, ChargeBreakdown, ProductType } from '../charges';
+import { calculateCharges } from '../charges';
 import { getMarketSessionStatus } from '../market-hours';
-import { applySlippage, roundRupee, toPaise, fromPaise } from '../money';
+import { applySlippage, roundRupee, toPaise } from '../money';
 import { newId } from '../ids';
 import { recordLedgerEntry } from '../ledger';
 import {
   OrderRequest,
   OrderPreviewResult,
   PositionRecord,
-  TradeRecord,
   PortfolioSummary,
   OrderStatus,
-  OrderSide,
-  OrderType,
 } from './types';
 
 export function previewOrder(request: OrderRequest): OrderPreviewResult {

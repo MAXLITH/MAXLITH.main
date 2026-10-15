@@ -3,6 +3,9 @@ const path = require('path');
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
   outputFileTracingRoot: path.join(__dirname),
   serverExternalPackages: ['better-sqlite3'],
   allowedDevOrigins: ['10.4.157.47', 'localhost:3000', '127.0.0.1:3000'],

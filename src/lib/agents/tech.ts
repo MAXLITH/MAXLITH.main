@@ -108,30 +108,46 @@ export class TechAgent extends BaseAgent<BaseAgentRunParams, TechAgentOutput> {
           close: c.close,
           volume: c.volume,
         }));
-      } else {
-        // Calibrated historical bars for symbol
-        const today = Date.now();
-        let runningClose = Number((price * 0.94).toFixed(2));
-        for (let i = 50; i >= 1; i--) {
-          const t = today - i * 86400000;
-          const open = runningClose;
-          const delta = (Math.sin(i / 6) * 0.012 + (Math.random() - 0.48) * 0.018) * open;
-          const close = Number(Math.max(1, open + delta).toFixed(2));
-          const high = Number((Math.max(open, close) * (1 + Math.random() * 0.007)).toFixed(2));
-          const low = Number((Math.min(open, close) * (1 - Math.random() * 0.007)).toFixed(2));
-          const volume = Math.floor(600000 + Math.random() * 800000);
-          candles.push({ timestamp: t, open, high, low, close, volume });
-          runningClose = close;
-        }
-        candles.push({
-          timestamp: today,
-          open: inst?.open_price || price,
-          high: inst?.high_price || price * 1.01,
-          low: inst?.low_price || price * 0.99,
-          close: price,
-          volume: inst?.volume || 1000000,
-        });
       }
+    }
+
+    if (candles.length === 0) {
+      return {
+        agentName: 'TECH',
+        symbol,
+        trend: 'NEUTRAL',
+        signal: 'HOLD',
+        confidence: 0,
+        keyLevels: {
+          support: Number((price * 0.95).toFixed(2)),
+          resistance: Number((price * 1.05).toFixed(2)),
+          stopLoss: Number((price * 0.93).toFixed(2)),
+          targetPrice: Number((price * 1.07).toFixed(2)),
+        },
+        metrics: {
+          currentPrice: price,
+          rsi14: 50,
+          sma20: price,
+          sma50: price,
+          sma200: price,
+          ema20: price,
+          ema50: price,
+          macd: 0,
+          macdSignal: 0,
+          macdHistogram: 0,
+          bollingerUpper: Number((price * 1.04).toFixed(2)),
+          bollingerMiddle: price,
+          bollingerLower: Number((price * 0.96).toFixed(2)),
+          atr14: 0,
+          adx14: 0,
+          support: Number((price * 0.95).toFixed(2)),
+          resistance: Number((price * 1.05).toFixed(2)),
+          volumeTrend: 'NORMAL',
+          candlestickPattern: 'Insufficient historical candle data',
+        },
+        rationale: `Historical candle data is currently unavailable for ${symbol}. Technical indicators require at least 20 historical daily sessions to calculate mathematical signals. Connect live market feed to view real-time technical indicators.`,
+        disclaimer: 'Pure mathematical computation from real historical bars. When data is unavailable, signals remain uncalculated to prevent inaccurate outputs.',
+      };
     }
 
     const ind = computeTechnicalIndicators(candles, '1D', symbol);

@@ -41,7 +41,7 @@ export class SupabaseFallbackProvider implements MarketDataProvider {
     return results;
   }
 
-  async getHistory(symbol: string, timeframe: string): Promise<OHLCV[]> {
+  async getHistory(_symbol: string, _timeframe: string): Promise<OHLCV[]> {
     const rows = db.prepare('SELECT timestamp, open, high, low, close, volume FROM price_history').all() as any[];
 
     return rows.map((r) => ({

@@ -56,23 +56,23 @@ export function OrderModifyModal({ order, onClose, onSuccess }: OrderModifyModal
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-in fade-in duration-200">
       <div 
-        className="w-full max-w-md bg-[#0f1523] border border-slate-800 rounded-2xl shadow-2xl overflow-hidden"
+        className="w-full max-w-md bg-[#0d131b] border border-max-border rounded-lg shadow-2xl overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
         {/* HEADER */}
-        <div className="px-5 py-4 border-b border-slate-800 bg-[#131b2e]/60 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 flex items-center justify-center">
+        <div className="px-5 py-4 border-b border-max-border bg-[#101723] flex items-center justify-between">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded bg-blue-500/10 text-blue-400 border border-blue-500/20 flex items-center justify-center">
               <Edit3 className="w-4 h-4" />
             </div>
             <div>
-              <h3 className="text-sm font-bold text-white">Modify Order</h3>
-              <p className="text-[11px] text-slate-400 font-mono">{order.id} • {order.symbol}</p>
+              <h3 className="text-sm font-bold text-slate-100">Modify Order</h3>
+              <p className="text-[11px] text-max-text-muted font-mono">{order.id} • {order.symbol}</p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800/80 transition-colors"
+            className="p-1 rounded border border-max-border bg-[#101723] hover:bg-max-surface text-max-text-muted hover:text-white transition-colors"
           >
             <X className="w-4 h-4" />
           </button>
@@ -81,20 +81,20 @@ export function OrderModifyModal({ order, onClose, onSuccess }: OrderModifyModal
         {/* FORM BODY */}
         <form onSubmit={handleSubmit} className="p-5 space-y-4 text-xs">
           {error && (
-            <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 flex items-start gap-2">
+            <div className="p-3 rounded border border-rose-900/50 bg-rose-950/30 text-rose-300 flex items-start gap-2">
               <AlertCircle className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
               <span>{error}</span>
             </div>
           )}
 
-          <div className="p-3 rounded-xl bg-[#141c2e] border border-slate-800 flex justify-between items-center font-mono">
+          <div className="p-3 rounded border border-max-border bg-[#101723] flex justify-between items-center font-mono">
             <div>
-              <span className="text-[10px] text-slate-400 uppercase block">Product / Side</span>
-              <span className="font-bold text-white text-xs">{order.product_type || 'CNC'} • {order.side}</span>
+              <span className="text-[10px] text-max-text-muted uppercase block">Product / Side</span>
+              <span className="font-bold text-slate-100 text-xs">{order.product_type || 'CNC'} • {order.side}</span>
             </div>
             <div className="text-right">
-              <span className="text-[10px] text-slate-400 uppercase block">Current Qty</span>
-              <span className="font-bold text-white text-xs">{order.quantity} Shares</span>
+              <span className="text-[10px] text-max-text-muted uppercase block">Current Qty</span>
+              <span className="font-bold text-slate-100 text-xs">{order.quantity} Shares</span>
             </div>
           </div>
 
@@ -109,13 +109,13 @@ export function OrderModifyModal({ order, onClose, onSuccess }: OrderModifyModal
               required
               value={quantity}
               onChange={(e) => setQuantity(parseInt(e.target.value, 10) || 1)}
-              className="w-full bg-[#141c2e] border border-slate-800 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 rounded-xl px-3.5 py-2.5 text-white font-mono text-sm outline-none transition-all"
+              className="w-full bg-[#101723] border border-max-border focus:border-blue-500/80 focus:ring-1 focus:ring-blue-500/40 rounded px-3 py-2 text-slate-100 font-mono text-sm outline-none transition-colors"
             />
           </div>
 
           <div>
             <label className="block text-[11px] font-semibold text-slate-300 mb-1.5">
-              Limit Price (₹) {order.order_type === 'MARKET' ? <span className="text-slate-500 font-normal">(Optional for Market)</span> : <span className="text-rose-400">*</span>}
+              Limit Price (₹) {order.order_type === 'MARKET' ? <span className="text-max-text-muted font-normal">(Optional for Market)</span> : <span className="text-rose-400">*</span>}
             </label>
             <input
               type="number"
@@ -124,13 +124,13 @@ export function OrderModifyModal({ order, onClose, onSuccess }: OrderModifyModal
               value={price}
               onChange={(e) => setPrice(e.target.value)}
               placeholder={order.order_type === 'MARKET' ? 'Leave empty to keep Market' : 'Enter new limit price'}
-              className="w-full bg-[#141c2e] border border-slate-800 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 rounded-xl px-3.5 py-2.5 text-white font-mono text-sm outline-none transition-all"
+              className="w-full bg-[#101723] border border-max-border focus:border-blue-500/80 focus:ring-1 focus:ring-blue-500/40 rounded px-3 py-2 text-slate-100 font-mono text-sm outline-none transition-colors placeholder:text-max-text-muted/60"
             />
           </div>
 
           {estTurnover > 0 && (
-            <div className="p-3 rounded-xl bg-[#141c2e]/60 border border-slate-800/80 flex items-center justify-between">
-              <span className="text-slate-400 text-[11px]">Estimated Turnover</span>
+            <div className="p-3 rounded border border-max-border bg-[#101723] flex items-center justify-between">
+              <span className="text-max-text-muted text-[11px]">Estimated Turnover</span>
               <span className="font-bold font-mono text-emerald-400">
                 ₹{estTurnover.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </span>
@@ -143,14 +143,14 @@ export function OrderModifyModal({ order, onClose, onSuccess }: OrderModifyModal
               type="button"
               onClick={onClose}
               disabled={loading}
-              className="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium text-xs transition-all border border-slate-700/60"
+              className="px-3.5 py-1.5 rounded border border-max-border bg-[#101723] hover:bg-max-surface text-max-text-secondary hover:text-white font-medium text-xs transition-colors"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={loading}
-              className="flex items-center gap-1.5 px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700 text-white font-bold text-xs transition-all shadow-md disabled:opacity-60"
+              className="flex items-center gap-1.5 px-4 py-1.5 rounded bg-blue-600 hover:bg-blue-500 active:bg-blue-700 text-white font-bold text-xs transition-colors shadow-sm disabled:opacity-60"
             >
               {loading && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
               <span>{loading ? 'Updating...' : 'Update Order'}</span>

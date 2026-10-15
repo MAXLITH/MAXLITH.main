@@ -9,7 +9,6 @@ export default function AlertsPage() {
   const [symbol, setSymbol] = useState('RELIANCE');
   const [condition, setCondition] = useState('ABOVE');
   const [targetValue, setTargetValue] = useState('');
-  const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
 
@@ -25,8 +24,6 @@ export default function AlertsPage() {
       }
     } catch (err) {
       console.error('Failed to fetch alerts', err);
-    } finally {
-      setLoading(false);
     }
   };
 

@@ -20,8 +20,6 @@ import {
   BarChart2,
   FileText,
   Shield,
-  Info,
-  CornerDownLeft,
 } from 'lucide-react';
 
 interface VerifiedQuoteSnapshot {
@@ -56,21 +54,22 @@ interface ChatMessage {
 
 export default function AICopilotPage() {
   const [prompt, setPrompt] = useState('');
+  const [conversationId, setConversationId] = useState<string | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       id: 'welcome-msg',
       sender: 'ASSISTANT',
       text: `### Welcome to MAXLITH AI Market Intelligence
-I am your institutional-grade AI Copilot for Indian equities (**NSE/BSE**).
+I am **MAXLITH AI**, your institutional-grade market intelligence engine for Indian equities (**NSE/BSE**).
 
-Before providing analysis, I retrieve **verified live market quotes** and calculate **mathematical technical indicators** (SMA, EMA, RSI 14, MACD, ATR, Pivot Channels) across 5 specialized agents:
-- 📊 **Market Data & Technical Agent**: Live ticks and verified historical candles.
+Before providing analysis, I retrieve **verified market data** and calculate **mathematical technical indicators** (SMA, EMA, RSI 14, MACD, ATR, Pivot Channels) across specialized agents:
+- 📊 **Market Data & Technical Agent**: Verified quotes and mathematical indicator calculations.
 - 🏛️ **Fundamental Valuation Agent**: Real P/E multiples, P/B, ROE & financial health.
 - 📰 **News & Sentiment Agent**: Authorized media feeds & event narrative scoring.
 - 🛡️ **Risk Telemetry Agent**: Value-at-Risk (95%), Portfolio Beta & drawdown warnings.
-- ℹ️ **Corporate Intelligence Agent**: Exchange classification and company fundamentals.
+- 💼 **Portfolio & Paper-Trading Risk**: Real-time evaluation of authorized holdings & risk exposure.
 
-Submit a stock query below to begin.`,
+Submit a stock query or ask about your portfolio below to begin.`,
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
     },
   ]);
@@ -84,11 +83,11 @@ Submit a stock query below to begin.`,
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const samplePrompts = [
+    'Analyze my paper-trading portfolio.',
     'Analyze RELIANCE stock.',
     'Technical setup for TCS and INFY.',
     'Risk assessment for HDFC Bank.',
-    'Latest market sentiment for NIFTY 50.',
-    'Calculate State Bank of India moving averages and RSI.',
+    'Explain how P/E ratio and ROCE impact valuation.',
   ];
 
   const scrollToBottom = () => {
@@ -118,6 +117,7 @@ Submit a stock query below to begin.`,
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       },
     ]);
+    setConversationId(null);
     setErrorMessage(null);
 
     try {
@@ -164,13 +164,17 @@ Submit a stock query below to begin.`,
       const res = await fetch('/api/ai/copilot', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt: query }),
+        body: JSON.stringify({ prompt: query, conversationId }),
       });
 
       const data = await res.json();
 
       if (!res.ok) {
         throw new Error(data.error || `Server responded with ${res.status}`);
+      }
+
+      if (data.conversationId) {
+        setConversationId(data.conversationId);
       }
 
       const aiMsg: ChatMessage = {
@@ -322,7 +326,7 @@ Submit a stock query below to begin.`,
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h1 className="text-sm font-bold text-white tracking-wide">MAXLITH AI Copilot</h1>
+              <h1 className="text-sm font-bold text-white tracking-wide">MAXLITH AI</h1>
               <span className="px-1.5 py-0.5 rounded bg-blue-500/10 text-max-brand-primary text-[9px] font-mono border border-blue-500/20">
                 MULTI-AGENT V1
               </span>
@@ -688,7 +692,7 @@ Submit a stock query below to begin.`,
         </div>
 
         <div className="flex items-center justify-between text-[9px] font-mono text-max-text-muted mt-1 px-1">
-          <span>MAXLITH AI Copilot • Verified Market Data • Paper Trading Educational Analysis</span>
+          <span>MAXLITH AI • Verified Market Data • Paper Trading Educational Analysis</span>
           <span className="hidden sm:inline">Press Enter ↵ to Send</span>
         </div>
       </form>

@@ -1,20 +1,17 @@
 import Link from 'next/link';
 import { getAuthSession } from '@/lib/auth';
-import { getAllInstruments, getMarketSessionStatus, marketDataService } from '@/lib/market-data';
+import { getAllInstruments, marketDataService } from '@/lib/market-data';
 import { getUserPortfolioSummary } from '@/lib/paper-trading';
 import { runTechAgent } from '@/lib/ai';
 import {
   TrendingUp,
-  TrendingDown,
   Wallet,
   PieChart,
-  Zap,
   ArrowUpRight,
   ArrowDownRight,
   Layers,
   Bot,
   BarChart3,
-  Sparkles
 } from 'lucide-react';
 
 export const dynamic = 'force-dynamic';
@@ -23,7 +20,6 @@ export default async function UserDashboard() {
   const session = await getAuthSession();
   const summary = getUserPortfolioSummary(session!.id);
   const instruments = getAllInstruments();
-  const sessionStatus = getMarketSessionStatus();
   const indices = await marketDataService.getIndices();
 
   const sortedByChange = [...instruments].sort((a, b) => b.percent_change - a.percent_change);

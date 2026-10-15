@@ -1,22 +1,18 @@
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import Link from 'next/link';
 import {
   RefreshCw,
   Search,
-  Filter,
   X,
   Plus,
-  ArrowUpRight,
-  ArrowDownRight,
   Copy,
   Check,
   Eye,
   Edit3,
   Clock,
   CheckCircle2,
-  XCircle,
   Ban,
   FileText,
   ChevronLeft,
@@ -25,9 +21,7 @@ import {
   ChevronsRight,
   TrendingUp,
   Layers,
-  Calendar,
   AlertCircle,
-  ArrowUpDown,
 } from 'lucide-react';
 import { OrderStatusBadge } from './components/OrderStatusBadge';
 import { OrderDetailsModal } from './components/OrderDetailsModal';
@@ -152,7 +146,7 @@ export default function OrdersPage() {
   };
 
   // Date filter helper
-  const matchesDateRange = (dateStr?: string) => {
+  const matchesDateRange = useCallback((dateStr?: string) => {
     if (filterDateRange === 'ALL' || !dateStr) return true;
     try {
       const itemDate = new Date(dateStr);
@@ -172,7 +166,7 @@ export default function OrdersPage() {
       return true;
     }
     return true;
-  };
+  }, [filterDateRange]);
 
   // Filtered Orders List
   const filteredOrders = useMemo(() => {
@@ -213,7 +207,7 @@ export default function OrdersPage() {
 
       return true;
     });
-  }, [orders, activeTab, searchQuery, filterSide, filterStatus, filterProduct, filterType, filterDateRange, instrumentMap]);
+  }, [orders, activeTab, searchQuery, filterSide, filterStatus, filterProduct, filterType, matchesDateRange, instrumentMap]);
 
   // Filtered Trades List
   const filteredTrades = useMemo(() => {
@@ -234,7 +228,7 @@ export default function OrdersPage() {
 
       return true;
     });
-  }, [trades, searchQuery, filterSide, filterProduct, filterType, filterDateRange, instrumentMap]);
+  }, [trades, searchQuery, filterSide, filterProduct, filterType, matchesDateRange, instrumentMap]);
 
   // Active records to display and paginate
   const activeRecords = activeTab === 'TRADES' ? filteredTrades : filteredOrders;
@@ -263,35 +257,36 @@ export default function OrdersPage() {
   return (
     <div className="space-y-5 pb-12 max-w-7xl mx-auto">
       {/* 1. PAGE HEADER (CLEAN GROWW-STYLE WITH MAXLITH THEME) */}
-      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 pt-1">
+      {/* 1. PAGE HEADER */}
+      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-3 rounded-lg border border-max-border bg-[#0d131b] px-4 py-3">
         <div>
           <div className="flex items-center gap-2.5">
-            <h1 className="text-2xl font-extrabold text-white tracking-tight">Orders</h1>
-            <span className="text-[11px] font-mono px-2 py-0.5 rounded-full bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
+            <h1 className="text-base font-bold text-slate-100 tracking-wide">Orders</h1>
+            <span className="rounded border border-blue-900/60 bg-blue-950/30 px-2 py-0.5 text-[9px] font-semibold text-blue-300 uppercase tracking-wider">
               Live Paper Engine
             </span>
           </div>
-          <p className="text-xs text-slate-400 mt-1">
+          <p className="text-[11px] text-max-text-muted mt-0.5">
             Track, manage and review all your trading activity in real time.
           </p>
         </div>
 
-        <div className="flex items-center gap-2.5 self-stretch md:self-auto">
+        <div className="flex items-center gap-2 self-stretch md:self-auto">
           <button
             onClick={() => fetchAllData(true)}
             disabled={refreshing || loading}
-            className="flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#141b2a] hover:bg-[#1a2337] active:bg-[#131b2e] text-slate-200 hover:text-white text-xs font-medium transition-all border border-slate-800 shadow-sm disabled:opacity-50"
+            className="flex items-center justify-center gap-1.5 px-3 py-1.5 rounded border border-max-border bg-[#101723] hover:bg-max-surface text-max-text-secondary hover:text-white text-xs font-medium transition-colors shadow-sm disabled:opacity-50"
             title="Refresh order history"
           >
-            <RefreshCw className={`w-3.5 h-3.5 text-indigo-400 ${refreshing || loading ? 'animate-spin' : ''}`} />
+            <RefreshCw className={`w-3.5 h-3.5 text-blue-400 ${refreshing || loading ? 'animate-spin' : ''}`} />
             <span>Refresh</span>
           </button>
 
           <Link
             href="/dashboard/paper-trading"
-            className="flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700 text-white text-xs font-bold transition-all shadow-md shadow-indigo-600/20"
+            className="flex items-center justify-center gap-1.5 px-3.5 py-1.5 rounded bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold transition-colors shadow-sm"
           >
-            <Plus className="w-4 h-4" />
+            <Plus className="w-3.5 h-3.5" />
             <span>Place Order</span>
           </Link>
         </div>
@@ -299,61 +294,71 @@ export default function OrdersPage() {
 
       {/* 2. STATS / OVERVIEW KPI CHIPS */}
       <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-5 gap-3">
-        <div className="p-3.5 rounded-2xl bg-[#0f1523] border border-slate-800/80 hover:border-slate-700/80 transition-all shadow-sm">
-          <div className="flex items-center justify-between text-slate-400 mb-1">
-            <span className="text-[11px] font-medium">Total Orders</span>
-            <Layers className="w-4 h-4 text-slate-500" />
+        <div className="rounded-lg border border-max-border bg-[#0d131b] p-3 transition-colors hover:border-max-border-strong">
+          <div className="flex items-center justify-between text-max-text-muted mb-1.5">
+            <span className="text-[10px] font-semibold uppercase tracking-wider text-max-text-muted">Total Orders</span>
+            <div className="flex h-6 w-6 items-center justify-center rounded bg-slate-800/60 text-slate-400">
+              <Layers className="w-3.5 h-3.5" />
+            </div>
           </div>
-          <div className="text-xl font-bold text-white tabular-nums font-mono">{counts.totalOrders}</div>
-          <span className="text-[10px] text-slate-500 mt-0.5 block">Audit log</span>
+          <div className="text-xl font-bold font-mono tracking-tight text-slate-100 tabular-nums">{counts.totalOrders}</div>
+          <span className="text-[9px] text-max-text-muted mt-1 block">Audit log</span>
         </div>
 
-        <div className="p-3.5 rounded-2xl bg-[#0f1523] border border-slate-800/80 hover:border-slate-700/80 transition-all shadow-sm">
-          <div className="flex items-center justify-between text-slate-400 mb-1">
-            <span className="text-[11px] font-medium">Open / Pending</span>
-            <Clock className="w-4 h-4 text-amber-400" />
+        <div className="rounded-lg border border-max-border bg-[#0d131b] p-3 transition-colors hover:border-max-border-strong">
+          <div className="flex items-center justify-between text-max-text-muted mb-1.5">
+            <span className="text-[10px] font-semibold uppercase tracking-wider text-max-text-muted">Open / Pending</span>
+            <div className="flex h-6 w-6 items-center justify-center rounded bg-amber-500/15 text-amber-400">
+              <Clock className="w-3.5 h-3.5" />
+            </div>
           </div>
-          <div className="text-xl font-bold text-amber-400 tabular-nums font-mono">{counts.openOrders}</div>
-          <span className="text-[10px] text-slate-500 mt-0.5 block">Queued &amp; AMO</span>
+          <div className="text-xl font-bold font-mono tracking-tight text-amber-400 tabular-nums">{counts.openOrders}</div>
+          <span className="text-[9px] text-max-text-muted mt-1 block">Queued &amp; AMO</span>
         </div>
 
-        <div className="p-3.5 rounded-2xl bg-[#0f1523] border border-slate-800/80 hover:border-slate-700/80 transition-all shadow-sm">
-          <div className="flex items-center justify-between text-slate-400 mb-1">
-            <span className="text-[11px] font-medium">Executed</span>
-            <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+        <div className="rounded-lg border border-max-border bg-[#0d131b] p-3 transition-colors hover:border-max-border-strong">
+          <div className="flex items-center justify-between text-max-text-muted mb-1.5">
+            <span className="text-[10px] font-semibold uppercase tracking-wider text-max-text-muted">Executed</span>
+            <div className="flex h-6 w-6 items-center justify-center rounded bg-emerald-500/15 text-emerald-400">
+              <CheckCircle2 className="w-3.5 h-3.5" />
+            </div>
           </div>
-          <div className="text-xl font-bold text-emerald-400 tabular-nums font-mono">{counts.executedOrders}</div>
-          <span className="text-[10px] text-slate-500 mt-0.5 block">Completed fills</span>
+          <div className="text-xl font-bold font-mono tracking-tight text-emerald-400 tabular-nums">{counts.executedOrders}</div>
+          <span className="text-[9px] text-max-text-muted mt-1 block">Completed fills</span>
         </div>
 
-        <div className="p-3.5 rounded-2xl bg-[#0f1523] border border-slate-800/80 hover:border-slate-700/80 transition-all shadow-sm">
-          <div className="flex items-center justify-between text-slate-400 mb-1">
-            <span className="text-[11px] font-medium">Cancelled / Rejected</span>
-            <Ban className="w-4 h-4 text-rose-400" />
+        <div className="rounded-lg border border-max-border bg-[#0d131b] p-3 transition-colors hover:border-max-border-strong">
+          <div className="flex items-center justify-between text-max-text-muted mb-1.5">
+            <span className="text-[10px] font-semibold uppercase tracking-wider text-max-text-muted">Cancelled / Rejected</span>
+            <div className="flex h-6 w-6 items-center justify-center rounded bg-rose-500/15 text-rose-400">
+              <Ban className="w-3.5 h-3.5" />
+            </div>
           </div>
-          <div className="text-xl font-bold text-rose-400 tabular-nums font-mono">{counts.cancelledRejectedOrders}</div>
-          <span className="text-[10px] text-slate-500 mt-0.5 block">Unfilled orders</span>
+          <div className="text-xl font-bold font-mono tracking-tight text-rose-400 tabular-nums">{counts.cancelledRejectedOrders}</div>
+          <span className="text-[9px] text-max-text-muted mt-1 block">Unfilled orders</span>
         </div>
 
-        <div className="p-3.5 rounded-2xl bg-[#0f1523] border border-slate-800/80 hover:border-slate-700/80 transition-all shadow-sm col-span-2 sm:col-span-4 lg:col-span-1">
-          <div className="flex items-center justify-between text-slate-400 mb-1">
-            <span className="text-[11px] font-medium">Traded Turnover</span>
-            <TrendingUp className="w-4 h-4 text-indigo-400" />
+        <div className="rounded-lg border border-max-border bg-[#0d131b] p-3 transition-colors hover:border-max-border-strong col-span-2 sm:col-span-4 lg:col-span-1">
+          <div className="flex items-center justify-between text-max-text-muted mb-1.5">
+            <span className="text-[10px] font-semibold uppercase tracking-wider text-max-text-muted">Traded Turnover</span>
+            <div className="flex h-6 w-6 items-center justify-center rounded bg-blue-500/15 text-blue-400">
+              <TrendingUp className="w-3.5 h-3.5" />
+            </div>
           </div>
-          <div className="text-xl font-bold text-indigo-400 tabular-nums font-mono truncate">
+          <div className="text-xl font-bold font-mono tracking-tight text-blue-300 tabular-nums truncate">
             ₹{counts.totalTurnover.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
           </div>
-          <span className="text-[10px] text-slate-500 mt-0.5 block">{counts.tradeBookCount} executions</span>
+          <span className="text-[9px] text-max-text-muted mt-1 block">{counts.tradeBookCount} executions</span>
         </div>
       </div>
 
       {/* ACTION BANNER NOTIFICATION */}
       {actionMsg && (
         <div
-          className={`p-3.5 rounded-xl text-xs flex items-center justify-between animate-in fade-in transition-all ${
+          className={`p-3 rounded-lg text-xs flex items-center justify-between animate-in fade-in transition-all ${
             actionMsg.success
-              ? 'bg-emerald-500/10 border border-emerald-500/30 text-emerald-300'
-              : 'bg-rose-500/10 border border-rose-500/30 text-rose-300'
+              ? 'bg-emerald-950/40 border border-emerald-900/60 text-emerald-300'
+              : 'bg-rose-950/40 border border-rose-900/60 text-rose-300'
           }`}
         >
           <div className="flex items-center gap-2">
@@ -366,115 +371,70 @@ export default function OrdersPage() {
           </div>
           <button
             onClick={() => setActionMsg(null)}
-            className="p-1 rounded text-slate-400 hover:text-white transition-colors"
+            className="p-1 rounded text-max-text-muted hover:text-white transition-colors"
           >
-            <X className="w-4 h-4" />
+            <X className="w-3.5 h-3.5" />
           </button>
         </div>
       )}
 
-      {/* 3. ORDER CATEGORY TABS (HORIZONTAL GROWW-STYLE) */}
-      <div className="border-b border-slate-800">
-        <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1 text-xs font-medium">
-          <button
-            onClick={() => setActiveTab('ALL')}
-            className={`px-4 py-2.5 rounded-xl transition-all whitespace-nowrap flex items-center gap-2 ${
-              activeTab === 'ALL'
-                ? 'bg-indigo-600 text-white font-bold shadow-md shadow-indigo-600/25'
-                : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
-            }`}
-          >
-            <span>All Orders</span>
-            <span className={`px-1.5 py-0.5 text-[10px] font-mono rounded-full ${
-              activeTab === 'ALL' ? 'bg-white/20 text-white' : 'bg-slate-800 text-slate-400'
-            }`}>
-              {counts.totalOrders}
-            </span>
-          </button>
-
-          <button
-            onClick={() => setActiveTab('OPEN')}
-            className={`px-4 py-2.5 rounded-xl transition-all whitespace-nowrap flex items-center gap-2 ${
-              activeTab === 'OPEN'
-                ? 'bg-amber-600 text-white font-bold shadow-md shadow-amber-600/25'
-                : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
-            }`}
-          >
-            <span>Open / Pending</span>
-            <span className={`px-1.5 py-0.5 text-[10px] font-mono rounded-full ${
-              activeTab === 'OPEN' ? 'bg-white/20 text-white' : 'bg-slate-800 text-slate-400'
-            }`}>
-              {counts.openOrders}
-            </span>
-          </button>
-
-          <button
-            onClick={() => setActiveTab('EXECUTED')}
-            className={`px-4 py-2.5 rounded-xl transition-all whitespace-nowrap flex items-center gap-2 ${
-              activeTab === 'EXECUTED'
-                ? 'bg-emerald-600 text-white font-bold shadow-md shadow-emerald-600/25'
-                : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
-            }`}
-          >
-            <span>Executed</span>
-            <span className={`px-1.5 py-0.5 text-[10px] font-mono rounded-full ${
-              activeTab === 'EXECUTED' ? 'bg-white/20 text-white' : 'bg-slate-800 text-slate-400'
-            }`}>
-              {counts.executedOrders}
-            </span>
-          </button>
-
-          <button
-            onClick={() => setActiveTab('CANCELLED_REJECTED')}
-            className={`px-4 py-2.5 rounded-xl transition-all whitespace-nowrap flex items-center gap-2 ${
-              activeTab === 'CANCELLED_REJECTED'
-                ? 'bg-slate-700 text-white font-bold shadow-md'
-                : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
-            }`}
-          >
-            <span>Cancelled / Rejected</span>
-            <span className={`px-1.5 py-0.5 text-[10px] font-mono rounded-full ${
-              activeTab === 'CANCELLED_REJECTED' ? 'bg-white/20 text-white' : 'bg-slate-800 text-slate-400'
-            }`}>
-              {counts.cancelledRejectedOrders}
-            </span>
-          </button>
-
-          <button
-            onClick={() => setActiveTab('TRADES')}
-            className={`px-4 py-2.5 rounded-xl transition-all whitespace-nowrap flex items-center gap-2 ${
-              activeTab === 'TRADES'
-                ? 'bg-indigo-600 text-white font-bold shadow-md shadow-indigo-600/25'
-                : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
-            }`}
-          >
-            <span>Trade Book</span>
-            <span className={`px-1.5 py-0.5 text-[10px] font-mono rounded-full ${
-              activeTab === 'TRADES' ? 'bg-white/20 text-white' : 'bg-slate-800 text-slate-400'
-            }`}>
-              {counts.tradeBookCount}
-            </span>
-          </button>
+      {/* 3. ORDER CATEGORY TABS */}
+      <div className="rounded-lg border border-max-border bg-[#0d131b] p-1.5">
+        <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar text-xs font-medium" role="tablist">
+          {[
+            { key: 'ALL' as TabKey, label: 'All Orders', count: counts.totalOrders },
+            { key: 'OPEN' as TabKey, label: 'Open / Pending', count: counts.openOrders },
+            { key: 'EXECUTED' as TabKey, label: 'Executed', count: counts.executedOrders },
+            { key: 'CANCELLED_REJECTED' as TabKey, label: 'Cancelled / Rejected', count: counts.cancelledRejectedOrders },
+            { key: 'TRADES' as TabKey, label: 'Trade Book', count: counts.tradeBookCount },
+          ].map((tab) => {
+            const isActive = activeTab === tab.key;
+            return (
+              <button
+                key={tab.key}
+                type="button"
+                role="tab"
+                aria-selected={isActive}
+                onClick={() => setActiveTab(tab.key)}
+                className={`flex items-center gap-2 rounded px-3 py-1.5 text-xs font-medium transition-colors whitespace-nowrap ${
+                  isActive
+                    ? 'border border-blue-500/40 bg-blue-950/40 text-blue-300 font-semibold'
+                    : 'border border-transparent text-max-text-muted hover:bg-[#101723] hover:text-slate-200'
+                }`}
+              >
+                <span>{tab.label}</span>
+                <span
+                  className={`rounded px-1.5 py-0.2 text-[10px] font-mono ${
+                    isActive
+                      ? 'border border-blue-800/60 bg-blue-900/40 text-blue-200'
+                      : 'border border-max-border bg-[#101723] text-max-text-muted'
+                  }`}
+                >
+                  {tab.count}
+                </span>
+              </button>
+            );
+          })}
         </div>
       </div>
 
       {/* 4. FILTERS AND SEARCH TOOLBAR */}
-      <div className="p-3.5 rounded-2xl bg-[#0f1523] border border-slate-800/80 space-y-3">
-        <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3">
+      <div className="rounded-lg border border-max-border bg-[#0d131b] p-3 space-y-2.5">
+        <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-2.5">
           {/* SEARCH INPUT */}
           <div className="relative flex-1 min-w-[240px]">
-            <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+            <Search className="w-3.5 h-3.5 text-max-text-muted absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search by stock symbol, company name, or ID..."
-              className="w-full bg-[#141b2a] border border-slate-800 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 rounded-xl pl-9 pr-9 py-2 text-xs text-white placeholder-slate-500 outline-none transition-all"
+              className="w-full bg-[#101723] border border-max-border focus:border-blue-500/80 focus:ring-1 focus:ring-blue-500/30 rounded-md pl-8 pr-8 py-1.5 text-xs text-slate-100 placeholder:text-max-text-muted outline-none transition-colors"
             />
             {searchQuery && (
               <button
                 onClick={() => setSearchQuery('')}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white"
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-max-text-muted hover:text-white"
               >
                 <X className="w-3.5 h-3.5" />
               </button>
@@ -487,7 +447,7 @@ export default function OrdersPage() {
             <select
               value={filterSide}
               onChange={(e) => setFilterSide(e.target.value as any)}
-              className="bg-[#141b2a] border border-slate-800 text-slate-200 text-xs rounded-xl px-3 py-2 outline-none focus:border-indigo-500 transition-colors"
+              className="bg-[#101723] border border-max-border text-max-text-secondary text-xs rounded-md px-2.5 py-1.5 outline-none focus:border-blue-500/80 transition-colors cursor-pointer"
             >
               <option value="ALL">All Sides</option>
               <option value="BUY">BUY Only</option>
@@ -499,7 +459,7 @@ export default function OrdersPage() {
               <select
                 value={filterStatus}
                 onChange={(e) => setFilterStatus(e.target.value)}
-                className="bg-[#141b2a] border border-slate-800 text-slate-200 text-xs rounded-xl px-3 py-2 outline-none focus:border-indigo-500 transition-colors"
+                className="bg-[#101723] border border-max-border text-max-text-secondary text-xs rounded-md px-2.5 py-1.5 outline-none focus:border-blue-500/80 transition-colors cursor-pointer"
               >
                 <option value="ALL">All Statuses</option>
                 <option value="EXECUTED">Executed</option>
@@ -514,7 +474,7 @@ export default function OrdersPage() {
             <select
               value={filterProduct}
               onChange={(e) => setFilterProduct(e.target.value as any)}
-              className="bg-[#141b2a] border border-slate-800 text-slate-200 text-xs rounded-xl px-3 py-2 outline-none focus:border-indigo-500 transition-colors"
+              className="bg-[#101723] border border-max-border text-max-text-secondary text-xs rounded-md px-2.5 py-1.5 outline-none focus:border-blue-500/80 transition-colors cursor-pointer"
             >
               <option value="ALL">All Products</option>
               <option value="CNC">CNC (Delivery)</option>
@@ -525,7 +485,7 @@ export default function OrdersPage() {
             <select
               value={filterType}
               onChange={(e) => setFilterType(e.target.value)}
-              className="bg-[#141b2a] border border-slate-800 text-slate-200 text-xs rounded-xl px-3 py-2 outline-none focus:border-indigo-500 transition-colors"
+              className="bg-[#101723] border border-max-border text-max-text-secondary text-xs rounded-md px-2.5 py-1.5 outline-none focus:border-blue-500/80 transition-colors cursor-pointer"
             >
               <option value="ALL">All Types</option>
               <option value="MARKET">Market</option>
@@ -538,7 +498,7 @@ export default function OrdersPage() {
             <select
               value={filterDateRange}
               onChange={(e) => setFilterDateRange(e.target.value as any)}
-              className="bg-[#141b2a] border border-slate-800 text-slate-200 text-xs rounded-xl px-3 py-2 outline-none focus:border-indigo-500 transition-colors"
+              className="bg-[#101723] border border-max-border text-max-text-secondary text-xs rounded-md px-2.5 py-1.5 outline-none focus:border-blue-500/80 transition-colors cursor-pointer"
             >
               <option value="ALL">All Time</option>
               <option value="TODAY">Today</option>
@@ -550,7 +510,7 @@ export default function OrdersPage() {
             {isFilterActive && (
               <button
                 onClick={clearAllFilters}
-                className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-800/90 hover:bg-slate-700 text-rose-300 hover:text-white transition-all border border-slate-700/60"
+                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md border border-rose-900/50 bg-rose-950/30 text-rose-300 hover:bg-rose-900/30 text-xs transition-colors"
               >
                 <X className="w-3.5 h-3.5" />
                 <span>Clear Filters</span>
@@ -560,18 +520,18 @@ export default function OrdersPage() {
         </div>
 
         {/* ACTIVE FILTER SUMMARY COUNTER */}
-        <div className="flex items-center justify-between text-[11px] text-slate-400 pt-1 border-t border-slate-800/60">
+        <div className="flex items-center justify-between text-[11px] text-max-text-muted pt-2 border-t border-max-border">
           <div>
-            Showing <span className="font-bold text-white font-mono">{activeRecords.length}</span> {activeTab === 'TRADES' ? 'trades' : 'orders'}
-            {isFilterActive && <span className="text-indigo-400 ml-1">(filtered)</span>}
+            Showing <span className="font-semibold text-slate-200 font-mono">{activeRecords.length}</span> {activeTab === 'TRADES' ? 'trades' : 'orders'}
+            {isFilterActive && <span className="text-blue-400 ml-1">(filtered)</span>}
           </div>
 
           <div className="flex items-center gap-2">
-            <span className="text-slate-500">Rows per page:</span>
+            <span className="text-max-text-muted">Rows per page:</span>
             <select
               value={pageSize}
               onChange={(e) => setPageSize(Number(e.target.value))}
-              className="bg-[#141b2a] border border-slate-800 text-slate-300 text-[11px] rounded-lg px-2 py-0.5 outline-none"
+              className="bg-[#101723] border border-max-border text-max-text-secondary text-[11px] rounded px-2 py-0.5 outline-none cursor-pointer"
             >
               <option value={10}>10</option>
               <option value={25}>25</option>
@@ -581,21 +541,21 @@ export default function OrdersPage() {
         </div>
       </div>
 
-      {/* 5. MAIN ORDERS / TRADES TABLE (GROWW-INSPIRED CLEAN TABLE) */}
-      <div className="rounded-2xl bg-[#0f1523] border border-slate-800/80 shadow-xl overflow-hidden">
+      {/* 5. MAIN ORDERS / TRADES TABLE */}
+      <div className="rounded-lg border border-max-border bg-[#0d131b] overflow-hidden">
         {loading ? (
-          <div className="p-16 text-center text-slate-400 space-y-3">
-            <RefreshCw className="w-8 h-8 text-indigo-500 animate-spin mx-auto" />
+          <div className="p-16 text-center text-max-text-muted space-y-3">
+            <RefreshCw className="w-6 h-6 text-blue-400 animate-spin mx-auto" />
             <p className="text-xs font-mono">Loading orders from trading engine...</p>
           </div>
         ) : activeRecords.length === 0 ? (
-          <div className="p-16 text-center space-y-4">
-            <div className="w-12 h-12 rounded-2xl bg-slate-800/70 text-slate-400 border border-slate-700/60 flex items-center justify-center mx-auto">
-              <FileText className="w-6 h-6" />
+          <div className="p-14 text-center space-y-3">
+            <div className="w-10 h-10 rounded-lg bg-[#101723] text-max-text-muted border border-max-border flex items-center justify-center mx-auto">
+              <FileText className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="text-sm font-bold text-white">No records found</h3>
-              <p className="text-xs text-slate-400 max-w-sm mx-auto mt-1">
+              <h3 className="text-sm font-semibold text-slate-200">No records found</h3>
+              <p className="text-xs text-max-text-muted max-w-sm mx-auto mt-1">
                 {isFilterActive
                   ? 'No orders or executions match your active filter criteria. Try clearing filters.'
                   : activeTab === 'TRADES'
@@ -606,16 +566,16 @@ export default function OrdersPage() {
             {isFilterActive ? (
               <button
                 onClick={clearAllFilters}
-                className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-medium text-xs transition-all shadow-sm"
+                className="px-3.5 py-1.5 rounded bg-blue-600 hover:bg-blue-500 text-white font-medium text-xs transition-colors shadow-sm"
               >
                 Clear all filters
               </button>
             ) : (
               <Link
                 href="/dashboard/paper-trading"
-                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-medium text-xs transition-all shadow-sm"
+                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded bg-blue-600 hover:bg-blue-500 text-white font-medium text-xs transition-colors shadow-sm"
               >
-                <Plus className="w-4 h-4" />
+                <Plus className="w-3.5 h-3.5" />
                 <span>Place your first order</span>
               </Link>
             )}
@@ -624,20 +584,20 @@ export default function OrdersPage() {
           /* TRADE BOOK TABLE */
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs font-sans">
-              <thead className="bg-[#131b2e] text-slate-400 text-[11px] font-semibold uppercase tracking-wider border-b border-slate-800">
+              <thead className="bg-[#101723] text-max-text-muted text-[10px] font-semibold uppercase tracking-wider border-b border-max-border">
                 <tr>
-                  <th className="py-3.5 px-5">Instrument</th>
-                  <th className="py-3.5 px-4">Trade ID</th>
-                  <th className="py-3.5 px-4">Side</th>
-                  <th className="py-3.5 px-4">Product</th>
-                  <th className="py-3.5 px-4 text-right">Quantity</th>
-                  <th className="py-3.5 px-4 text-right">Execution Price</th>
-                  <th className="py-3.5 px-4 text-right">Turnover</th>
-                  <th className="py-3.5 px-4">Executed Time</th>
-                  <th className="py-3.5 px-5 text-right">Action</th>
+                  <th className="py-2.5 px-4 font-medium">Instrument</th>
+                  <th className="py-2.5 px-3.5 font-medium">Trade ID</th>
+                  <th className="py-2.5 px-3 font-medium">Side</th>
+                  <th className="py-2.5 px-3 font-medium">Product</th>
+                  <th className="py-2.5 px-3.5 font-medium text-right">Quantity</th>
+                  <th className="py-2.5 px-3.5 font-medium text-right">Execution Price</th>
+                  <th className="py-2.5 px-3.5 font-medium text-right">Turnover</th>
+                  <th className="py-2.5 px-3.5 font-medium">Executed Time</th>
+                  <th className="py-2.5 px-4 font-medium text-right">Action</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-800/70">
+              <tbody className="divide-y divide-max-border/60">
                 {paginatedRecords.map((tr: any) => {
                   const inst = instrumentMap[tr.symbol?.toUpperCase()];
                   const isBuy = tr.side === 'BUY';
@@ -648,39 +608,39 @@ export default function OrdersPage() {
                     <tr
                       key={tr.id}
                       onClick={() => setSelectedTradeDetails(tr)}
-                      className="hover:bg-[#141d30]/60 transition-colors cursor-pointer group"
+                      className="hover:bg-[#141b24]/60 transition-colors cursor-pointer group text-max-text-primary"
                     >
-                      <td className="py-4 px-5">
-                        <div className="flex items-center gap-3">
-                          <div className={`w-8 h-8 rounded-lg flex items-center justify-center font-bold text-xs shrink-0 ${
+                      <td className="py-3 px-4">
+                        <div className="flex items-center gap-2.5">
+                          <div className={`w-7 h-7 rounded flex items-center justify-center font-bold text-xs shrink-0 ${
                             isBuy 
-                              ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' 
-                              : 'bg-rose-500/10 text-rose-400 border border-rose-500/20'
+                              ? 'bg-emerald-500/15 text-emerald-300 border border-emerald-900/40' 
+                              : 'bg-rose-500/15 text-rose-300 border border-rose-900/40'
                           }`}>
                             {tr.symbol.slice(0, 2)}
                           </div>
                           <div>
                             <div className="flex items-center gap-1.5">
-                              <span className="font-bold text-white text-sm group-hover:text-indigo-400 transition-colors">
+                              <span className="font-semibold text-slate-100 text-xs group-hover:text-blue-300 transition-colors">
                                 {tr.symbol}
                               </span>
-                              <span className="text-[10px] font-mono px-1 py-0.2 rounded bg-slate-800 text-slate-400 border border-slate-700/60">
+                              <span className="text-[9px] font-mono px-1 py-0.2 rounded bg-[#101723] text-max-text-muted border border-max-border">
                                 {inst?.exchange || 'NSE'}
                               </span>
                             </div>
-                            <span className="text-[11px] text-slate-400 block truncate max-w-[150px]">
+                            <span className="text-[10px] text-max-text-muted block truncate max-w-[150px]">
                               {inst?.name || `${tr.symbol} Equity`}
                             </span>
                           </div>
                         </div>
                       </td>
 
-                      <td className="py-4 px-4 font-mono text-slate-300 text-[11px]">
+                      <td className="py-3 px-3.5 font-mono text-max-text-secondary text-[11px]">
                         <div className="flex items-center gap-1.5">
                           <span>{tr.id}</span>
                           <button
                             onClick={(e) => handleCopyId(tr.id, e)}
-                            className="opacity-0 group-hover:opacity-100 p-1 hover:text-white text-slate-400 transition-opacity"
+                            className="opacity-0 group-hover:opacity-100 p-1 hover:text-white text-max-text-muted transition-opacity"
                             title="Copy Trade ID"
                           >
                             {copiedOrderId === tr.id ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
@@ -688,41 +648,41 @@ export default function OrdersPage() {
                         </div>
                       </td>
 
-                      <td className="py-4 px-4">
-                        <span className={`inline-flex items-center font-bold text-[11px] px-2 py-0.5 rounded-full ${
+                      <td className="py-3 px-3">
+                        <span className={`inline-flex items-center font-semibold text-[10px] px-2 py-0.5 rounded border ${
                           isBuy 
-                            ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' 
-                            : 'bg-rose-500/10 text-rose-400 border border-rose-500/20'
+                            ? 'bg-emerald-950/40 text-emerald-300 border-emerald-900/50' 
+                            : 'bg-rose-950/40 text-rose-300 border-rose-900/50'
                         }`}>
                           {tr.side}
                         </span>
                       </td>
 
-                      <td className="py-4 px-4 text-slate-300 font-medium">
+                      <td className="py-3 px-3 text-max-text-muted font-medium text-[11px]">
                         {tr.product_type || 'CNC'}
                       </td>
 
-                      <td className="py-4 px-4 text-right font-mono font-semibold text-white tabular-nums">
+                      <td className="py-3 px-3.5 text-right font-mono font-medium text-slate-100 tabular-nums">
                         {tr.quantity}
                       </td>
 
-                      <td className="py-4 px-4 text-right font-mono font-bold text-white tabular-nums">
+                      <td className="py-3 px-3.5 text-right font-mono font-medium text-slate-100 tabular-nums">
                         ₹{Number(tr.price).toFixed(2)}
                       </td>
 
-                      <td className="py-4 px-4 text-right font-mono font-bold text-emerald-400 tabular-nums">
+                      <td className="py-3 px-3.5 text-right font-mono font-medium text-emerald-400 tabular-nums">
                         ₹{turnover.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                       </td>
 
-                      <td className="py-4 px-4 text-slate-400">
-                        <div className="text-white text-[11px]">{dateInfo.time}</div>
-                        <div className="text-[10px] text-slate-500 font-mono">{dateInfo.date}</div>
+                      <td className="py-3 px-3.5 text-max-text-muted">
+                        <div className="text-slate-200 text-[11px]">{dateInfo.time}</div>
+                        <div className="text-[10px] text-max-text-muted font-mono">{dateInfo.date}</div>
                       </td>
 
-                      <td className="py-4 px-5 text-right" onClick={(e) => e.stopPropagation()}>
+                      <td className="py-3 px-4 text-right" onClick={(e) => e.stopPropagation()}>
                         <button
                           onClick={() => setSelectedTradeDetails(tr)}
-                          className="px-2.5 py-1.5 rounded-lg bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-white text-[11px] font-medium transition-all border border-slate-700/60 inline-flex items-center gap-1"
+                          className="px-2.5 py-1 rounded border border-max-border bg-[#101723] hover:bg-max-surface text-max-text-secondary hover:text-white text-[11px] font-medium transition-colors inline-flex items-center gap-1"
                         >
                           <Eye className="w-3 h-3" />
                           <span>Receipt</span>
@@ -735,37 +695,35 @@ export default function OrdersPage() {
             </table>
           </div>
         ) : (
-          /* ORDERS TABLE (GROWW REFERENCE COMPLIANT) */
+          /* ORDERS TABLE */
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs font-sans">
-              <thead className="bg-[#131b2e] text-slate-400 text-[11px] font-semibold uppercase tracking-wider border-b border-slate-800">
+              <thead className="bg-[#101723] text-max-text-muted text-[10px] font-semibold uppercase tracking-wider border-b border-max-border">
                 <tr>
-                  <th className="py-3.5 px-5">Instrument</th>
-                  <th className="py-3.5 px-4">Order ID</th>
-                  <th className="py-3.5 px-3">Type</th>
-                  <th className="py-3.5 px-3">Side</th>
-                  <th className="py-3.5 px-3">Product</th>
-                  <th className="py-3.5 px-4 text-right">Quantity</th>
-                  <th className="py-3.5 px-4 text-right">Order Price</th>
-                  <th className="py-3.5 px-4 text-right">Exec Price</th>
-                  <th className="py-3.5 px-4 text-center">Status</th>
-                  <th className="py-3.5 px-4">Time</th>
-                  <th className="py-3.5 px-5 text-right">Action</th>
+                  <th className="py-2.5 px-4 font-medium">Instrument</th>
+                  <th className="py-2.5 px-3.5 font-medium">Order ID</th>
+                  <th className="py-2.5 px-3 font-medium">Type</th>
+                  <th className="py-2.5 px-3 font-medium">Side</th>
+                  <th className="py-2.5 px-3 font-medium">Product</th>
+                  <th className="py-2.5 px-3.5 font-medium text-right">Quantity</th>
+                  <th className="py-2.5 px-3.5 font-medium text-right">Order Price</th>
+                  <th className="py-2.5 px-3.5 font-medium text-right">Exec Price</th>
+                  <th className="py-2.5 px-3.5 font-medium text-center">Status</th>
+                  <th className="py-2.5 px-3.5 font-medium">Time</th>
+                  <th className="py-2.5 px-4 font-medium text-right">Action</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-800/70">
+              <tbody className="divide-y divide-max-border/60">
                 {paginatedRecords.map((ord: any) => {
                   const inst = instrumentMap[ord.symbol?.toUpperCase()];
                   const isBuy = ord.side === 'BUY';
                   const isPending = ord.status === 'PENDING' || ord.status === 'AMO';
                   const dateInfo = formatDateDisplay(ord.created_at);
 
-                  // Order price formatting
                   const orderPriceDisplay = ord.order_type === 'MARKET'
                     ? 'Market'
                     : (ord.price ? `₹${Number(ord.price).toFixed(2)}` : 'Market');
 
-                  // Executed price formatting: only when genuine executed price exists
                   const executedPriceDisplay = (ord.executed_price || ord.average_fill_price)
                     ? `₹${Number(ord.executed_price || ord.average_fill_price).toFixed(2)}`
                     : (ord.status === 'EXECUTED' && ord.price ? `₹${Number(ord.price).toFixed(2)}` : '—');
@@ -774,28 +732,28 @@ export default function OrdersPage() {
                     <tr
                       key={ord.id}
                       onClick={() => setSelectedOrderDetails(ord)}
-                      className="hover:bg-[#141d30]/60 transition-colors cursor-pointer group"
+                      className="hover:bg-[#141b24]/60 transition-colors cursor-pointer group text-max-text-primary"
                     >
                       {/* INSTRUMENT */}
-                      <td className="py-4 px-5">
-                        <div className="flex items-center gap-3">
-                          <div className={`w-8 h-8 rounded-lg flex items-center justify-center font-bold text-xs shrink-0 ${
+                      <td className="py-3 px-4">
+                        <div className="flex items-center gap-2.5">
+                          <div className={`w-7 h-7 rounded flex items-center justify-center font-bold text-xs shrink-0 ${
                             isBuy 
-                              ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' 
-                              : 'bg-rose-500/10 text-rose-400 border border-rose-500/20'
+                              ? 'bg-emerald-500/15 text-emerald-300 border border-emerald-900/40' 
+                              : 'bg-rose-500/15 text-rose-300 border border-rose-900/40'
                           }`}>
                             {ord.symbol.slice(0, 2)}
                           </div>
                           <div>
                             <div className="flex items-center gap-1.5">
-                              <span className="font-bold text-white text-sm group-hover:text-indigo-400 transition-colors">
+                              <span className="font-semibold text-slate-100 text-xs group-hover:text-blue-300 transition-colors">
                                 {ord.symbol}
                               </span>
-                              <span className="text-[10px] font-mono px-1 py-0.2 rounded bg-slate-800 text-slate-400 border border-slate-700/60">
+                              <span className="text-[9px] font-mono px-1 py-0.2 rounded bg-[#101723] text-max-text-muted border border-max-border">
                                 {inst?.exchange || 'NSE'}
                               </span>
                             </div>
-                            <span className="text-[11px] text-slate-400 block truncate max-w-[150px]">
+                            <span className="text-[10px] text-max-text-muted block truncate max-w-[150px]">
                               {inst?.name || `${ord.symbol} Equity`}
                             </span>
                           </div>
@@ -803,12 +761,12 @@ export default function OrdersPage() {
                       </td>
 
                       {/* ORDER ID */}
-                      <td className="py-4 px-4 font-mono text-slate-300 text-[11px]">
+                      <td className="py-3 px-3.5 font-mono text-max-text-secondary text-[11px]">
                         <div className="flex items-center gap-1.5">
                           <span>{ord.id}</span>
                           <button
                             onClick={(e) => handleCopyId(ord.id, e)}
-                            className="opacity-0 group-hover:opacity-100 p-1 hover:text-white text-slate-400 transition-opacity"
+                            className="opacity-0 group-hover:opacity-100 p-1 hover:text-white text-max-text-muted transition-opacity"
                             title="Copy Order ID"
                           >
                             {copiedOrderId === ord.id ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
@@ -817,69 +775,69 @@ export default function OrdersPage() {
                       </td>
 
                       {/* ORDER TYPE */}
-                      <td className="py-4 px-3">
-                        <span className="text-slate-300 font-mono text-[11px] px-1.5 py-0.5 rounded bg-slate-800/80 border border-slate-700/60">
+                      <td className="py-3 px-3">
+                        <span className="text-slate-300 font-mono text-[10px] px-1.5 py-0.5 rounded bg-[#101723] border border-max-border">
                           {ord.order_type}
                         </span>
                       </td>
 
                       {/* SIDE */}
-                      <td className="py-4 px-3">
-                        <span className={`inline-flex items-center font-bold text-[11px] px-2 py-0.5 rounded-full ${
+                      <td className="py-3 px-3">
+                        <span className={`inline-flex items-center font-semibold text-[10px] px-2 py-0.5 rounded border ${
                           isBuy 
-                            ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' 
-                            : 'bg-rose-500/10 text-rose-400 border border-rose-500/20'
+                            ? 'bg-emerald-950/40 text-emerald-300 border-emerald-900/50' 
+                            : 'bg-rose-950/40 text-rose-300 border-rose-900/50'
                         }`}>
                           {ord.side}
                         </span>
                       </td>
 
                       {/* PRODUCT */}
-                      <td className="py-4 px-3 text-slate-300 font-medium text-[11px]">
+                      <td className="py-3 px-3 text-max-text-muted font-medium text-[11px]">
                         {ord.product_type || 'CNC'}
                       </td>
 
                       {/* QUANTITY */}
-                      <td className="py-4 px-4 text-right font-mono font-semibold text-white tabular-nums">
+                      <td className="py-3 px-3.5 text-right font-mono font-medium text-slate-100 tabular-nums">
                         {ord.quantity}
                       </td>
 
                       {/* ORDER PRICE */}
-                      <td className="py-4 px-4 text-right font-mono text-slate-300 tabular-nums">
+                      <td className="py-3 px-3.5 text-right font-mono text-max-text-secondary tabular-nums">
                         {orderPriceDisplay}
                       </td>
 
                       {/* EXECUTED PRICE */}
-                      <td className="py-4 px-4 text-right font-mono font-bold text-white tabular-nums">
+                      <td className="py-3 px-3.5 text-right font-mono font-medium text-slate-100 tabular-nums">
                         {executedPriceDisplay}
                       </td>
 
                       {/* STATUS BADGE */}
-                      <td className="py-4 px-4 text-center">
+                      <td className="py-3 px-3.5 text-center">
                         <OrderStatusBadge status={ord.status} />
                       </td>
 
                       {/* TIME */}
-                      <td className="py-4 px-4 text-slate-400">
-                        <div className="text-white text-[11px]">{dateInfo.time}</div>
-                        <div className="text-[10px] text-slate-500 font-mono">{dateInfo.date}</div>
+                      <td className="py-3 px-3.5 text-max-text-muted">
+                        <div className="text-slate-200 text-[11px]">{dateInfo.time}</div>
+                        <div className="text-[10px] text-max-text-muted font-mono">{dateInfo.date}</div>
                       </td>
 
                       {/* ACTIONS */}
-                      <td className="py-4 px-5 text-right" onClick={(e) => e.stopPropagation()}>
-                        <div className="flex items-center justify-end gap-1.5">
+                      <td className="py-3 px-4 text-right" onClick={(e) => e.stopPropagation()}>
+                        <div className="flex items-center justify-end gap-1">
                           {isPending && (
                             <>
                               <button
                                 onClick={() => setSelectedOrderModify(ord)}
-                                className="p-1.5 rounded-lg bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 border border-indigo-500/20 transition-all"
+                                className="p-1 rounded border border-blue-900/50 bg-blue-950/30 text-blue-300 hover:bg-blue-900/40 transition-colors"
                                 title="Modify Order"
                               >
                                 <Edit3 className="w-3.5 h-3.5" />
                               </button>
                               <button
                                 onClick={() => setSelectedOrderCancel(ord)}
-                                className="p-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/20 transition-all"
+                                className="p-1 rounded border border-rose-900/50 bg-rose-950/30 text-rose-300 hover:bg-rose-900/40 transition-colors"
                                 title="Cancel Order"
                               >
                                 <X className="w-3.5 h-3.5" />
@@ -888,7 +846,7 @@ export default function OrdersPage() {
                           )}
                           <button
                             onClick={() => setSelectedOrderDetails(ord)}
-                            className="p-1.5 rounded-lg bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700/60 transition-all"
+                            className="p-1 rounded border border-max-border bg-[#101723] hover:bg-max-surface text-max-text-secondary hover:text-white transition-colors"
                             title="View Full Details"
                           >
                             <Eye className="w-3.5 h-3.5" />
@@ -905,53 +863,53 @@ export default function OrdersPage() {
 
         {/* 6. PROFESSIONAL PAGINATION FOOTER */}
         {activeRecords.length > 0 && (
-          <div className="px-5 py-3.5 border-t border-slate-800 bg-[#131b2e]/60 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-400">
+          <div className="px-4 py-2.5 border-t border-max-border bg-[#101723]/60 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-max-text-muted">
             <div>
-              Showing <span className="text-white font-mono font-semibold">{(currentPage - 1) * pageSize + 1}</span> to{' '}
-              <span className="text-white font-mono font-semibold">
+              Showing <span className="text-slate-200 font-mono font-medium">{(currentPage - 1) * pageSize + 1}</span> to{' '}
+              <span className="text-slate-200 font-mono font-medium">
                 {Math.min(currentPage * pageSize, totalRecords)}
               </span>{' '}
-              of <span className="text-white font-mono font-semibold">{totalRecords}</span> entries
+              of <span className="text-slate-200 font-mono font-medium">{totalRecords}</span> entries
             </div>
 
-            <div className="flex items-center gap-1.5 font-mono">
+            <div className="flex items-center gap-1 font-mono">
               <button
                 onClick={() => setCurrentPage(1)}
                 disabled={currentPage === 1}
-                className="p-1.5 rounded-lg bg-slate-800/80 hover:bg-slate-700 text-slate-300 disabled:opacity-40 disabled:cursor-not-allowed border border-slate-700/60 transition-colors"
+                className="p-1 rounded border border-max-border bg-[#101723] hover:bg-max-surface text-max-text-secondary hover:text-white disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                 title="First Page"
               >
-                <ChevronsLeft className="w-4 h-4" />
+                <ChevronsLeft className="w-3.5 h-3.5" />
               </button>
               <button
                 onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                 disabled={currentPage === 1}
-                className="p-1.5 rounded-lg bg-slate-800/80 hover:bg-slate-700 text-slate-300 disabled:opacity-40 disabled:cursor-not-allowed border border-slate-700/60 transition-colors"
+                className="p-1 rounded border border-max-border bg-[#101723] hover:bg-max-surface text-max-text-secondary hover:text-white disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                 title="Previous Page"
               >
-                <ChevronLeft className="w-4 h-4" />
+                <ChevronLeft className="w-3.5 h-3.5" />
               </button>
 
-              <span className="px-3 py-1 text-slate-300 text-xs">
-                Page <span className="font-bold text-white">{currentPage}</span> of{' '}
-                <span className="font-bold text-white">{totalPages}</span>
+              <span className="px-2.5 py-0.5 text-max-text-secondary text-xs">
+                Page <span className="font-semibold text-slate-100">{currentPage}</span> of{' '}
+                <span className="font-semibold text-slate-100">{totalPages}</span>
               </span>
 
               <button
                 onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
                 disabled={currentPage === totalPages}
-                className="p-1.5 rounded-lg bg-slate-800/80 hover:bg-slate-700 text-slate-300 disabled:opacity-40 disabled:cursor-not-allowed border border-slate-700/60 transition-colors"
+                className="p-1 rounded border border-max-border bg-[#101723] hover:bg-max-surface text-max-text-secondary hover:text-white disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                 title="Next Page"
               >
-                <ChevronRight className="w-4 h-4" />
+                <ChevronRight className="w-3.5 h-3.5" />
               </button>
               <button
                 onClick={() => setCurrentPage(totalPages)}
                 disabled={currentPage === totalPages}
-                className="p-1.5 rounded-lg bg-slate-800/80 hover:bg-slate-700 text-slate-300 disabled:opacity-40 disabled:cursor-not-allowed border border-slate-700/60 transition-colors"
+                className="p-1 rounded border border-max-border bg-[#101723] hover:bg-max-surface text-max-text-secondary hover:text-white disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                 title="Last Page"
               >
-                <ChevronsRight className="w-4 h-4" />
+                <ChevronsRight className="w-3.5 h-3.5" />
               </button>
             </div>
           </div>

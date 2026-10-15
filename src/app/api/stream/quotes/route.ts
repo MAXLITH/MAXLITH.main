@@ -30,7 +30,7 @@ export async function GET(request: Request) {
           quotes: Array.from(initialQuotes.values()),
           timestamp: new Date().toISOString(),
         });
-      } catch (err) {
+      } catch {
         /* initial error */
       }
 
@@ -47,7 +47,7 @@ export async function GET(request: Request) {
             quotes: Array.from(quotes.values()),
             timestamp: new Date().toISOString(),
           });
-        } catch (err) {
+        } catch {
           sendEvent('heartbeat', { status: 'alive', time: Date.now() });
         }
       }, 3000);

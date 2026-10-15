@@ -88,7 +88,13 @@ export async function GET() {
       },
       '/ai/copilot': {
         post: {
-          summary: 'Conversational multi-agent AI copilot orchestration',
+          summary: 'MAXLITH AI conversational multi-agent market intelligence',
+          responses: { '200': { description: 'Synthesized market intelligence report' } },
+        },
+      },
+      '/ai/maxlith-ai': {
+        post: {
+          summary: 'MAXLITH AI conversational multi-agent market intelligence (Canonical Route)',
           responses: { '200': { description: 'Synthesized market intelligence report' } },
         },
       },

@@ -4,16 +4,8 @@ import Footer from '@/components/Footer';
 import { getAuthSession } from '@/lib/auth';
 import { getAllInstruments, getMarketSessionStatus } from '@/lib/market-data';
 import {
-  TrendingUp,
-  ShieldCheck,
-  Cpu,
-  Layers,
   ArrowRight,
-  Bot,
-  Zap,
-  BarChart3,
   CheckCircle2,
-  Lock,
   Sparkles
 } from 'lucide-react';
 
@@ -218,7 +210,7 @@ export default async function LandingPage() {
               </div>
             </div>
 
-            {/* Mock Order Ticket Graphic */}
+            {/* Paper Trading Order Ticket Preview */}
             <div className="fintech-card p-4 border border-max-border-strong/80 bg-max-surface">
               <div className="flex items-center justify-between border-b border-max-border pb-4 mb-4">
                 <div className="flex items-center gap-2">

@@ -6,7 +6,6 @@ import {
   Layers,
   CheckCircle2,
   AlertCircle,
-  Wallet,
   AlertTriangle
 } from 'lucide-react';
 

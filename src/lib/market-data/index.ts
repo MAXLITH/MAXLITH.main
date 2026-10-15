@@ -1,6 +1,5 @@
 import db from '../db';
 import { getMarketSessionStatus as getStatusFromHours, MarketSessionStatus } from '../market-hours';
-import { marketDataService, MarketDataService } from './service';
 export * from './types';
 export * from './service';
 export * from './technical-indicators';
@@ -70,7 +69,7 @@ export function getInstrument(symbol: string): InstrumentData | null {
 /**
  * Fetch historical price series (candles) for chart rendering
  */
-export function getInstrumentHistory(symbol: string, timeframe: string = '1D') {
+export function getInstrumentHistory(symbol: string, _timeframe: string = '1D') {
   if (process.env.NODE_ENV === 'production') return [];
   return db.prepare(`
     SELECT timestamp, open, high, low, close, volume 

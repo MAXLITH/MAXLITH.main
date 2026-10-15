@@ -32,8 +32,8 @@ export abstract class BaseAgent<TInput extends BaseAgentRunParams, TOutput> {
 
     const startTime = Date.now();
     let status: 'SUCCESS' | 'ERROR' = 'SUCCESS';
-    let tokensUsed = 0;
-    let costUsd = 0;
+    const tokensUsed = 0;
+    const costUsd = 0;
     let result: TOutput;
 
     try {

@@ -192,6 +192,64 @@ describe('AI Copilot Live Market Data & Multi-Agent Intelligence', () => {
       expect(run.model).toBe('gemini-1.5-pro');
       expect(run.status).toBe('SUCCESS');
     });
+
+    it('handles portfolio query for authorized user with authentic metrics', async () => {
+      const orchestrator = new Orchestrator();
+      const output = await orchestrator.orchestrate({
+        userId: 'admin-root-001',
+        prompt: 'Analyze my paper-trading portfolio and risk exposure',
+      });
+
+      expect(output.symbolDetected).toBeNull();
+      expect(output.quoteSnapshot).toBeUndefined();
+      expect(output.agentReports.risk).toBeDefined();
+      expect(output.response).toContain('PORTFOLIO VALUATION & CAPITAL');
+      expect(output.response).toContain('OPEN POSITIONS BREAKDOWN');
+      expect(output.response).toContain('RISK & SECTOR EXPOSURE');
+      expect(output.disclaimer).toContain('Paper trading / educational');
+    });
+
+    it('requires authentication for guest users on portfolio query', async () => {
+      const orchestrator = new Orchestrator();
+      const output = await orchestrator.orchestrate({
+        userId: 'guest-user',
+        prompt: 'Show me my portfolio holdings and PnL',
+      });
+
+      expect(output.symbolDetected).toBeNull();
+      expect(output.quoteSnapshot).toBeUndefined();
+      expect(output.response).toContain('Authentication Required');
+      expect(output.response).toContain('guest session');
+    });
+
+    it('answers general market education query without forcing stock quote card', async () => {
+      const orchestrator = new Orchestrator();
+      const output = await orchestrator.orchestrate({
+        userId: 'test-user-edu',
+        prompt: 'Explain what is a stop loss order and how circuit breakers work',
+      });
+
+      expect(output.symbolDetected).toBeNull();
+      expect(output.quoteSnapshot).toBeUndefined();
+      expect(output.response).toBeDefined();
+      expect(output.disclaimer).toContain('Paper trading / educational');
+    });
+
+    it('maintains multi-turn conversational context when analyzing stocks', async () => {
+      const orchestrator = new Orchestrator();
+      const output = await orchestrator.orchestrate({
+        userId: 'test-user-conv',
+        prompt: 'What about its RSI and moving averages?',
+        conversationHistory: [
+          { role: 'user', content: 'Tell me about HDFCBANK' },
+          { role: 'assistant', content: 'HDFCBANK is trading around ₹1,642.' },
+        ],
+      });
+
+      expect(output.symbolDetected).toBe('HDFCBANK');
+      expect(output.quoteSnapshot?.symbol).toBe('HDFCBANK');
+    });
   });
 });
+
 

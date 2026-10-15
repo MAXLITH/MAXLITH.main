@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Cpu, ShieldCheck, Zap, Activity, Play, RefreshCw, ChevronDown, ChevronUp, CheckCircle2, AlertCircle } from 'lucide-react';
+import { Cpu, Play, RefreshCw, ChevronDown, ChevronUp } from 'lucide-react';
 
 interface AgentTelemetry {
   name: string;
@@ -17,7 +17,6 @@ export default function AIAgentsPage() {
   const [agentTelemetry, setAgentTelemetry] = useState<Record<string, AgentTelemetry>>({});
   const [runningAgent, setRunningAgent] = useState<string | null>(null);
   const [expandedAgent, setExpandedAgent] = useState<string | null>(null);
-  const [loadingInitial, setLoadingInitial] = useState(true);
 
   const agents = [
     {
@@ -70,8 +69,6 @@ export default function AIAgentsPage() {
       }
     } catch (err) {
       console.error('Failed to fetch agent status', err);
-    } finally {
-      setLoadingInitial(false);
     }
   };
 

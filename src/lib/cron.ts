@@ -12,7 +12,7 @@ export function initBackgroundJobs() {
     try {
       evaluatePendingOrders();
       evaluatePriceAlerts();
-    } catch (err) {
+    } catch {
       /* ignore tick error */
     }
   }, 3000);

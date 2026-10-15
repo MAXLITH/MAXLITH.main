@@ -69,9 +69,37 @@ export class RiskAgent extends BaseAgent<BaseAgentRunParams, RiskAgentOutput> {
   readonly outputSchema = RiskOutputSchema;
 
   protected async execute(input: BaseAgentRunParams): Promise<RiskAgentOutput> {
-    const userId = input.userId || 'admin-root-001';
-    const summary = getUserPortfolioSummary(userId);
-    const positions = getUserPositions(userId);
+    const isGuest = !input.userId || input.userId === 'guest-user' || input.userId === 'anonymous';
+    const userId = isGuest ? null : input.userId;
+    const summary = userId ? getUserPortfolioSummary(userId) : null;
+    const positions = userId ? getUserPositions(userId) : [];
+
+    if (isGuest || !summary || positions.length === 0) {
+      return {
+        agentName: 'RISK',
+        riskScore: 20,
+        riskCategory: 'LOW_RISK',
+        portfolioMetrics: {
+          totalValue: summary?.currentPortfolioValue || 0,
+          cashRatioPct: 100,
+          topStockConcentrationPct: 0,
+          topStockSymbol: 'NONE',
+          topSectorConcentrationPct: 0,
+          topSectorName: 'NONE',
+          annualizedVolatilityPct: 0,
+          portfolioBeta: 1.0,
+          maxDrawdownPct: 0,
+          varHistorical95Pct: 0,
+        },
+        warnings: isGuest
+          ? ['Guest session: No user portfolio connected. Log in to evaluate your personal paper-trading risk.']
+          : ['No active paper-trading positions found in your portfolio.'],
+        recommendedActions: [
+          'Maintain risk management discipline and limit single position sizes to under 5% of total capital.',
+        ],
+        disclaimer: 'Portfolio risk telemetry calculated strictly on authorized paper-trading positions. Never fabricated.',
+      };
+    }
 
     const totalVal = Math.max(1, summary.currentPortfolioValue);
     const cashVal = summary.virtualCash;

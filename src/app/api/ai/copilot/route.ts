@@ -62,10 +62,30 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Prompt exceeds maximum length of 2000 characters.' }, { status: 400 });
     }
 
+    let conversationHistory: { role: 'user' | 'assistant'; content: string }[] = [];
+    if (conversationId) {
+      try {
+        const pastMsgs = db.prepare(`
+          SELECT sender, content FROM ai_messages
+          WHERE conversation_id = ?
+          ORDER BY created_at ASC
+        `).all(conversationId) as any[];
+        if (pastMsgs && pastMsgs.length > 0) {
+          conversationHistory = pastMsgs.slice(-8).map((m) => ({
+            role: m.sender === 'USER' ? 'user' : 'assistant',
+            content: m.content,
+          }));
+        }
+      } catch (err) {
+        console.warn('Failed to load prior messages for context:', err);
+      }
+    }
+
     const result = await orchestrator.orchestrate({
       userId,
       prompt: prompt.trim(),
       symbol,
+      conversationHistory,
     });
 
     let activeConvId = conversationId;
@@ -111,7 +131,7 @@ export async function POST(request: Request) {
       conversationId: activeConvId,
     });
   } catch (error: any) {
-    console.error('AI Copilot error:', error);
+    console.error('MAXLITH AI error:', error);
     return NextResponse.json(
       { error: error.message || 'AI Orchestration failed to execute.' },
       { status: 500 }

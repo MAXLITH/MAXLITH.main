@@ -5,14 +5,16 @@ import { RiskAgent, RiskAgentOutput } from './risk';
 import { FundamentalAgent, FundamentalAgentOutput } from './fundamental';
 import { InfoAgent, InfoAgentOutput } from './info';
 import db from '../db';
-import { callLLM } from '../ai/llm';
+import { callLLM, LLMMessage } from '../ai/llm';
 import { rateLimit } from '../cache';
 import { newId } from '../ids';
+import { getUserPortfolioSummary, getUserPositions, getUserOrders } from '../paper-trading';
 
 export interface OrchestrationInput {
   userId: string;
   prompt: string;
   symbol?: string;
+  conversationHistory?: LLMMessage[];
 }
 
 export interface OrchestratorVerdict {
@@ -56,7 +58,7 @@ export class Orchestrator {
   private infoAgent = new InfoAgent();
 
   async orchestrate(input: OrchestrationInput): Promise<OrchestratorOutput> {
-    const { userId, prompt } = input;
+    const { userId, prompt, conversationHistory = [] } = input;
 
     // Rate limit per user (e.g. 20 requests per minute)
     const allowed = rateLimit(`ai-rate:${userId}`, 20, 60_000);
@@ -64,11 +66,22 @@ export class Orchestrator {
       throw new Error('Rate limit exceeded: You can make up to 20 AI queries per minute. Please try again shortly.');
     }
 
+    const isGuest = !userId || userId === 'guest-user' || userId === 'anonymous';
     const promptUpper = prompt.toUpperCase();
 
-    // 1. Detect target symbol or portfolio intent
+    // Check portfolio intent
+    const isPortfolioQuery =
+      promptUpper.includes('PORTFOLIO') ||
+      promptUpper.includes('MY RISK') ||
+      promptUpper.includes('HOLDINGS') ||
+      promptUpper.includes('MY POSITIONS') ||
+      promptUpper.includes('MY ORDERS') ||
+      promptUpper.includes('MY TRADES') ||
+      promptUpper.includes('MY ACCOUNT') ||
+      promptUpper.includes('MY PNL');
+
+    // 1. Detect target symbol
     let targetSymbol: string | null = input.symbol ? input.symbol.toUpperCase().trim() : null;
-    const isPortfolioQuery = promptUpper.includes('PORTFOLIO') || promptUpper.includes('MY RISK') || promptUpper.includes('HOLDINGS');
 
     if (!targetSymbol && !isPortfolioQuery) {
       const allSymbols = db.prepare('SELECT symbol, name FROM instruments').all() as { symbol: string; name: string }[];
@@ -83,14 +96,248 @@ export class Orchestrator {
       }
     }
 
-    // Default symbol if not specified and not pure portfolio query
-    if (!targetSymbol && !isPortfolioQuery) {
-      targetSymbol = 'RELIANCE';
+    // If still not detected, search recent conversation history
+    if (!targetSymbol && !isPortfolioQuery && conversationHistory.length > 0) {
+      const allSymbols = db.prepare('SELECT symbol FROM instruments').all() as { symbol: string }[];
+      for (let i = conversationHistory.length - 1; i >= 0; i--) {
+        const histUpper = conversationHistory[i].content.toUpperCase();
+        for (const row of allSymbols) {
+          if (histUpper.includes(row.symbol)) {
+            targetSymbol = row.symbol;
+            break;
+          }
+        }
+        if (targetSymbol) break;
+      }
     }
 
-    const sym = targetSymbol || 'NIFTY50';
+    const disclaimer = 'Paper trading / educational, not investment advice. MAXLITH V1 does not execute real-money trades.';
 
-    // 2. Run MarketDataAgent first to get verified live quote and candles
+    // =========================================================================
+    // CASE 1: PORTFOLIO / PAPER-TRADING QUERY
+    // =========================================================================
+    if (isPortfolioQuery) {
+      if (isGuest) {
+        const guestResponse = `### MAXLITH AI • PORTFOLIO ACCESS
+> **Authentication Required**: You are currently in a guest session.
+
+To analyze your paper-trading portfolio, positions, orders, and risk metrics:
+1. Log in or create an account on MAXLITH.
+2. Your virtual ₹10,00,000 cash balance and paper positions will sync automatically.
+3. MAXLITH AI can then provide real-time risk telemetry, portfolio Beta, and diversification analysis.
+
+---
+> **Disclaimer:** ${disclaimer}`;
+
+        return {
+          query: prompt,
+          symbolDetected: null,
+          agentReports: {},
+          verdict: {
+            verdict: 'NEUTRAL_HOLD',
+            confidenceScore: 50,
+            summaryWhy: 'Guest session: Log in to inspect authorized user portfolio.',
+            agentCitations: {
+              marketData: 'No portfolio connected.',
+              tech: 'N/A',
+              fundamental: 'N/A',
+              risk: 'Log in to calculate portfolio risk.',
+              news: 'N/A',
+              info: 'Portfolio telemetry requires user authentication.',
+            },
+          },
+          response: guestResponse,
+          disclaimer,
+          timestamp: new Date().toISOString(),
+        };
+      }
+
+      const summary = getUserPortfolioSummary(userId);
+      const positions = getUserPositions(userId);
+      const riskReport = await this.riskAgent.run({ userId, prompt });
+
+      const positionsList = positions.length > 0
+        ? positions.map((p) => 
+            `- **${p.symbol}** (${p.product_type}): ${p.quantity} shares @ avg ₹${p.average_price.toFixed(2)} | Current: ₹${p.current_price.toFixed(2)} | Unrealized P&L: ₹${p.unrealized_pnl >= 0 ? '+' : ''}${p.unrealized_pnl.toFixed(2)} (${p.unrealized_pnl_percent >= 0 ? '+' : ''}${p.unrealized_pnl_percent.toFixed(2)}%)`
+          ).join('\n')
+        : 'No open paper-trading positions.';
+
+      const sectorBreakdown = summary.sectorAllocations.length > 0
+        ? summary.sectorAllocations.map((s) => 
+            `- **${s.sector}**: ₹${s.value.toLocaleString('en-IN')} (${s.percentage}%)`
+          ).join('\n')
+        : 'No sector concentration.';
+
+      const systemPrompt = `You are MAXLITH AI Market Intelligence, an institutional risk officer and portfolio analyst for Indian Equities.
+Analyze the user's paper-trading portfolio objectively based on real account telemetry provided below.
+Format your output with clear markdown headings:
+1. PORTFOLIO VALUATION & CAPITAL
+2. OPEN POSITIONS BREAKDOWN
+3. RISK & SECTOR EXPOSURE
+4. ACTIONABLE RISK GUARDRAILS
+Never invent positions, cash balances, or guaranteed returns. Conclude with the educational paper-trading disclaimer.`;
+
+      const userPrompt = `User Prompt: "${prompt}"
+Account Summary:
+- Virtual Cash: ₹${summary.virtualCash.toLocaleString('en-IN')} (Available: ₹${summary.availableCash.toLocaleString('en-IN')})
+- Invested Capital: ₹${summary.investedValue.toLocaleString('en-IN')}
+- Current Portfolio Value: ₹${summary.currentPortfolioValue.toLocaleString('en-IN')}
+- Total P&L: ₹${summary.overallPnl >= 0 ? '+' : ''}${summary.overallPnl.toLocaleString('en-IN')} (${summary.overallPnlPercent}%)
+- Today's P&L: ₹${summary.todayPnl >= 0 ? '+' : ''}${summary.todayPnl.toLocaleString('en-IN')} (${summary.todayPnlPercent}%)
+
+Open Positions:
+${positionsList}
+
+Sector Breakdown:
+${sectorBreakdown}
+
+Risk Telemetry:
+- Risk Score: ${riskReport.riskScore}/100 (${riskReport.riskCategory})
+- Portfolio Beta: ${riskReport.portfolioMetrics.portfolioBeta}
+- 1-Day 95% Historical VaR: ₹${riskReport.portfolioMetrics.varHistorical95Pct.toLocaleString('en-IN')}
+- Warnings: ${riskReport.warnings.join('; ') || 'Standard market volatility'}`;
+
+      let aiResponse = '';
+      try {
+        const llmRes = await callLLM({
+          systemPrompt,
+          userPrompt,
+          history: conversationHistory,
+          temperature: 0.2,
+          maxTokens: 1200,
+        });
+        if (llmRes.content && llmRes.content.trim().length > 0) {
+          aiResponse = llmRes.content.trim();
+        }
+      } catch (err) {
+        console.warn('[Orchestrator] callLLM for portfolio failed, using grounded template:', err);
+      }
+
+      const response = aiResponse || `
+### PORTFOLIO VALUATION & CAPITAL
+- **Net Portfolio Value:** ₹${summary.currentPortfolioValue.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+- **Virtual Cash Balance:** ₹${summary.virtualCash.toLocaleString('en-IN', { minimumFractionDigits: 2 })} (Available: ₹${summary.availableCash.toLocaleString('en-IN', { minimumFractionDigits: 2 })})
+- **Invested Capital:** ₹${summary.investedValue.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+- **Total Realized & Unrealized P&L:** ₹${summary.overallPnl >= 0 ? '+' : ''}${summary.overallPnl.toLocaleString('en-IN', { minimumFractionDigits: 2 })} (${summary.overallPnlPercent >= 0 ? '+' : ''}${summary.overallPnlPercent}%)
+- **Today's Session P&L:** ₹${summary.todayPnl >= 0 ? '+' : ''}${summary.todayPnl.toLocaleString('en-IN', { minimumFractionDigits: 2 })} (${summary.todayPnlPercent >= 0 ? '+' : ''}${summary.todayPnlPercent}%)
+
+---
+
+### OPEN POSITIONS BREAKDOWN (${positions.length} Active)
+${positionsList}
+
+---
+
+### RISK & SECTOR EXPOSURE
+- **Risk Score:** \`${riskReport.riskScore}/100\` (${riskReport.riskCategory})
+- **Portfolio Beta:** \`${riskReport.portfolioMetrics.portfolioBeta}\` (Relative to Nifty 50)
+- **1-Day 95% Historical VaR:** ₹${riskReport.portfolioMetrics.varHistorical95Pct.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+- **Sector Distribution:**
+${sectorBreakdown}
+
+---
+
+### ACTIONABLE RISK GUARDRAILS
+${riskReport.warnings.length > 0 ? riskReport.warnings.map((w) => `- ⚠️ ${w}`).join('\n') : '- ✅ Portfolio maintains standard risk parameters.'}
+${riskReport.recommendedActions.map((a) => `- 💡 ${a}`).join('\n')}
+
+> **IMPORTANT:** ${disclaimer}
+      `.trim();
+
+      return {
+        query: prompt,
+        symbolDetected: null,
+        agentReports: {
+          risk: riskReport,
+        },
+        verdict: {
+          verdict: riskReport.riskScore > 65 ? 'SELL' : 'NEUTRAL_HOLD',
+          confidenceScore: 85,
+          summaryWhy: `Portfolio evaluation for ${userId}: Value ₹${summary.currentPortfolioValue.toLocaleString('en-IN')}, Total P&L ${summary.overallPnlPercent}%, Risk Score ${riskReport.riskScore}/100 (${riskReport.riskCategory}).`,
+          agentCitations: {
+            marketData: 'Portfolio telemetry verified from active ledger & positions.',
+            tech: 'N/A',
+            fundamental: 'N/A',
+            risk: `Risk Score ${riskReport.riskScore}/100. ${riskReport.warnings.join(' ')}`,
+            news: 'N/A',
+            info: `Portfolio tracking ${positions.length} active positions.`,
+          },
+        },
+        response,
+        disclaimer,
+        timestamp: new Date().toISOString(),
+      };
+    }
+
+    // =========================================================================
+    // CASE 2: GENERAL FINANCIAL / MARKET INQUIRY (NO STOCK SPECIFIED)
+    // =========================================================================
+    if (!targetSymbol) {
+      const systemPrompt = `You are MAXLITH AI, a senior institutional analyst and financial educator for Indian Equities (NSE/BSE).
+Answer the user's question accurately, concisely, and educationally.
+Explain terminology clearly (e.g. Greeks, P/E ratio, RSI, stop loss, margin trading, circuit breakers, market depth).
+Never invent stock prices or make false profit guarantees.
+Conclude with the educational paper-trading disclaimer.`;
+
+      let aiContent = '';
+      try {
+        const llmRes = await callLLM({
+          systemPrompt,
+          userPrompt: prompt,
+          history: conversationHistory,
+          temperature: 0.3,
+          maxTokens: 1000,
+        });
+        if (llmRes.content && llmRes.content.trim().length > 0) {
+          aiContent = llmRes.content.trim();
+        }
+      } catch (err) {
+        console.warn('[Orchestrator] callLLM for general question failed:', err);
+      }
+
+      const response = aiContent || `
+### MAXLITH AI • MARKET INTELLIGENCE
+
+**Query:** "${prompt}"
+
+Thank you for your question. As MAXLITH AI, I provide institutional analysis and education across Indian equities (**NSE/BSE**).
+
+- **Stock Analysis:** To analyze a specific security, include a ticker in your prompt (e.g. *Analyze RELIANCE*, *TCS technical indicators*, *HDFCBANK fundamentals*).
+- **Portfolio Telemetry:** Inquire *Analyze my portfolio* or *Show my risk exposure* to inspect your authorized paper-trading positions.
+- **Indicators Supported:** 20/50/200 SMA, 12/20/50 EMA, RSI 14, MACD (12, 26, 9), ATR 14, Bollinger Bands, and Pivot Levels calculated mathematically from verified daily candles.
+
+> **IMPORTANT:** ${disclaimer}
+      `.trim();
+
+      return {
+        query: prompt,
+        symbolDetected: null,
+        agentReports: {},
+        verdict: {
+          verdict: 'NEUTRAL_HOLD',
+          confidenceScore: 70,
+          summaryWhy: 'General market/educational query answered without stock-specific bias.',
+          agentCitations: {
+            marketData: 'Educational reference.',
+            tech: 'Standard mathematical indicator definitions.',
+            fundamental: 'General equities fundamentals.',
+            risk: 'Capital preservation & risk management principles.',
+            news: 'N/A',
+            info: 'MAXLITH AI Market Intelligence System.',
+          },
+        },
+        response,
+        disclaimer,
+        timestamp: new Date().toISOString(),
+      };
+    }
+
+    // =========================================================================
+    // CASE 3: SPECIFIC STOCK / INDEX ANALYSIS (targetSymbol detected)
+    // =========================================================================
+    const sym = targetSymbol;
+
+    // Run MarketDataAgent first to get verified live quote and candles
     let marketData: MarketDataAgentOutput | undefined;
     try {
       marketData = await this.marketDataAgent.run({ userId, symbol: sym, prompt });
@@ -101,7 +348,7 @@ export class Orchestrator {
     const verifiedQuote = marketData?.quote;
     const candles = marketData?.candles || [];
 
-    // 3. Run remaining agents concurrently
+    // Run remaining agents concurrently
     const [techResult, newsResult, riskResult, fundResult, infoResult] = await Promise.allSettled([
       this.techAgent.run({ userId, symbol: sym, prompt, candles } as any),
       this.newsAgent.run({ userId, symbol: sym, prompt }),
@@ -116,7 +363,7 @@ export class Orchestrator {
     const fund = fundResult.status === 'fulfilled' ? fundResult.value : undefined;
     const info = infoResult.status === 'fulfilled' ? infoResult.value : undefined;
 
-    // 4. Synthesize balanced verdict with score
+    // Synthesize balanced verdict with score
     let score = 50;
     if (tech) {
       if (tech.signal === 'BUY') score += 15;
@@ -150,11 +397,8 @@ export class Orchestrator {
       info: info?.plainLanguageExplanation || 'General equities overview.',
     };
 
-    const summaryWhy = `Consensus synthesis for ${sym}: Technical signals point to ${tech?.signal || 'HOLD'} with RSI at ${tech?.metrics.rsi14 || 50}. Valuation is classified as ${fund?.valuationVerdict || 'FAIR'} (${fund?.metrics.peRatio || 'N/A'}x P/E). News sentiment registers ${news?.overallSentiment || 'NEUTRAL'}, while risk telemetry indicates ${risk?.riskCategory || 'MODERATE_RISK'}.`;
+    const summaryWhy = `Consensus synthesis for ${sym}: Technical signals point to ${tech?.signal || 'HOLD'} with RSI at ${tech?.metrics.rsi14 ?? 50}. Valuation is classified as ${fund?.valuationVerdict || 'FAIR'} (${fund?.metrics.peRatio || 'N/A'}x P/E). News sentiment registers ${news?.overallSentiment || 'NEUTRAL'}, while risk telemetry indicates ${risk?.riskCategory || 'MODERATE_RISK'}.`;
 
-    const disclaimer = 'Paper trading / educational, not investment advice. MAXLITH V1 does not execute real-money trades.';
-
-    // 5. Call LLM for synthesis or use deterministic grounded synthesis
     const currentPriceStr = verifiedQuote ? `₹${verifiedQuote.price.toFixed(2)}` : '₹1,000.00';
     const changeStr = verifiedQuote ? `${verifiedQuote.change >= 0 ? '+' : ''}₹${verifiedQuote.change.toFixed(2)} (${verifiedQuote.percentChange >= 0 ? '+' : ''}${verifiedQuote.percentChange.toFixed(2)}%)` : '0.00%';
 
@@ -206,6 +450,7 @@ Risk Telemetry:
       const llmRes = await callLLM({
         systemPrompt,
         userPrompt,
+        history: conversationHistory,
         temperature: 0.2,
         maxTokens: 1200,
       });
@@ -217,7 +462,6 @@ Risk Telemetry:
       console.warn('[Orchestrator] callLLM failed, falling back to grounded markdown:', err);
     }
 
-    // 6. If LLM did not provide text or key is absent, use zero-hallucination deterministic template
     const response = aiGeneratedContent || `
 ### MARKET SNAPSHOT
 - **Symbol:** ${sym} (${info?.name || sym})
@@ -263,7 +507,7 @@ ${summaryWhy}
 > **IMPORTANT:** ${disclaimer}
     `.trim();
 
-    // 7. Persist analysis run into ai_analysis_runs
+    // Persist analysis run into ai_analysis_runs
     try {
       db.prepare(`
         INSERT INTO ai_analysis_runs (

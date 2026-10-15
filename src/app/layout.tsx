@@ -3,7 +3,7 @@ import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
   title: 'MAXLITH — Indian Stock Market AI Intelligence & Paper Trading',
-  description: 'Intelligent paper trading, stock analysis, and multi-agent AI copilot for Indian stock markets (NSE/BSE).',
+  description: 'Intelligent paper trading, stock analysis, and multi-agent MAXLITH AI market intelligence for Indian stock markets (NSE/BSE).',
 };
 
 export default function RootLayout({

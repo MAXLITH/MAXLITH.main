@@ -1,9 +1,9 @@
 'use client';
 
 import Link from 'next/link';
-import { TrendingUp, Shield, Cpu, ArrowRight } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 
-export default function Navbar({ authenticated = false, user = null }: { authenticated?: boolean; user?: any }) {
+export default function Navbar({ authenticated = false, user: _user = null }: { authenticated?: boolean; user?: any }) {
   return (
     <header className="sticky top-0 z-50 fintech-glass border-b border-max-border/80">
       <div className="max-w-7xl mx-auto px-4 sm:px-4 lg:px-8 h-16 flex items-center justify-between">

@@ -203,33 +203,8 @@ export class MarketDataAgent extends BaseAgent<BaseAgentRunParams, MarketDataAge
           volume: c.volume,
         }));
       } else {
-        // Generate calibrated historical walk candles from base price if table has no history
-        const p = verifiedQuote.price;
-        const generated: OHLCVBar[] = [];
-        const today = Date.now();
-        let runningClose = Number((p * 0.92).toFixed(2));
-
-        for (let i = 60; i >= 1; i--) {
-          const t = today - i * 86400000;
-          const open = runningClose;
-          const delta = (Math.sin(i / 5) * 0.015 + (Math.random() - 0.48) * 0.02) * open;
-          const close = Number(Math.max(1, open + delta).toFixed(2));
-          const high = Number((Math.max(open, close) * (1 + Math.random() * 0.008)).toFixed(2));
-          const low = Number((Math.min(open, close) * (1 - Math.random() * 0.008)).toFixed(2));
-          const volume = Math.floor(500000 + Math.random() * 1000000);
-          generated.push({ timestamp: t, open, high, low, close, volume });
-          runningClose = close;
-        }
-        // Last bar matches verified quote
-        generated.push({
-          timestamp: today,
-          open: verifiedQuote.open,
-          high: verifiedQuote.high,
-          low: verifiedQuote.low,
-          close: verifiedQuote.price,
-          volume: verifiedQuote.volume,
-        });
-        candles = generated;
+        // No fake bars: if authentic historical candles are unavailable, retain empty list
+        candles = [];
       }
     }
 

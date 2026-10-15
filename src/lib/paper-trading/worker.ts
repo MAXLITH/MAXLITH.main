@@ -203,15 +203,6 @@ export function autoSquareOffMIS(): number {
     if (!inst) continue;
 
     try {
-      const exitOrder = {
-        userId: pos.user_id,
-        symbol: pos.symbol,
-        side: 'SELL' as const,
-        orderType: 'MARKET' as const,
-        productType: 'MIS' as const,
-        quantity: pos.quantity,
-      };
-
       const charges = calculateCharges({
         side: 'SELL',
         productType: 'MIS',

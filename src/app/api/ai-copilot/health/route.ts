@@ -11,7 +11,7 @@ export async function GET() {
 
   return NextResponse.json({
     status: 'HEALTHY',
-    service: 'MAXLITH AI Copilot Market Intelligence',
+    service: 'MAXLITH AI Market Intelligence',
     timestamp: new Date().toISOString(),
     market: {
       session: sessionStatus.session,
@@ -27,8 +27,15 @@ export async function GET() {
     ai: {
       geminiConfigured: Boolean(config.geminiApiKey),
       geminiModel: config.geminiModel,
+      groqConfigured: Boolean(config.groqApiKey),
+      groqModel: config.groqModel,
+      openaiConfigured: Boolean(config.openaiApiKey),
       anthropicConfigured: Boolean(config.anthropicApiKey),
-      defaultModel: config.geminiApiKey ? config.geminiModel : 'maxlith-deterministic-grounded-v1',
+      defaultModel: config.geminiApiKey
+        ? config.geminiModel
+        : config.groqApiKey
+        ? config.groqModel
+        : 'maxlith-deterministic-grounded-v1',
     },
   });
 }

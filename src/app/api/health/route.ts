@@ -10,7 +10,7 @@ export async function GET() {
 
   try {
     db.prepare('SELECT 1').get();
-  } catch (err) {
+  } catch {
     dbStatus = 'DEGRADED';
   }
 

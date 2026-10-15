@@ -31,7 +31,7 @@ export async function GET() {
     }
 
     return NextResponse.json({ agents: statusResults });
-  } catch (error: any) {
+  } catch {
     return NextResponse.json({ error: 'Failed to fetch agents status' }, { status: 500 });
   }
 }

@@ -135,6 +135,49 @@ class SupabaseDbStore {
     for (const hDate of NSE_HOLIDAYS_2026) {
       this.marketHolidays.set(hDate, { date: hDate, name: 'Market Holiday', exchanges: 'NSE,BSE' });
     }
+
+    // Seed deterministic historical daily bars for key benchmark instruments
+    const coreSymbols = ['RELIANCE', 'TCS', 'HDFCBANK', 'INFY', 'ICICIBANK', 'NIFTY50'];
+    const now = Date.now();
+    for (const sym of coreSymbols) {
+      const inst = this.instruments.get(sym);
+      if (!inst) continue;
+      const basePrice = inst.current_price;
+      for (let i = 60; i >= 1; i--) {
+        const timestamp = now - i * 86400000;
+        const factor = 1 + 0.04 * Math.sin(i * 0.14) + 0.02 * Math.cos(i * 0.09);
+        const close = Number((basePrice * factor).toFixed(2));
+        const open = Number((close * (1 + 0.003 * Math.sin(i * 0.25))).toFixed(2));
+        const high = Number((Math.max(open, close) * 1.008).toFixed(2));
+        const low = Number((Math.min(open, close) * 0.992).toFixed(2));
+        const volume = Math.floor(1000000 + 400000 * Math.sin(i * 0.2));
+        const ph = {
+          id: `ph-${sym}-${timestamp}`,
+          symbol: sym,
+          timeframe: '1D',
+          timestamp,
+          open,
+          high,
+          low,
+          close,
+          volume,
+        };
+        this.priceHistory.set(ph.id, ph);
+      }
+      // Add latest bar corresponding to current instrument price
+      const latestBar = {
+        id: `ph-${sym}-${now}`,
+        symbol: sym,
+        timeframe: '1D',
+        timestamp: now,
+        open: inst.open_price,
+        high: inst.high_price,
+        low: inst.low_price,
+        close: inst.current_price,
+        volume: inst.volume,
+      };
+      this.priceHistory.set(latestBar.id, latestBar);
+    }
   }
 }
 
@@ -403,6 +446,19 @@ class StatementWrapper {
       let runs = Array.from(store.aiAnalysisRuns.values());
       if (userId) runs = runs.filter((r) => r.user_id === userId);
       return runs.sort((a, b) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime());
+    }
+
+    if (sqlUpper.includes('FROM PRICE_HISTORY')) {
+      const sym = (params[0] || '').toUpperCase();
+      let candles = Array.from(store.priceHistory.values());
+      if (sym) {
+        candles = candles.filter((c) => c.symbol?.toUpperCase() === sym);
+      }
+      return candles.sort((a, b) => {
+        const timeA = typeof a.timestamp === 'number' ? a.timestamp : new Date(a.timestamp).getTime();
+        const timeB = typeof b.timestamp === 'number' ? b.timestamp : new Date(b.timestamp).getTime();
+        return timeA - timeB;
+      });
     }
 
     return [];
@@ -857,6 +913,29 @@ class StatementWrapper {
       return { changes: 1, lastInsertRowid: 1 };
     }
 
+    if (sqlUpper.includes('INSERT INTO PRICE_HISTORY')) {
+      let ph: any = {};
+      if (typeof args[0] === 'object' && args[0] !== null) {
+        ph = args[0];
+      } else {
+        ph = {
+          id: params[0] || `ph-${params[1]}-${params[3]}`,
+          symbol: params[1],
+          timeframe: params[2] || '1D',
+          timestamp: params[3],
+          open: params[4],
+          high: params[5],
+          low: params[6],
+          close: params[7],
+          volume: params[8] || 0,
+        };
+      }
+      const phKey = ph.id || `${ph.symbol}_${ph.timestamp}`;
+      store.priceHistory.set(phKey, ph);
+      syncToSupabase('price_history', [ph]);
+      return { changes: 1, lastInsertRowid: 1 };
+    }
+
     return { changes: 1, lastInsertRowid: 1 };
   }
 }
@@ -875,10 +954,10 @@ export const db = {
       return fn(...args);
     }) as T;
   },
-  exec(sql: string) {
+  exec(_sql: string) {
     return;
   },
-  pragma(sql: string) {
+  pragma(_sql: string) {
     return [];
   },
 };

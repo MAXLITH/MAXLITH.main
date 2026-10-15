@@ -208,7 +208,7 @@ export class NormalizedRestMarketDataProvider implements MarketDataProvider {
     return request.countback === undefined ? ordered : ordered.slice(-request.countback);
   }
 
-  subscribeBars(symbolId: string, resolution: string, listener: (bar: MarketBar) => void): () => void {
+  subscribeBars(_symbolId: string, _resolution: string, _listener: (bar: MarketBar) => void): () => void {
     return () => {};
   }
 
@@ -284,7 +284,7 @@ export function getMarketDataProviderStatus() {
   const configured = Boolean(apiKey.length > 0);
   return {
     configured,
-    provider: configured ? 'upstox' : null,
+    provider: configured ? provider : null,
     streamingAvailable: false,
     source: configured ? 'UPSTOX_OFFICIAL_API' : 'UNAVAILABLE',
   };

@@ -134,7 +134,7 @@ export async function DELETE(request: Request) {
 
     db.prepare('DELETE FROM alerts WHERE id = ? AND user_id = ?').run(id, session.id);
     return NextResponse.json({ success: true, id });
-  } catch (error: any) {
+  } catch {
     return NextResponse.json({ error: 'Failed to delete alert' }, { status: 500 });
   }
 }

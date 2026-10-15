@@ -2,7 +2,7 @@ import { redirect } from 'next/navigation';
 import { requireAdminSession } from '@/lib/auth';
 import db from '@/lib/db';
 import { getMarketSessionStatus } from '@/lib/market-data';
-import { ShieldAlert, Users, Database, Cpu, Activity, FileText, CheckCircle2, Lock } from 'lucide-react';
+import { ShieldAlert, Users, Database, Cpu, Activity, FileText } from 'lucide-react';
 
 export const dynamic = 'force-dynamic';
 
@@ -20,8 +20,6 @@ export default async function AdminDashboardPage() {
   const instrumentsCount = (db.prepare('SELECT COUNT(*) as cnt FROM instruments').get() as { cnt: number }).cnt;
 
   const users = db.prepare('SELECT id, email, full_name, role, virtual_cash, created_at FROM users ORDER BY created_at DESC LIMIT 10').all() as any[];
-  const recentOrders = db.prepare('SELECT * FROM orders ORDER BY created_at DESC LIMIT 10').all() as any[];
-  const aiRuns = db.prepare('SELECT * FROM ai_agent_runs ORDER BY created_at DESC LIMIT 10').all() as any[];
 
   const marketSession = getMarketSessionStatus();
 
@@ -35,13 +33,6 @@ export default async function AdminDashboardPage() {
       ROUND(AVG(execution_time_ms), 1) as avg_latency_ms
     FROM ai_agent_runs
     GROUP BY agent_name
-  `).all() as any[];
-
-  // Order breakdown by status
-  const orderBreakdown = db.prepare(`
-    SELECT status, COUNT(*) as count 
-    FROM orders 
-    GROUP BY status
   `).all() as any[];
 
   // Audit logs

@@ -38,7 +38,6 @@ export default function StockChart({
   }));
 
   const strokeColor = isPositive ? '#10b981' : '#ef4444';
-  const fillColor = isPositive ? 'rgba(16, 185, 129, 0.15)' : 'rgba(239, 68, 68, 0.15)';
 
   const prices = formattedData.map((d) => d.price);
   const minPrice = Math.floor(Math.min(...prices) * 0.98);
