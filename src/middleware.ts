@@ -29,7 +29,13 @@ export async function middleware(request: NextRequest) {
   }
 
   // If already authenticated and visiting /login or /signup directly without explicit switches, redirect to dashboard
-  const isExplicitAction = request.nextUrl.searchParams.has('mode') || request.nextUrl.searchParams.has('switch');
+  const hasRedirectParam = request.nextUrl.searchParams.has('redirect');
+  const hasErrorParam = request.nextUrl.searchParams.has('error');
+  const isExplicitAction = request.nextUrl.searchParams.has('mode') || 
+                           request.nextUrl.searchParams.has('switch') || 
+                           hasRedirectParam || 
+                           hasErrorParam;
+
   if (isAuthenticated && !isExplicitAction && (pathname === '/login' || pathname === '/signup')) {
     const dashboardUrl = request.nextUrl.clone();
     dashboardUrl.pathname = '/dashboard';

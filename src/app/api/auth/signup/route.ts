@@ -46,7 +46,14 @@ export async function POST(request: Request) {
     db.prepare('INSERT INTO watchlist_items (id, watchlist_id, symbol) VALUES (?, ?, ?)').run(`wli-3-${Date.now()}`, watchlistId, 'HDFCBANK');
     db.prepare('INSERT INTO watchlist_items (id, watchlist_id, symbol) VALUES (?, ?, ?)').run(`wli-4-${Date.now()}`, watchlistId, 'INFY');
 
-    const token = await createSessionToken({ id: userId, email: normalizedEmail, role: 'USER' });
+    const token = await createSessionToken({
+      id: userId,
+      email: normalizedEmail,
+      role: 'USER',
+      fullName,
+      virtualCash: initialCash,
+      initialCapital: initialCash,
+    });
 
     const response = NextResponse.json({
       success: true,
