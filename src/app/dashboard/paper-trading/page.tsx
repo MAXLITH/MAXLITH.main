@@ -131,7 +131,7 @@ function PaperTradingContent() {
               <Layers className="w-5 h-5 text-max-brand-primary" />
               <span>Paper Trading Console</span>
             </h1>
-            <span className="px-2.5 py-0.5 rounded bg-blue-500/10 text-max-brand-primary text-[10px] font-mono border border-blue-500/30">
+            <span className="px-2.5 py-0.5 rounded bg-max-brand-primary/10 text-max-brand-primary text-[10px] font-mono border border-max-brand-primary/30">
               ENVIRONMENT: PAPER TRADING
             </span>
           </div>
@@ -151,7 +151,7 @@ function PaperTradingContent() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        <div className="fintech-card p-4 border-t-4 border-t-blue-600">
+        <div className="fintech-card p-4 border-t-4 border-t-max-brand-primary">
           <h2 className="text-sm font-bold text-white mb-4">Order Execution Ticket</h2>
 
           {feedback && (
@@ -211,7 +211,7 @@ function PaperTradingContent() {
                     type="button"
                     onClick={() => setProductType('CNC')}
                     className={`py-1.5 rounded text-xs font-mono transition-all ${
-                      productType === 'CNC' ? 'bg-blue-600 text-white font-semibold' : 'bg-[#0d121c] text-max-text-secondary border border-max-border'
+                      productType === 'CNC' ? 'bg-max-brand-primary text-white font-semibold' : 'bg-[#0d121c] text-max-text-secondary border border-max-border'
                     }`}
                   >
                     CNC
@@ -220,7 +220,7 @@ function PaperTradingContent() {
                     type="button"
                     onClick={() => setProductType('MIS')}
                     className={`py-1.5 rounded text-xs font-mono transition-all ${
-                      productType === 'MIS' ? 'bg-blue-600 text-white font-semibold' : 'bg-[#0d121c] text-max-text-secondary border border-max-border'
+                      productType === 'MIS' ? 'bg-max-brand-primary text-white font-semibold' : 'bg-[#0d121c] text-max-text-secondary border border-max-border'
                     }`}
                   >
                     MIS
@@ -233,7 +233,7 @@ function PaperTradingContent() {
                 <select
                   value={orderType}
                   onChange={(e) => setOrderType(e.target.value as any)}
-                  className="w-full bg-[#0d121c] border border-max-border focus:border-blue-500 text-xs text-white rounded px-2.5 py-1.5 outline-none font-mono"
+                  className="w-full bg-[#0d121c] border border-max-border focus:border-max-brand-primary text-xs text-white rounded px-2.5 py-1.5 outline-none font-mono"
                 >
                   <option value="MARKET">MARKET</option>
                   <option value="LIMIT">LIMIT</option>
@@ -248,7 +248,7 @@ function PaperTradingContent() {
               <select
                 value={symbol}
                 onChange={(e) => setSymbol(e.target.value)}
-                className="w-full bg-[#0d121c] border border-max-border focus:border-blue-500 text-xs text-white rounded px-3.5 py-2 outline-none font-mono"
+                className="w-full bg-[#0d121c] border border-max-border focus:border-max-brand-primary text-xs text-white rounded px-3.5 py-2 outline-none font-mono"
               >
                 {instruments.map((inst) => (
                   <option key={inst.symbol} value={inst.symbol}>
@@ -267,7 +267,7 @@ function PaperTradingContent() {
                   required
                   value={quantity}
                   onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 1))}
-                  className="w-full bg-[#0d121c] border border-max-border focus:border-blue-500 text-xs text-white rounded px-3 py-2 outline-none font-mono"
+                  className="w-full bg-[#0d121c] border border-max-border focus:border-max-brand-primary text-xs text-white rounded px-3 py-2 outline-none font-mono"
                 />
               </div>
 
@@ -281,7 +281,7 @@ function PaperTradingContent() {
                     value={limitPrice}
                     placeholder={`Current: ₹${currentPrice.toFixed(2)}`}
                     onChange={(e) => setLimitPrice(e.target.value)}
-                    className="w-full bg-[#0d121c] border border-max-border focus:border-blue-500 text-xs text-white rounded px-3 py-2 outline-none font-mono"
+                    className="w-full bg-[#0d121c] border border-max-border focus:border-max-brand-primary text-xs text-white rounded px-3 py-2 outline-none font-mono"
                   />
                 </div>
               )}
@@ -296,7 +296,7 @@ function PaperTradingContent() {
                     value={triggerPrice}
                     placeholder={`Trigger (e.g. ₹${(currentPrice * 0.98).toFixed(2)})`}
                     onChange={(e) => setTriggerPrice(e.target.value)}
-                    className="w-full bg-[#0d121c] border border-max-border focus:border-blue-500 text-xs text-white rounded px-3 py-2 outline-none font-mono"
+                    className="w-full bg-[#0d121c] border border-max-border focus:border-max-brand-primary text-xs text-white rounded px-3 py-2 outline-none font-mono"
                   />
                 </div>
               )}

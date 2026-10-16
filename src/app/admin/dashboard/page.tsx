@@ -81,7 +81,7 @@ export default async function AdminDashboardPage() {
           <div className="text-[11px] font-mono text-max-text-muted mt-1">Role-Based Access (RBAC)</div>
         </div>
 
-        <div className="fintech-card p-5 border-t-2 border-t-blue-500">
+        <div className="fintech-card p-5 border-t-2 border-t-max-brand-primary">
           <div className="flex items-center justify-between text-max-text-secondary text-xs mb-2">
             <span>Total Paper Orders</span>
             <FileText className="w-4 h-4 text-max-brand-primary" />
@@ -236,7 +236,7 @@ export default async function AdminDashboardPage() {
                     <td className="py-3 px-3 font-bold text-white">{u.full_name}</td>
                     <td className="py-3 px-3 text-max-text-secondary">{u.email}</td>
                     <td className="py-3 px-3">
-                      <span className={`px-2 py-0.5 rounded text-[10px] ${u.role === 'ADMIN' ? 'bg-purple-500/10 text-purple-400 border border-purple-500/20 font-bold' : 'bg-blue-500/10 text-max-brand-primary'}`}>
+                      <span className={`px-2 py-0.5 rounded text-[10px] ${u.role === 'ADMIN' ? 'bg-purple-500/10 text-purple-400 border border-purple-500/20 font-bold' : 'bg-max-brand-primary/10 text-max-brand-primary'}`}>
                         {u.role}
                       </span>
                     </td>

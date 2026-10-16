@@ -42,7 +42,7 @@ export default async function UserDashboard() {
         <div>
           <div className="flex items-center gap-2">
             <h1 className="text-xl font-bold text-white">Welcome back, {session?.fullName}</h1>
-            <span className="px-2 py-0.5 rounded bg-blue-500/10 text-max-brand-primary text-[10px] font-mono border border-blue-500/20">
+            <span className="px-2 py-0.5 rounded bg-max-brand-primary/10 text-max-brand-primary text-[10px] font-mono border border-max-brand-primary/20">
               {session?.role === 'ADMIN' ? 'ADMIN V1' : 'TRADER V1'}
             </span>
           </div>
@@ -54,7 +54,7 @@ export default async function UserDashboard() {
         <div className="flex items-center gap-2">
           <Link
             href="/dashboard/paper-trading"
-            className="flex items-center gap-1.5 px-4 py-2 rounded bg-blue-600 hover:bg-blue-500 text-white font-medium text-xs transition-all"
+            className="flex items-center gap-1.5 px-4 py-2 rounded bg-max-brand-primary hover:bg-max-brand-secondary text-white font-medium text-xs transition-all"
           >
             <Layers className="w-4 h-4" />
             <span>Paper Trade</span>
@@ -204,7 +204,7 @@ export default async function UserDashboard() {
                           </Link>
                           <Link
                             href={`/dashboard/markets/${inst.symbol}`}
-                            className="px-2.5 py-1 rounded bg-blue-600/20 hover:bg-blue-600 text-max-brand-primary hover:text-white transition-all text-[11px]"
+                            className="px-2.5 py-1 rounded bg-max-brand-primary/20 hover:bg-max-brand-primary text-max-brand-primary hover:text-white transition-all text-[11px]"
                           >
                             Analyze
                           </Link>

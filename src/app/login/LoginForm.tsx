@@ -163,7 +163,7 @@ export default function LoginForm({ initialMode }: LoginFormProps) {
           {/* Back to Home Link */}
           <Link
             href="/"
-            className="inline-flex items-center gap-1.5 text-xs font-mono text-[#94A3B8] hover:text-[#35D49A] transition-colors group"
+            className="inline-flex items-center gap-1.5 text-xs font-mono text-[#94A3B8] hover:text-[#7C6FF2] transition-colors group"
           >
             <ChevronLeft className="w-4 h-4 transition-transform group-hover:-translate-x-0.5" />
             <span>TERMINAL OVERVIEW</span>
@@ -171,7 +171,7 @@ export default function LoginForm({ initialMode }: LoginFormProps) {
 
           {/* Institutional Gateway Status Indicator */}
           <div className="flex items-center gap-2 px-2.5 py-1 rounded bg-[#111720] border border-[#1C2533] text-[11px] font-mono text-[#94A3B8]">
-            <span className="w-1.5 h-1.5 rounded-full bg-[#35D49A] shadow-[0_0_6px_#35D49A]" />
+            <span className="w-1.5 h-1.5 rounded-full bg-[#7C6FF2] shadow-[0_0_6px_#7C6FF2]" />
             <span className="text-[10px] text-[#A9B4C0]">GATEWAY: 256-BIT</span>
           </div>
         </div>
@@ -181,7 +181,7 @@ export default function LoginForm({ initialMode }: LoginFormProps) {
           {/* Mobile-Only Header Brand Badge */}
           <div className="lg:hidden flex items-center justify-between pb-6 mb-6 border-b border-[#1C2533]">
             <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-lg bg-[#111720] border border-[#1C2533] flex items-center justify-center text-[#35D49A] font-mono font-bold text-sm shadow-[0_0_12px_rgba(53,212,154,0.15)]">
+              <div className="w-8 h-8 rounded-lg bg-[#111720] border border-[#1C2533] flex items-center justify-center text-[#7C6FF2] font-mono font-bold text-sm shadow-[0_0_12px_rgba(124,111,242,0.15)] ring-1 ring-[#7C6FF2]/20">
                 M
               </div>
               <div>
@@ -191,7 +191,7 @@ export default function LoginForm({ initialMode }: LoginFormProps) {
                 </span>
               </div>
             </div>
-            <div className="flex items-center gap-1.5 px-2 py-0.5 rounded bg-[#35D49A]/10 border border-[#35D49A]/30 text-[10px] font-mono text-[#35D49A]">
+            <div className="flex items-center gap-1.5 px-2 py-0.5 rounded bg-[#7C6FF2]/10 border border-[#7C6FF2]/30 text-[10px] font-mono text-[#7C6FF2]">
               <span>PAPER TRADING</span>
             </div>
           </div>
@@ -203,7 +203,7 @@ export default function LoginForm({ initialMode }: LoginFormProps) {
               onClick={() => handleModeChange('login')}
               className={`py-2 px-3 rounded-md text-xs font-mono font-semibold transition-all cursor-pointer ${
                 mode === 'login'
-                  ? 'bg-[#1C2533] text-[#35D49A] shadow-sm ring-1 ring-[#35D49A]/30'
+                  ? 'bg-[#1C2533] text-[#7C6FF2] shadow-sm ring-1 ring-[#7C6FF2]/30'
                   : 'text-[#94A3B8] hover:text-[#F4F7FA]'
               }`}
             >
@@ -214,12 +214,12 @@ export default function LoginForm({ initialMode }: LoginFormProps) {
               onClick={() => handleModeChange('signup')}
               className={`py-2 px-3 rounded-md text-xs font-mono font-semibold transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
                 mode === 'signup'
-                  ? 'bg-[#1C2533] text-[#35D49A] shadow-sm ring-1 ring-[#35D49A]/30'
+                  ? 'bg-[#1C2533] text-[#7C6FF2] shadow-sm ring-1 ring-[#7C6FF2]/30'
                   : 'text-[#94A3B8] hover:text-[#F4F7FA]'
               }`}
             >
               <span>Create Account</span>
-              <span className="hidden sm:inline text-[9px] px-1 py-0.2 rounded bg-[#35D49A]/20 text-[#35D49A]">
+              <span className="hidden sm:inline text-[9px] px-1 py-0.2 rounded bg-[#7C6FF2]/20 text-[#7C6FF2]">
                 ₹10L
               </span>
             </button>
@@ -227,7 +227,7 @@ export default function LoginForm({ initialMode }: LoginFormProps) {
 
           {/* Form Header */}
           <div className="mb-6">
-            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#111720] border border-[#1C2533] text-[10px] font-mono text-[#35D49A] uppercase tracking-wider mb-2.5">
+            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#111720] border border-[#1C2533] text-[10px] font-mono text-[#7C6FF2] uppercase tracking-wider mb-2.5">
               <Terminal className="w-3 h-3" />
               <span>{mode === 'login' ? 'TERMINAL ACCESS PORTAL' : 'TERMINAL PROVISIONING • V1.0'}</span>
             </div>
@@ -243,15 +243,15 @@ export default function LoginForm({ initialMode }: LoginFormProps) {
 
           {/* Virtual Capital Highlight for Account Creation */}
           {mode === 'signup' && (
-            <div className="mb-5 p-3 rounded-lg bg-[#35D49A]/10 border border-[#35D49A]/30 flex items-center gap-3">
-              <div className="w-8 h-8 rounded-md bg-[#35D49A]/20 flex items-center justify-center text-[#35D49A] flex-shrink-0">
+            <div className="mb-5 p-3 rounded-lg bg-[#7C6FF2]/10 border border-[#7C6FF2]/30 flex items-center gap-3">
+              <div className="w-8 h-8 rounded-md bg-[#7C6FF2]/20 flex items-center justify-center text-[#7C6FF2] flex-shrink-0">
                 <Sparkles className="w-4 h-4" />
               </div>
               <div>
                 <p className="font-mono text-xs font-bold text-[#F4F7FA]">
                   ₹10,00,000 Starting Virtual Capital
                 </p>
-                <p className="text-[10px] font-mono text-[#35D49A]">
+                <p className="text-[10px] font-mono text-[#7C6FF2]">
                   Zero monetary risk • Auto-credited on registration
                 </p>
               </div>
@@ -298,7 +298,7 @@ export default function LoginForm({ initialMode }: LoginFormProps) {
                     onChange={(e) => setFullName(e.target.value)}
                     placeholder="Rohan Sharma"
                     disabled={loading}
-                    className="w-full bg-[#111720] border border-[#1C2533] focus:border-[#35D49A] focus:ring-1 focus:ring-[#35D49A]/30 text-xs text-[#F4F7FA] placeholder-[#4E5A67] rounded-lg pl-10 pr-3.5 py-2.5 outline-none transition-all disabled:opacity-50 font-mono"
+                    className="w-full bg-[#111720] border border-[#1C2533] focus:border-[#7C6FF2] focus:ring-1 focus:ring-[#7C6FF2]/30 text-xs text-[#F4F7FA] placeholder-[#4E5A67] rounded-lg pl-10 pr-3.5 py-2.5 outline-none transition-all disabled:opacity-50 font-mono"
                   />
                 </div>
               </div>
@@ -326,7 +326,7 @@ export default function LoginForm({ initialMode }: LoginFormProps) {
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="trader@institution.com"
                   disabled={loading}
-                  className="w-full bg-[#111720] border border-[#1C2533] focus:border-[#35D49A] focus:ring-1 focus:ring-[#35D49A]/30 text-xs text-[#F4F7FA] placeholder-[#4E5A67] rounded-lg pl-10 pr-3.5 py-2.5 outline-none transition-all disabled:opacity-50 font-mono"
+                  className="w-full bg-[#111720] border border-[#1C2533] focus:border-[#7C6FF2] focus:ring-1 focus:ring-[#7C6FF2]/30 text-xs text-[#F4F7FA] placeholder-[#4E5A67] rounded-lg pl-10 pr-3.5 py-2.5 outline-none transition-all disabled:opacity-50 font-mono"
                 />
               </div>
             </div>
@@ -344,7 +344,7 @@ export default function LoginForm({ initialMode }: LoginFormProps) {
                   <button
                     type="button"
                     onClick={() => setShowRecoveryModal(true)}
-                    className="text-[11px] font-mono text-[#94A3B8] hover:text-[#35D49A] transition-colors focus:outline-none underline-offset-2 hover:underline cursor-pointer"
+                    className="text-[11px] font-mono text-[#94A3B8] hover:text-[#7C6FF2] transition-colors focus:outline-none underline-offset-2 hover:underline cursor-pointer"
                   >
                     Forgot Key?
                   </button>
@@ -364,7 +364,7 @@ export default function LoginForm({ initialMode }: LoginFormProps) {
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder={mode === 'login' ? '••••••••••••' : 'Min. 6 characters'}
                   disabled={loading}
-                  className="w-full bg-[#111720] border border-[#1C2533] focus:border-[#35D49A] focus:ring-1 focus:ring-[#35D49A]/30 text-xs text-[#F4F7FA] placeholder-[#4E5A67] rounded-lg pl-10 pr-10 py-2.5 outline-none transition-all disabled:opacity-50 font-mono"
+                  className="w-full bg-[#111720] border border-[#1C2533] focus:border-[#7C6FF2] focus:ring-1 focus:ring-[#7C6FF2]/30 text-xs text-[#F4F7FA] placeholder-[#4E5A67] rounded-lg pl-10 pr-10 py-2.5 outline-none transition-all disabled:opacity-50 font-mono"
                 />
                 <button
                   type="button"
@@ -389,7 +389,7 @@ export default function LoginForm({ initialMode }: LoginFormProps) {
                     type="checkbox"
                     checked={rememberMe}
                     onChange={(e) => setRememberMe(e.target.checked)}
-                    className="w-3.5 h-3.5 rounded bg-[#111720] border-[#1C2533] text-[#35D49A] focus:ring-0 focus:ring-offset-0 focus:outline-none accent-[#35D49A] cursor-pointer"
+                    className="w-3.5 h-3.5 rounded bg-[#111720] border-[#1C2533] text-[#7C6FF2] focus:ring-0 focus:ring-offset-0 focus:outline-none accent-[#7C6FF2] cursor-pointer"
                   />
                   <span className="font-mono text-[11px] text-[#94A3B8]">Remember ID</span>
                 </label>
@@ -402,7 +402,7 @@ export default function LoginForm({ initialMode }: LoginFormProps) {
             {/* Terms Notice for Signup Mode */}
             {mode === 'signup' && (
               <div className="pt-1 flex items-start gap-2 text-[10px] font-mono text-[#64748B] leading-relaxed">
-                <ShieldCheck className="w-3.5 h-3.5 text-[#35D49A] flex-shrink-0 mt-0.5" />
+                <ShieldCheck className="w-3.5 h-3.5 text-[#7C6FF2] flex-shrink-0 mt-0.5" />
                 <span>
                   Paper trading simulation only. No real money or bank account required.
                 </span>
@@ -413,11 +413,11 @@ export default function LoginForm({ initialMode }: LoginFormProps) {
             <button
               type="submit"
               disabled={loading}
-              className="w-full mt-2 py-2.5 px-4 rounded-lg bg-[#35D49A] hover:bg-[#2BB883] text-[#080B10] font-mono font-bold text-xs transition-all shadow-[0_0_20px_rgba(53,212,154,0.2)] hover:shadow-[0_0_25px_rgba(53,212,154,0.35)] flex items-center justify-center gap-2 disabled:opacity-50 active:scale-[0.99] cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#35D49A]/50"
+              className="w-full mt-2 py-2.5 px-4 rounded-lg bg-[#7C6FF2] hover:bg-[#6A5AE0] text-white font-mono font-bold text-xs transition-all shadow-[0_0_20px_rgba(124,111,242,0.25)] hover:shadow-[0_0_25px_rgba(124,111,242,0.4)] flex items-center justify-center gap-2 disabled:opacity-50 active:scale-[0.99] cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#7C6FF2]/50"
             >
               {loading ? (
                 <div className="flex items-center gap-2">
-                  <span className="w-3.5 h-3.5 border-2 border-[#080B10] border-t-transparent rounded-full animate-spin" />
+                  <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
                   <span>{mode === 'login' ? 'AUTHENTICATING SESSION...' : 'PROVISIONING ACCOUNT...'}</span>
                 </div>
               ) : (
@@ -437,7 +437,7 @@ export default function LoginForm({ initialMode }: LoginFormProps) {
                 <button
                   type="button"
                   onClick={() => handleModeChange('signup')}
-                  className="text-[#35D49A] hover:underline font-mono font-semibold transition-colors inline-flex items-center gap-1 cursor-pointer"
+                  className="text-[#7C6FF2] hover:underline font-mono font-semibold transition-colors inline-flex items-center gap-1 cursor-pointer"
                 >
                   <span>Create Paper Account</span>
                   <span className="text-[10px] text-[#A9B4C0]">(₹10L Virtual)</span>
@@ -449,7 +449,7 @@ export default function LoginForm({ initialMode }: LoginFormProps) {
                 <button
                   type="button"
                   onClick={() => handleModeChange('login')}
-                  className="text-[#35D49A] hover:underline font-mono font-semibold transition-colors inline-flex items-center gap-1 cursor-pointer"
+                  className="text-[#7C6FF2] hover:underline font-mono font-semibold transition-colors inline-flex items-center gap-1 cursor-pointer"
                 >
                   <span>Sign In to Terminal</span>
                 </button>
@@ -461,7 +461,7 @@ export default function LoginForm({ initialMode }: LoginFormProps) {
         {/* Security & Regulatory Compliance Footer */}
         <div className="pt-6 border-t border-[#1C2533] flex flex-col sm:flex-row items-center justify-between gap-2 text-[10px] font-mono text-[#64748B]">
           <div className="flex items-center gap-1.5">
-            <Shield className="w-3.5 h-3.5 text-[#35D49A]" />
+            <Shield className="w-3.5 h-3.5 text-[#7C6FF2]" />
             <span>256-BIT ENCRYPTED SESSION</span>
           </div>
           <span className="hidden sm:inline">•</span>
@@ -483,7 +483,7 @@ export default function LoginForm({ initialMode }: LoginFormProps) {
             {/* Modal Header */}
             <div className="flex items-center justify-between pb-4 border-b border-[#1C2533]">
               <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-lg bg-[#35D49A]/10 border border-[#35D49A]/20 flex items-center justify-center text-[#35D49A]">
+                <div className="w-8 h-8 rounded-lg bg-[#7C6FF2]/10 border border-[#7C6FF2]/20 flex items-center justify-center text-[#7C6FF2]">
                   <HelpCircle className="w-4 h-4" />
                 </div>
                 <div>
@@ -515,7 +515,7 @@ export default function LoginForm({ initialMode }: LoginFormProps) {
                   Contact your organization&apos;s MAXLITH security administrator or contact support desk directly at{' '}
                   <a
                     href="mailto:support@maxlith.com"
-                    className="text-[#35D49A] hover:underline font-mono"
+                    className="text-[#7C6FF2] hover:underline font-mono"
                   >
                     support@maxlith.com
                   </a>.
@@ -528,7 +528,7 @@ export default function LoginForm({ initialMode }: LoginFormProps) {
               <button
                 type="button"
                 onClick={() => setShowRecoveryModal(false)}
-                className="px-3.5 py-1.5 rounded-lg bg-[#35D49A] hover:bg-[#2BB883] text-[#080B10] font-mono font-semibold text-xs transition-colors focus:outline-none cursor-pointer"
+                className="px-3.5 py-1.5 rounded-lg bg-[#7C6FF2] hover:bg-[#6A5AE0] text-white font-mono font-semibold text-xs transition-colors focus:outline-none cursor-pointer"
               >
                 Acknowledge
               </button>

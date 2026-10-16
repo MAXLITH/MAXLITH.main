@@ -181,7 +181,7 @@ export default function SettingsPage() {
                 type="number"
                 value={startingCapital}
                 onChange={(e) => setStartingCapital(e.target.value)}
-                className="w-36 bg-[#0d121c] border border-max-border focus:border-blue-500 text-xs font-mono font-bold text-max-market-positive rounded px-3 py-1.5 outline-none"
+                className="w-36 bg-[#0d121c] border border-max-border focus:border-max-brand-primary text-xs font-mono font-bold text-max-market-positive rounded px-3 py-1.5 outline-none"
               />
             </div>
           </div>
@@ -234,7 +234,7 @@ export default function SettingsPage() {
               required
               value={currentPassword}
               onChange={(e) => setCurrentPassword(e.target.value)}
-              className="w-full sm:w-80 bg-[#0d121c] border border-max-border focus:border-blue-500 text-xs text-white rounded px-3 py-2 outline-none"
+              className="w-full sm:w-80 bg-[#0d121c] border border-max-border focus:border-max-brand-primary text-xs text-white rounded px-3 py-2 outline-none"
             />
           </div>
 
@@ -246,7 +246,7 @@ export default function SettingsPage() {
                 required
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
-                className="w-full bg-[#0d121c] border border-max-border focus:border-blue-500 text-xs text-white rounded px-3 py-2 outline-none"
+                className="w-full bg-[#0d121c] border border-max-border focus:border-max-brand-primary text-xs text-white rounded px-3 py-2 outline-none"
               />
             </div>
 
@@ -257,7 +257,7 @@ export default function SettingsPage() {
                 required
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
-                className="w-full bg-[#0d121c] border border-max-border focus:border-blue-500 text-xs text-white rounded px-3 py-2 outline-none"
+                className="w-full bg-[#0d121c] border border-max-border focus:border-max-brand-primary text-xs text-white rounded px-3 py-2 outline-none"
               />
             </div>
           </div>
@@ -279,7 +279,7 @@ export default function SettingsPage() {
             <button
               type="submit"
               disabled={passwordUpdating}
-              className="px-4 py-2 rounded bg-blue-600 hover:bg-blue-500 text-white font-medium text-xs transition-colors disabled:opacity-50"
+              className="px-4 py-2 rounded bg-max-brand-primary hover:bg-max-brand-secondary text-white font-medium text-xs transition-colors disabled:opacity-50"
             >
               {passwordUpdating ? 'Updating Password...' : 'Change Password'}
             </button>
@@ -301,7 +301,7 @@ export default function SettingsPage() {
               type="checkbox"
               checked={notifAlerts}
               onChange={(e) => setNotifAlerts(e.target.checked)}
-              className="w-4 h-4 accent-blue-600"
+              className="w-4 h-4 accent-[#7C6FF2]"
             />
           </label>
 
@@ -311,7 +311,7 @@ export default function SettingsPage() {
               type="checkbox"
               checked={notifFills}
               onChange={(e) => setNotifFills(e.target.checked)}
-              className="w-4 h-4 accent-blue-600"
+              className="w-4 h-4 accent-[#7C6FF2]"
             />
           </label>
 
@@ -321,7 +321,7 @@ export default function SettingsPage() {
               type="checkbox"
               checked={notifMarket}
               onChange={(e) => setNotifMarket(e.target.checked)}
-              className="w-4 h-4 accent-blue-600"
+              className="w-4 h-4 accent-[#7C6FF2]"
             />
           </label>
         </div>

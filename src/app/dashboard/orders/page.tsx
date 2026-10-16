@@ -118,31 +118,31 @@ export default function OrdersPage() {
       <div className="flex items-center gap-1.5 border-b border-max-border pb-2 overflow-x-auto text-xs font-mono">
         <button
           onClick={() => setActiveTab('ALL')}
-          className={`px-3 py-1.5 rounded transition-all ${activeTab === 'ALL' ? 'bg-blue-600 text-white font-semibold' : 'text-max-text-secondary hover:text-white'}`}
+          className={`px-3 py-1.5 rounded transition-all ${activeTab === 'ALL' ? 'bg-max-brand-primary text-white font-semibold' : 'text-max-text-secondary hover:text-white'}`}
         >
           All Orders ({orders.length})
         </button>
         <button
           onClick={() => setActiveTab('OPEN')}
-          className={`px-3 py-1.5 rounded transition-all ${activeTab === 'OPEN' ? 'bg-blue-600 text-white font-semibold' : 'text-max-text-secondary hover:text-white'}`}
+          className={`px-3 py-1.5 rounded transition-all ${activeTab === 'OPEN' ? 'bg-max-brand-primary text-white font-semibold' : 'text-max-text-secondary hover:text-white'}`}
         >
           Open / Pending ({orders.filter((o) => o.status === 'PENDING' || o.status === 'AMO').length})
         </button>
         <button
           onClick={() => setActiveTab('EXECUTED')}
-          className={`px-3 py-1.5 rounded transition-all ${activeTab === 'EXECUTED' ? 'bg-blue-600 text-white font-semibold' : 'text-max-text-secondary hover:text-white'}`}
+          className={`px-3 py-1.5 rounded transition-all ${activeTab === 'EXECUTED' ? 'bg-max-brand-primary text-white font-semibold' : 'text-max-text-secondary hover:text-white'}`}
         >
           Executed ({orders.filter((o) => o.status === 'EXECUTED').length})
         </button>
         <button
           onClick={() => setActiveTab('CANCELLED_REJECTED')}
-          className={`px-3 py-1.5 rounded transition-all ${activeTab === 'CANCELLED_REJECTED' ? 'bg-blue-600 text-white font-semibold' : 'text-max-text-secondary hover:text-white'}`}
+          className={`px-3 py-1.5 rounded transition-all ${activeTab === 'CANCELLED_REJECTED' ? 'bg-max-brand-primary text-white font-semibold' : 'text-max-text-secondary hover:text-white'}`}
         >
           Cancelled / Rejected ({orders.filter((o) => o.status === 'CANCELLED' || o.status === 'REJECTED').length})
         </button>
         <button
           onClick={() => setActiveTab('TRADES')}
-          className={`px-3 py-1.5 rounded transition-all ${activeTab === 'TRADES' ? 'bg-purple-600 text-white font-semibold' : 'text-purple-400 hover:text-white'}`}
+          className={`px-3 py-1.5 rounded transition-all ${activeTab === 'TRADES' ? 'bg-max-brand-primary text-white font-semibold' : 'text-max-text-secondary hover:text-white'}`}
         >
           Trade Book ({trades.length})
         </button>
@@ -150,7 +150,7 @@ export default function OrdersPage() {
 
       {/* MODAL FOR MODIFYING PENDING ORDER */}
       {editingOrder && (
-        <div className="p-4 rounded bg-max-bg border border-blue-500/40 space-y-3 font-mono text-xs">
+        <div className="p-4 rounded bg-max-bg border border-max-brand-primary/40 space-y-3 font-mono text-xs">
           <div className="flex items-center justify-between">
             <span className="font-bold text-white">Modify Pending Order ({editingOrder.id})</span>
             <button onClick={() => setEditingOrder(null)} className="text-max-text-secondary hover:text-white">
@@ -166,7 +166,7 @@ export default function OrdersPage() {
                 required
                 value={editQty}
                 onChange={(e) => setEditQty(parseInt(e.target.value) || 1)}
-                className="w-full bg-[#0d121c] border border-max-border rounded px-3 py-2 text-white outline-none focus:border-blue-500"
+                className="w-full bg-[#0d121c] border border-max-border rounded px-3 py-2 text-white outline-none focus:border-max-brand-primary"
               />
             </div>
             <div>
@@ -176,12 +176,12 @@ export default function OrdersPage() {
                 step="0.05"
                 value={editPrice}
                 onChange={(e) => setEditPrice(e.target.value)}
-                className="w-full bg-[#0d121c] border border-max-border rounded px-3 py-2 text-white outline-none focus:border-blue-500"
+                className="w-full bg-[#0d121c] border border-max-border rounded px-3 py-2 text-white outline-none focus:border-max-brand-primary"
               />
             </div>
             <button
               type="submit"
-              className="py-2 px-4 rounded bg-blue-600 hover:bg-blue-500 text-white font-bold transition-all"
+              className="py-2 px-4 rounded bg-max-brand-primary hover:bg-max-brand-secondary text-white font-bold transition-all"
             >
               Update Order
             </button>
@@ -304,7 +304,7 @@ export default function OrdersPage() {
                               setEditQty(ord.quantity);
                               setEditPrice(ord.price ? String(ord.price) : '');
                             }}
-                            className="p-1 rounded bg-blue-600/20 text-max-brand-primary hover:bg-blue-600 hover:text-white"
+                            className="p-1 rounded bg-max-brand-primary/20 text-max-brand-primary hover:bg-max-brand-primary hover:text-white"
                             title="Modify Order"
                           >
                             <Edit3 className="w-3.5 h-3.5" />

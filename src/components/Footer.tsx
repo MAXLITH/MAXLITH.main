@@ -7,7 +7,7 @@ export default function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
           <div className="md:col-span-1 space-y-3">
             <div className="flex items-center gap-2">
-              <div className="w-6 h-6 rounded bg-blue-600 flex items-center justify-center text-white font-bold text-xs">
+              <div className="w-6 h-6 rounded bg-max-brand-primary flex items-center justify-center text-white font-bold text-xs">
                 M
               </div>
               <span className="text-base font-bold text-white tracking-tight">MAXLITH</span>

@@ -121,7 +121,7 @@ export default function Sidebar({ user }: { user: any }) {
                     {item.badgeCount}
                   </span>
                 ) : item.highlight && !isActive ? (
-                  <span className="w-1.5 h-1.5 rounded bg-blue-400"></span>
+                  <span className="w-1.5 h-1.5 rounded bg-max-brand-primary"></span>
                 ) : null}
               </div>
             </Link>

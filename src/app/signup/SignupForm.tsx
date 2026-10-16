@@ -47,7 +47,7 @@ export default function SignupForm() {
         {/* Brand Header */}
         <div className="text-center mb-8">
           <Link href="/" className="inline-flex items-center gap-2.5 mb-4 group">
-            <div className="w-10 h-10 rounded bg-blue-600 flex items-center justify-center text-white font-bold text-lg group-hover:scale-105 transition-transform">
+            <div className="w-10 h-10 rounded bg-max-brand-primary flex items-center justify-center text-white font-bold text-lg group-hover:scale-105 transition-transform">
               M
             </div>
             <span className="text-2xl font-bold tracking-tight text-white">MAXLITH</span>
@@ -58,7 +58,7 @@ export default function SignupForm() {
 
         {/* Signup Form Card */}
         <div className="fintech-card p-4 border border-max-border">
-          <div className="mb-4 p-2.5 rounded bg-blue-500/10 border border-blue-500/20 text-max-brand-primary text-xs flex items-center gap-2 font-mono">
+          <div className="mb-4 p-2.5 rounded bg-max-brand-primary/10 border border-max-brand-primary/20 text-max-brand-primary text-xs flex items-center gap-2 font-mono">
             <ShieldCheck className="w-4 h-4 flex-shrink-0" />
             <span>V1 Paper Trading Only • Zero Monetary Risk</span>
           </div>
@@ -81,7 +81,7 @@ export default function SignupForm() {
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
                 placeholder="Rohan Sharma"
-                className="w-full bg-[#0d121c] border border-max-border focus:border-blue-500 text-xs text-white placeholder-slate-500 rounded px-3.5 py-2.5 outline-none transition-colors"
+                className="w-full bg-[#0d121c] border border-max-border focus:border-max-brand-primary text-xs text-white placeholder-slate-500 rounded px-3.5 py-2.5 outline-none transition-colors"
               />
             </div>
 
@@ -95,7 +95,7 @@ export default function SignupForm() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="rohan@example.com"
-                className="w-full bg-[#0d121c] border border-max-border focus:border-blue-500 text-xs text-white placeholder-slate-500 rounded px-3.5 py-2.5 outline-none transition-colors"
+                className="w-full bg-[#0d121c] border border-max-border focus:border-max-brand-primary text-xs text-white placeholder-slate-500 rounded px-3.5 py-2.5 outline-none transition-colors"
               />
             </div>
 
@@ -110,7 +110,7 @@ export default function SignupForm() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
-                  className="w-full bg-[#0d121c] border border-max-border focus:border-blue-500 text-xs text-white placeholder-slate-500 rounded px-3.5 py-2.5 pr-10 outline-none transition-colors"
+                  className="w-full bg-[#0d121c] border border-max-border focus:border-max-brand-primary text-xs text-white placeholder-slate-500 rounded px-3.5 py-2.5 pr-10 outline-none transition-colors"
                 />
                 <button
                   type="button"
@@ -130,7 +130,7 @@ export default function SignupForm() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-2.5 rounded bg-blue-600 hover:bg-blue-500 text-white font-medium text-xs transition-all flex items-center justify-center gap-2 disabled:opacity-50 active:scale-[0.98]"
+              className="w-full py-2.5 rounded bg-max-brand-primary hover:bg-max-brand-secondary text-white font-medium text-xs transition-all flex items-center justify-center gap-2 disabled:opacity-50 active:scale-[0.98]"
             >
               {loading ? (
                 <span>Provisioning Account...</span>

@@ -32,7 +32,7 @@ export default function PositionsPanel({
             const marketValue = quote ? position.quantity * quote.last : null;
             const pnl = marketValue === null ? null : marketValue - position.quantity * position.average_price;
             return <tr key={position.id} className="text-max-text-primary hover:bg-max-surface/30">
-              <td className="px-3 py-2"><button onClick={() => onSelect(`NSE:${position.symbol}`)} className="font-semibold text-slate-100 hover:text-blue-300">{position.symbol}</button><span className="ml-1 text-[8px] text-slate-600">NSE</span></td>
+              <td className="px-3 py-2"><button onClick={() => onSelect(`NSE:${position.symbol}`)} className="font-semibold text-slate-100 hover:text-max-brand-primary">{position.symbol}</button><span className="ml-1 text-[8px] text-slate-600">NSE</span></td>
               <td className="px-3 py-2 text-max-text-muted">{position.product_type || 'CNC'}</td><td className="px-3 py-2 tabular-nums">{position.quantity}</td><td className="px-3 py-2 tabular-nums">{formatRupees(position.average_price)}</td>
               <td className="px-3 py-2 tabular-nums">{quote ? formatRupees(quote.last) : '—'}</td><td className="px-3 py-2 tabular-nums">{marketValue === null ? '—' : formatRupees(marketValue)}</td>
               <td className={`px-3 py-2 tabular-nums ${pnl === null ? 'text-slate-600' : pnl >= 0 ? 'text-max-market-positive' : 'text-rose-400'}`}>{pnl === null ? '—' : formatRupees(pnl)}</td>

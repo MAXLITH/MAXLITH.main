@@ -113,11 +113,11 @@ export default function WatchlistPage() {
             placeholder="Add symbol (e.g. INFY)..."
             value={newSymbol}
             onChange={(e) => setNewSymbol(e.target.value)}
-            className="bg-max-surface border border-max-border focus:border-blue-500 text-xs text-white placeholder-slate-500 rounded px-3.5 py-2 outline-none font-mono uppercase"
+            className="bg-max-surface border border-max-border focus:border-max-brand-primary text-xs text-white placeholder-slate-500 rounded px-3.5 py-2 outline-none font-mono uppercase"
           />
           <button
             type="submit"
-            className="px-3.5 py-2 rounded bg-blue-600 hover:bg-blue-500 text-white font-medium text-xs transition-all flex items-center gap-1"
+            className="px-3.5 py-2 rounded bg-max-brand-primary hover:bg-max-brand-secondary text-white font-medium text-xs transition-all flex items-center gap-1"
           >
             <Plus className="w-4 h-4" />
             <span>Add Stock</span>
@@ -136,7 +136,7 @@ export default function WatchlistPage() {
               onClick={() => fetchWatchlist(wl.id)}
               className={`px-3 py-1.5 rounded transition-all ${
                 activeWatchlist?.id === wl.id
-                  ? 'bg-blue-600 text-white font-semibold'
+                  ? 'bg-max-brand-primary text-white font-semibold'
                   : 'bg-max-surface text-max-text-secondary hover:text-white border border-max-border'
               }`}
             >
@@ -161,7 +161,7 @@ export default function WatchlistPage() {
             placeholder="Watchlist name (e.g. Banking Stocks)..."
             value={newListName}
             onChange={(e) => setNewListName(e.target.value)}
-            className="flex-1 bg-[#0d121c] border border-max-border focus:border-blue-500 text-xs text-white px-3 py-1.5 rounded outline-none font-mono"
+            className="flex-1 bg-[#0d121c] border border-max-border focus:border-max-brand-primary text-xs text-white px-3 py-1.5 rounded outline-none font-mono"
           />
           <button
             type="submit"
@@ -229,7 +229,7 @@ export default function WatchlistPage() {
                         </Link>
                         <Link
                           href={`/dashboard/markets/${encodeURIComponent(item.symbol)}`}
-                          className="px-2.5 py-1 rounded bg-blue-600/20 hover:bg-blue-600 text-max-brand-primary hover:text-white transition-all text-[11px]"
+                          className="px-2.5 py-1 rounded bg-max-brand-primary/20 hover:bg-max-brand-primary text-max-brand-primary hover:text-white transition-all text-[11px]"
                         >
                           Analyze
                         </Link>

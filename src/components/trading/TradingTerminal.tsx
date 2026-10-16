@@ -439,7 +439,7 @@ export default function TradingTerminal() {
       <div className="mx-auto max-w-[1800px] space-y-3">
         <header className="flex flex-wrap items-center gap-3 rounded border border-max-border bg-[#0d131b] px-3 py-2.5">
           <div className="flex items-center gap-2 pr-1">
-            <div className="flex h-7 w-7 items-center justify-center rounded-md bg-blue-500/15 text-blue-300"><Activity className="h-4 w-4" /></div>
+            <div className="flex h-7 w-7 items-center justify-center rounded-md bg-max-brand-primary/15 text-max-brand-primary"><Activity className="h-4 w-4" /></div>
             <div><p className="text-[11px] font-bold tracking-[0.12em] text-slate-100">MAXLITH</p><p className="text-[8px] uppercase tracking-[0.16em] text-max-text-muted">Market terminal</p></div>
           </div>
           <div className="flex h-8 items-center rounded border border-max-border bg-[#101723] px-2">
@@ -449,7 +449,7 @@ export default function TradingTerminal() {
           <div className="flex flex-wrap items-center gap-2 text-[9px]">
             <span className="inline-flex items-center gap-1.5 rounded border border-max-border px-2 py-1.5 text-max-text-secondary"><span className={`h-1.5 w-1.5 rounded ${connectionLabel === 'LIVE' ? 'bg-emerald-400' : connectionLabel === 'RECONNECTING' ? 'bg-amber-400' : 'bg-slate-600'}`} />{connectionLabel}</span>
             <span className="rounded border border-max-border px-2 py-1.5 text-max-text-secondary">{marketStatusLabel}</span>
-            <span className="rounded border border-blue-900/60 bg-blue-950/30 px-2 py-1.5 font-semibold text-blue-300">PAPER</span>
+            <span className="rounded border border-max-brand-primary/40 bg-max-brand-primary/10 px-2 py-1.5 font-semibold text-max-brand-primary">PAPER</span>
           </div>
           <div className="ml-auto flex items-center gap-3">
             <div className="hidden text-right sm:block"><p className="text-[8px] uppercase tracking-wide text-max-text-muted">Available cash</p><p className="mt-0.5 text-[10px] tabular-nums text-slate-200">{availableCash === null ? '—' : formatRupees(availableCash)}</p></div>
@@ -494,7 +494,7 @@ export default function TradingTerminal() {
 
             {showAccountPanel && <section className="overflow-hidden rounded border border-max-border bg-[#0d131b]">
               <div className="flex items-center gap-1 overflow-x-auto border-b border-max-border px-2 pt-1.5" role="tablist" aria-label="Account and market panels">
-                {TABS.map((tab) => <button key={tab.id} type="button" role="tab" aria-selected={activeTab === tab.id} onClick={() => setActiveTab(tab.id)} className={`shrink-0 border-b-2 px-2.5 py-2 text-[9px] font-medium ${activeTab === tab.id ? 'border-blue-400 text-blue-300' : 'border-transparent text-max-text-muted hover:text-slate-200'}`}>{tab.label}</button>)}
+                {TABS.map((tab) => <button key={tab.id} type="button" role="tab" aria-selected={activeTab === tab.id} onClick={() => setActiveTab(tab.id)} className={`shrink-0 border-b-2 px-2.5 py-2 text-[9px] font-medium ${activeTab === tab.id ? 'border-max-brand-primary text-max-brand-primary' : 'border-transparent text-max-text-muted hover:text-slate-200'}`}>{tab.label}</button>)}
                 <span className="ml-auto hidden pr-2 text-[8px] text-slate-600 sm:inline-flex sm:items-center sm:gap-1"><CircleDollarSign className="h-3 w-3" />Virtual account</span>
               </div>
               {activeTab === 'POSITIONS' && <PositionsPanel positions={positions} quotes={quoteBySymbol} onSelect={(symbol) => handleSelect(toTradingSymbol({ symbol: symbol.split(':')[1], exchange: 'NSE' }))} />}

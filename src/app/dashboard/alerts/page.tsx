@@ -102,7 +102,7 @@ export default function AlertsPage() {
               required
               value={symbol}
               onChange={(e) => setSymbol(e.target.value)}
-              className="w-full bg-[#0d121c] border border-max-border focus:border-blue-500 text-xs text-white rounded px-3 py-2 outline-none font-mono uppercase"
+              className="w-full bg-[#0d121c] border border-max-border focus:border-max-brand-primary text-xs text-white rounded px-3 py-2 outline-none font-mono uppercase"
             />
           </div>
 
@@ -111,7 +111,7 @@ export default function AlertsPage() {
             <select
               value={condition}
               onChange={(e) => setCondition(e.target.value)}
-              className="w-full bg-[#0d121c] border border-max-border focus:border-blue-500 text-xs text-white rounded px-3 py-2 outline-none font-mono"
+              className="w-full bg-[#0d121c] border border-max-border focus:border-max-brand-primary text-xs text-white rounded px-3 py-2 outline-none font-mono"
             >
               <option value="ABOVE">PRICE RISES ABOVE</option>
               <option value="BELOW">PRICE DROPS BELOW</option>
@@ -127,14 +127,14 @@ export default function AlertsPage() {
               value={targetValue}
               placeholder="e.g. 3000.00"
               onChange={(e) => setTargetValue(e.target.value)}
-              className="w-full bg-[#0d121c] border border-max-border focus:border-blue-500 text-xs text-white rounded px-3 py-2 outline-none font-mono"
+              className="w-full bg-[#0d121c] border border-max-border focus:border-max-brand-primary text-xs text-white rounded px-3 py-2 outline-none font-mono"
             />
           </div>
 
           <button
             type="submit"
             disabled={submitting}
-            className="py-2 px-4 rounded bg-blue-600 hover:bg-blue-500 text-white font-medium text-xs transition-all flex items-center justify-center gap-1.5 disabled:opacity-50"
+            className="py-2 px-4 rounded bg-max-brand-primary hover:bg-max-brand-secondary text-white font-medium text-xs transition-all flex items-center justify-center gap-1.5 disabled:opacity-50"
           >
             <Plus className="w-4 h-4" />
             <span>Create Alert</span>

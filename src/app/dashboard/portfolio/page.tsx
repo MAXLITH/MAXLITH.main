@@ -34,7 +34,7 @@ export default async function PortfolioPage() {
         </div>
         <Link
           href="/dashboard/paper-trading"
-          className="flex items-center gap-1.5 px-4 py-2 rounded bg-blue-600 hover:bg-blue-500 text-white font-medium text-xs transition-all"
+          className="flex items-center gap-1.5 px-4 py-2 rounded bg-max-brand-primary hover:bg-max-brand-secondary text-white font-medium text-xs transition-all"
         >
           <span>Manage Positions</span>
           <ArrowRight className="w-4 h-4" />
@@ -149,7 +149,7 @@ export default async function PortfolioPage() {
                   </div>
                   <div className="w-full bg-max-surface h-2 rounded overflow-hidden">
                     <div
-                      className="bg-blue-600 h-full rounded transition-all"
+                      className="bg-max-brand-primary h-full rounded transition-all"
                       style={{ width: `${Math.min(100, sec.percentage)}%` }}
                     ></div>
                   </div>

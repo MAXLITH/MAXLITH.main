@@ -126,8 +126,8 @@ export default async function LandingPage() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-            <div className="fintech-card p-5 border-t-2 border-t-blue-500">
-              <div className="w-8 h-8 rounded bg-blue-500/10 text-max-brand-primary flex items-center justify-center font-bold font-mono text-xs mb-3">
+            <div className="fintech-card p-5 border-t-2 border-t-max-brand-primary">
+              <div className="w-8 h-8 rounded bg-max-brand-primary/10 text-max-brand-primary flex items-center justify-center font-bold font-mono text-xs mb-3">
                 TECH
               </div>
               <h3 className="font-bold text-white text-sm mb-1">TECH AGENT</h3>
@@ -210,7 +210,7 @@ export default async function LandingPage() {
               <div className="mt-8">
                 <Link
                   href="/signup"
-                  className="inline-flex items-center gap-2 px-5 py-3 rounded bg-blue-600 hover:bg-blue-500 text-white font-medium text-xs transition-all"
+                  className="inline-flex items-center gap-2 px-5 py-3 rounded bg-max-brand-primary hover:bg-max-brand-secondary text-white font-medium text-xs transition-all shadow-sm active:scale-[0.98]"
                 >
                   <span>Open Paper Account</span>
                   <ArrowRight className="w-4 h-4" />

@@ -12,8 +12,8 @@ export default function TradingTerminalVisual() {
         className="absolute inset-0 pointer-events-none opacity-[0.035]"
         style={{
           backgroundImage: `
-            linear-gradient(to right, #35D49A 1px, transparent 1px),
-            linear-gradient(to bottom, #35D49A 1px, transparent 1px)
+            linear-gradient(to right, #7C6FF2 1px, transparent 1px),
+            linear-gradient(to bottom, #7C6FF2 1px, transparent 1px)
           `,
           backgroundSize: '40px 40px',
         }}
@@ -23,7 +23,7 @@ export default function TradingTerminalVisual() {
       <div 
         className="absolute -top-32 -left-32 w-96 h-96 rounded-full pointer-events-none opacity-20 blur-3xl"
         style={{
-          background: 'radial-gradient(circle, #35D49A 0%, rgba(53, 212, 154, 0.05) 60%, transparent 80%)'
+          background: 'radial-gradient(circle, #7C6FF2 0%, rgba(124, 111, 242, 0.05) 60%, transparent 80%)'
         }}
       />
       <div 
@@ -38,15 +38,15 @@ export default function TradingTerminalVisual() {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             {/* Geometric Machined Brand Emblem */}
-            <div className="relative flex items-center justify-center w-10 h-10 rounded-lg bg-[#111720] border border-[#1C2533] shadow-[0_0_15px_rgba(53,212,154,0.15)] ring-1 ring-[#35D49A]/20">
-              <span className="font-mono font-black text-lg text-[#35D49A] tracking-tighter">M</span>
-              <div className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 bg-[#35D49A] rounded-full shadow-[0_0_6px_#35D49A]" />
+            <div className="relative flex items-center justify-center w-10 h-10 rounded-lg bg-[#111720] border border-[#1C2533] shadow-[0_0_15px_rgba(124,111,242,0.15)] ring-1 ring-[#7C6FF2]/20">
+              <span className="font-mono font-black text-lg text-[#7C6FF2] tracking-tighter">M</span>
+              <div className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 bg-[#7C6FF2] rounded-full shadow-[0_0_6px_#7C6FF2]" />
             </div>
 
             <div>
               <div className="flex items-center gap-2">
                 <span className="text-xl font-bold tracking-tight text-[#F4F7FA]">MAXLITH</span>
-                <span className="text-xs font-mono font-medium text-[#35D49A] px-1.5 py-0.5 rounded bg-[#35D49A]/10 border border-[#35D49A]/30">
+                <span className="text-xs font-mono font-medium text-[#7C6FF2] px-1.5 py-0.5 rounded bg-[#7C6FF2]/10 border border-[#7C6FF2]/30">
                   AI v1.0
                 </span>
               </div>
@@ -59,8 +59,8 @@ export default function TradingTerminalVisual() {
           {/* Colo Status Badge */}
           <div className="hidden xl:flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#111720] border border-[#1C2533] text-[11px] font-mono text-[#94A3B8]">
             <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#35D49A] opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-[#35D49A]"></span>
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#22C55E] opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-[#22C55E]"></span>
             </span>
             <span>MUMBAI BKC • 0.8ms</span>
           </div>
@@ -68,7 +68,7 @@ export default function TradingTerminalVisual() {
 
         {/* Trading Intelligence Headline */}
         <div className="mt-10 xl:mt-12 max-w-xl">
-          <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded bg-[#111720] border border-[#1C2533] text-[11px] font-mono text-[#35D49A] mb-3">
+          <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded bg-[#111720] border border-[#1C2533] text-[11px] font-mono text-[#7C6FF2] mb-3">
             <Terminal className="w-3.5 h-3.5" />
             <span>ALGORITHMIC REASONING ENGINE</span>
           </div>
@@ -96,7 +96,7 @@ export default function TradingTerminalVisual() {
                 </div>
                 <div className="flex items-center gap-2 mt-0.5">
                   <span className="text-lg font-bold font-mono text-[#F4F7FA]">24,842.15</span>
-                  <span className="inline-flex items-center text-xs font-mono font-medium text-[#35D49A]">
+                  <span className="inline-flex items-center text-xs font-mono font-medium text-[#22C55E]">
                     <ArrowUpRight className="w-3.5 h-3.5 mr-0.5" />
                     +168.40 (+0.68%)
                   </span>
@@ -111,7 +111,7 @@ export default function TradingTerminalVisual() {
               </div>
               <div className="hidden sm:block text-right pl-3 border-l border-[#1C2533]">
                 <div className="text-[10px] text-[#64748B]">CONFIDENCE</div>
-                <div className="text-[#35D49A] font-medium">94.2% BULL</div>
+                <div className="text-[#22C55E] font-medium">94.2% BULL</div>
               </div>
             </div>
           </div>
@@ -126,8 +126,8 @@ export default function TradingTerminalVisual() {
             >
               <defs>
                 <linearGradient id="volGradBull" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#35D49A" stopOpacity="0.4" />
-                  <stop offset="100%" stopColor="#35D49A" stopOpacity="0.05" />
+                  <stop offset="0%" stopColor="#22C55E" stopOpacity="0.4" />
+                  <stop offset="100%" stopColor="#22C55E" stopOpacity="0.05" />
                 </linearGradient>
                 <linearGradient id="volGradBear" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="0%" stopColor="#F05252" stopOpacity="0.35" />
@@ -173,96 +173,96 @@ export default function TradingTerminalVisual() {
 
               {/* Candles: Candlestick bodies and wicks */}
               {/* Candle 1 (Bull) */}
-              <line x1="23" y1="115" x2="23" y2="148" stroke="#35D49A" strokeWidth="1.2" />
-              <rect x="18" y="122" width="10" height="18" fill="#35D49A" rx="1" />
+              <line x1="23" y1="115" x2="23" y2="148" stroke="#22C55E" strokeWidth="1.2" />
+              <rect x="18" y="122" width="10" height="18" fill="#22C55E" rx="1" />
 
               {/* Candle 2 (Bear) */}
               <line x1="47" y1="120" x2="47" y2="152" stroke="#F05252" strokeWidth="1.2" />
               <rect x="42" y="124" width="10" height="16" fill="#F05252" rx="1" />
 
               {/* Candle 3 (Bull) */}
-              <line x1="71" y1="105" x2="71" y2="142" stroke="#35D49A" strokeWidth="1.2" />
-              <rect x="66" y="112" width="10" height="20" fill="#35D49A" rx="1" />
+              <line x1="71" y1="105" x2="71" y2="142" stroke="#22C55E" strokeWidth="1.2" />
+              <rect x="66" y="112" width="10" height="20" fill="#22C55E" rx="1" />
 
               {/* Candle 4 (Bull) */}
-              <line x1="95" y1="100" x2="95" y2="135" stroke="#35D49A" strokeWidth="1.2" />
-              <rect x="90" y="106" width="10" height="18" fill="#35D49A" rx="1" />
+              <line x1="95" y1="100" x2="95" y2="135" stroke="#22C55E" strokeWidth="1.2" />
+              <rect x="90" y="106" width="10" height="18" fill="#22C55E" rx="1" />
 
               {/* Candle 5 (Bear pull-back) */}
               <line x1="119" y1="104" x2="119" y2="138" stroke="#F05252" strokeWidth="1.2" />
               <rect x="114" y="110" width="10" height="15" fill="#F05252" rx="1" />
 
               {/* Candle 6 (Bull breakout candle) */}
-              <line x1="143" y1="88" x2="143" y2="128" stroke="#35D49A" strokeWidth="1.2" />
-              <rect x="138" y="94" width="10" height="24" fill="#35D49A" rx="1" />
+              <line x1="143" y1="88" x2="143" y2="128" stroke="#22C55E" strokeWidth="1.2" />
+              <rect x="138" y="94" width="10" height="24" fill="#22C55E" rx="1" />
 
               {/* Candle 7 (Bull continuation) */}
-              <line x1="167" y1="82" x2="167" y2="118" stroke="#35D49A" strokeWidth="1.2" />
-              <rect x="162" y="86" width="10" height="18" fill="#35D49A" rx="1" />
+              <line x1="167" y1="82" x2="167" y2="118" stroke="#22C55E" strokeWidth="1.2" />
+              <rect x="162" y="86" width="10" height="18" fill="#22C55E" rx="1" />
 
               {/* Candle 8 (Bear consolidation) */}
               <line x1="191" y1="84" x2="191" y2="112" stroke="#F05252" strokeWidth="1.2" />
               <rect x="186" y="88" width="10" height="12" fill="#F05252" rx="1" />
 
               {/* Candle 9 (Bull hammer) */}
-              <line x1="215" y1="78" x2="215" y2="115" stroke="#35D49A" strokeWidth="1.2" />
-              <rect x="210" y="80" width="10" height="16" fill="#35D49A" rx="1" />
+              <line x1="215" y1="78" x2="215" y2="115" stroke="#22C55E" strokeWidth="1.2" />
+              <rect x="210" y="80" width="10" height="16" fill="#22C55E" rx="1" />
 
               {/* Candle 10 (Bull momentum) */}
-              <line x1="239" y1="68" x2="239" y2="102" stroke="#35D49A" strokeWidth="1.2" />
-              <rect x="234" y="72" width="10" height="20" fill="#35D49A" rx="1" />
+              <line x1="239" y1="68" x2="239" y2="102" stroke="#22C55E" strokeWidth="1.2" />
+              <rect x="234" y="72" width="10" height="20" fill="#22C55E" rx="1" />
 
               {/* Candle 11 (Bear rest) */}
               <line x1="263" y1="70" x2="263" y2="98" stroke="#F05252" strokeWidth="1.2" />
               <rect x="258" y="74" width="10" height="11" fill="#F05252" rx="1" />
 
               {/* Candle 12 (Strong Bull surge) */}
-              <line x1="287" y1="52" x2="287" y2="92" stroke="#35D49A" strokeWidth="1.2" />
-              <rect x="282" y="58" width="10" height="25" fill="#35D49A" rx="1" />
+              <line x1="287" y1="52" x2="287" y2="92" stroke="#22C55E" strokeWidth="1.2" />
+              <rect x="282" y="58" width="10" height="25" fill="#22C55E" rx="1" />
 
               {/* Candle 13 (Bear doji) */}
               <line x1="311" y1="54" x2="311" y2="82" stroke="#F05252" strokeWidth="1.2" />
               <rect x="306" y="62" width="10" height="8" fill="#F05252" rx="1" />
 
               {/* Candle 14 (Bull) */}
-              <line x1="335" y1="48" x2="335" y2="78" stroke="#35D49A" strokeWidth="1.2" />
-              <rect x="330" y="54" width="10" height="16" fill="#35D49A" rx="1" />
+              <line x1="335" y1="48" x2="335" y2="78" stroke="#22C55E" strokeWidth="1.2" />
+              <rect x="330" y="54" width="10" height="16" fill="#22C55E" rx="1" />
 
               {/* Candle 15 (Bull) */}
-              <line x1="359" y1="42" x2="359" y2="74" stroke="#35D49A" strokeWidth="1.2" />
-              <rect x="354" y="46" width="10" height="18" fill="#35D49A" rx="1" />
+              <line x1="359" y1="42" x2="359" y2="74" stroke="#22C55E" strokeWidth="1.2" />
+              <rect x="354" y="46" width="10" height="18" fill="#22C55E" rx="1" />
 
               {/* Candle 16 (Bear pull) */}
               <line x1="383" y1="48" x2="383" y2="76" stroke="#F05252" strokeWidth="1.2" />
               <rect x="378" y="52" width="10" height="14" fill="#F05252" rx="1" />
 
               {/* Candle 17 (Bull) */}
-              <line x1="407" y1="36" x2="407" y2="68" stroke="#35D49A" strokeWidth="1.2" />
-              <rect x="402" y="40" width="10" height="20" fill="#35D49A" rx="1" />
+              <line x1="407" y1="36" x2="407" y2="68" stroke="#22C55E" strokeWidth="1.2" />
+              <rect x="402" y="40" width="10" height="20" fill="#22C55E" rx="1" />
 
               {/* Candle 18 (Bull expansion) */}
-              <line x1="431" y1="28" x2="431" y2="62" stroke="#35D49A" strokeWidth="1.2" />
-              <rect x="426" y="32" width="10" height="22" fill="#35D49A" rx="1" />
+              <line x1="431" y1="28" x2="431" y2="62" stroke="#22C55E" strokeWidth="1.2" />
+              <rect x="426" y="32" width="10" height="22" fill="#22C55E" rx="1" />
 
               {/* Candle 19 (Bear) */}
               <line x1="455" y1="32" x2="455" y2="58" stroke="#F05252" strokeWidth="1.2" />
               <rect x="450" y="35" width="10" height="12" fill="#F05252" rx="1" />
 
               {/* Candle 20 (Bull) */}
-              <line x1="479" y1="24" x2="479" y2="52" stroke="#35D49A" strokeWidth="1.2" />
-              <rect x="474" y="28" width="10" height="16" fill="#35D49A" rx="1" />
+              <line x1="479" y1="24" x2="479" y2="52" stroke="#22C55E" strokeWidth="1.2" />
+              <rect x="474" y="28" width="10" height="16" fill="#22C55E" rx="1" />
 
               {/* Candle 21 (Bull continuation) */}
-              <line x1="503" y1="18" x2="503" y2="44" stroke="#35D49A" strokeWidth="1.2" />
-              <rect x="498" y="22" width="10" height="15" fill="#35D49A" rx="1" />
+              <line x1="503" y1="18" x2="503" y2="44" stroke="#22C55E" strokeWidth="1.2" />
+              <rect x="498" y="22" width="10" height="15" fill="#22C55E" rx="1" />
 
               {/* Candle 22 (Bear consolidation) */}
               <line x1="527" y1="20" x2="527" y2="46" stroke="#F05252" strokeWidth="1.2" />
               <rect x="522" y="24" width="10" height="10" fill="#F05252" rx="1" />
 
               {/* Candle 23 (Current Bull pin bar) */}
-              <line x1="551" y1="14" x2="551" y2="40" stroke="#35D49A" strokeWidth="1.2" />
-              <rect x="546" y="16" width="10" height="14" fill="#35D49A" rx="1" />
+              <line x1="551" y1="14" x2="551" y2="40" stroke="#22C55E" strokeWidth="1.2" />
+              <rect x="546" y="16" width="10" height="14" fill="#22C55E" rx="1" />
 
               {/* EMA 20 Overlay (Amber #F2B84B) */}
               <path
@@ -285,8 +285,8 @@ export default function TradingTerminalVisual() {
               />
 
               {/* Resistance marker */}
-              <line x1="280" y1="14" x2="560" y2="14" stroke="#35D49A" strokeWidth="1" strokeDasharray="2 2" opacity="0.4" />
-              <circle cx="551" cy="23" r="3" fill="#35D49A" className="animate-pulse" />
+              <line x1="280" y1="14" x2="560" y2="14" stroke="#7C6FF2" strokeWidth="1" strokeDasharray="2 2" opacity="0.4" />
+              <circle cx="551" cy="23" r="3" fill="#7C6FF2" className="animate-pulse" />
             </svg>
           </div>
 
@@ -301,8 +301,8 @@ export default function TradingTerminalVisual() {
                 <span className="w-2 h-0.5 bg-[#38BDF8] rounded-full" />
                 <span>EMA 50</span>
               </span>
-              <span className="flex items-center gap-1 text-[#35D49A]">
-                <span className="w-1.5 h-1.5 rounded-full bg-[#35D49A]" />
+              <span className="flex items-center gap-1 text-[#22C55E]">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#22C55E]" />
                 <span>BULL MOMENTUM</span>
               </span>
             </div>
@@ -320,11 +320,11 @@ export default function TradingTerminalVisual() {
       <div className="relative z-10 grid grid-cols-3 gap-3">
         <div className="rounded-lg bg-[#111720]/70 border border-[#1C2533] p-3">
           <div className="flex items-center gap-1.5 text-[11px] font-mono text-[#94A3B8]">
-            <Activity className="w-3.5 h-3.5 text-[#35D49A]" />
+            <Activity className="w-3.5 h-3.5 text-[#7C6FF2]" />
             <span className="truncate">TICK TELEMETRY</span>
           </div>
           <p className="mt-1 font-mono text-xs font-semibold text-[#F4F7FA]">NSE Co-Location</p>
-          <p className="text-[10px] font-mono text-[#35D49A]">0.8ms • Zero Drops</p>
+          <p className="text-[10px] font-mono text-[#22C55E]">0.8ms • Zero Drops</p>
         </div>
 
         <div className="rounded-lg bg-[#111720]/70 border border-[#1C2533] p-3">
@@ -338,7 +338,7 @@ export default function TradingTerminalVisual() {
 
         <div className="rounded-lg bg-[#111720]/70 border border-[#1C2533] p-3">
           <div className="flex items-center gap-1.5 text-[11px] font-mono text-[#94A3B8]">
-            <ShieldCheck className="w-3.5 h-3.5 text-[#35D49A]" />
+            <ShieldCheck className="w-3.5 h-3.5 text-[#7C6FF2]" />
             <span className="truncate">RISK DESK</span>
           </div>
           <p className="mt-1 font-mono text-xs font-semibold text-[#F4F7FA]">SEBI Compliant</p>

@@ -82,7 +82,7 @@ export default function AICopilotPage() {
           <div>
             <h1 className="text-base font-bold text-white flex items-center gap-2">
               <span>MAXLITH AI Copilot</span>
-              <span className="px-2 py-0.5 rounded bg-blue-500/10 text-max-brand-primary text-[9px] font-mono border border-blue-500/20">
+              <span className="px-2 py-0.5 rounded bg-max-brand-primary/10 text-max-brand-primary text-[9px] font-mono border border-max-brand-primary/20">
                 MULTI-AGENT ENGINE
               </span>
             </h1>
@@ -98,14 +98,14 @@ export default function AICopilotPage() {
             className={`flex gap-3 ${msg.sender === 'USER' ? 'justify-end' : 'justify-start'}`}
           >
             {msg.sender === 'ASSISTANT' && (
-              <div className="w-7 h-7 rounded bg-blue-600 flex items-center justify-center text-white font-bold text-xs flex-shrink-0 mt-1">
+              <div className="w-7 h-7 rounded bg-max-brand-primary flex items-center justify-center text-white font-bold text-xs flex-shrink-0 mt-1">
                 AI
               </div>
             )}
 
             <div className={`max-w-2xl rounded p-4 text-xs ${
               msg.sender === 'USER'
-                ? 'bg-blue-600 text-white font-medium'
+                ? 'bg-max-brand-primary text-white font-medium'
                 : 'fintech-card text-slate-200 border border-max-border'
             }`}>
               <div className="whitespace-pre-wrap leading-relaxed font-sans">{msg.text}</div>
@@ -145,7 +145,7 @@ export default function AICopilotPage() {
 
         {loading && (
           <div className="flex gap-3 justify-start">
-            <div className="w-7 h-7 rounded bg-blue-600 flex items-center justify-center text-white font-bold text-xs animate-pulse">
+            <div className="w-7 h-7 rounded bg-max-brand-primary flex items-center justify-center text-white font-bold text-xs animate-pulse">
               AI
             </div>
             <div className="fintech-card p-4 text-xs font-mono text-max-text-secondary flex items-center gap-2">
@@ -181,12 +181,12 @@ export default function AICopilotPage() {
           value={prompt}
           onChange={(e) => setPrompt(e.target.value)}
           placeholder="Ask MAXLITH AI (e.g. 'Analyze RELIANCE technical structure')..."
-          className="w-full bg-max-surface border border-max-border focus:border-blue-500 text-xs text-white placeholder-slate-500 rounded pl-4 pr-12 py-3 outline-none transition-colors"
+          className="w-full bg-max-surface border border-max-border focus:border-max-brand-primary text-xs text-white placeholder-slate-500 rounded pl-4 pr-12 py-3 outline-none transition-colors"
         />
         <button
           type="submit"
           disabled={!prompt.trim() || loading}
-          className="absolute right-2 top-1/2 -translate-y-1/2 p-2 rounded bg-blue-600 hover:bg-blue-500 text-white disabled:opacity-40 transition-colors"
+          className="absolute right-2 top-1/2 -translate-y-1/2 p-2 rounded bg-max-brand-primary hover:bg-max-brand-secondary text-white disabled:opacity-40 transition-colors"
         >
           <Send className="w-4 h-4" />
         </button>

@@ -124,7 +124,7 @@ export default function AIAgentsPage() {
           <button
             onClick={handleRunAll}
             disabled={runningAgent !== null}
-            className="flex items-center gap-1.5 px-4 py-2 rounded bg-blue-600 hover:bg-blue-500 text-white font-medium text-xs transition-all disabled:opacity-50"
+            className="flex items-center gap-1.5 px-4 py-2 rounded bg-max-brand-primary hover:bg-max-brand-secondary text-white font-medium text-xs transition-all disabled:opacity-50"
           >
             {runningAgent ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4" />}
             <span>Run All Agents</span>
@@ -141,7 +141,7 @@ export default function AIAgentsPage() {
             value={symbol}
             onChange={(e) => setSymbol(e.target.value.toUpperCase())}
             placeholder="RELIANCE"
-            className="w-32 bg-[#0d121c] border border-max-border focus:border-blue-500 text-xs font-mono font-bold text-white rounded px-3 py-1.5 outline-none uppercase"
+            className="w-32 bg-[#0d121c] border border-max-border focus:border-max-brand-primary text-xs font-mono font-bold text-white rounded px-3 py-1.5 outline-none uppercase"
           />
         </div>
 
@@ -153,7 +153,7 @@ export default function AIAgentsPage() {
               onClick={() => setSymbol(sym)}
               className={`px-2.5 py-1 rounded text-[11px] font-mono transition-colors ${
                 symbol === sym
-                  ? 'bg-blue-600 text-white font-bold'
+                  ? 'bg-max-brand-primary text-white font-bold'
                   : 'bg-[#0d121c] text-max-text-secondary hover:text-white border border-max-border'
               }`}
             >
@@ -171,7 +171,7 @@ export default function AIAgentsPage() {
           const isExpanded = expandedAgent === agent.id;
 
           return (
-            <div key={agent.name} className="fintech-card p-5 border-t-2 border-t-blue-500 space-y-3 flex flex-col justify-between">
+            <div key={agent.name} className="fintech-card p-5 border-t-2 border-t-max-brand-primary space-y-3 flex flex-col justify-between">
               <div>
                 <div className="flex items-center justify-between">
                   <span className="font-bold text-white font-mono text-sm">{agent.name}</span>
@@ -202,7 +202,7 @@ export default function AIAgentsPage() {
                   <button
                     onClick={() => handleRunAgent(agent.id)}
                     disabled={isRunning}
-                    className="flex-1 py-1.5 px-3 rounded bg-blue-600/20 hover:bg-blue-600 text-max-brand-primary hover:text-white transition-all text-xs font-mono font-medium flex items-center justify-center gap-1.5 disabled:opacity-50"
+                    className="flex-1 py-1.5 px-3 rounded bg-max-brand-primary/20 hover:bg-max-brand-primary text-max-brand-primary hover:text-white transition-all text-xs font-mono font-medium flex items-center justify-center gap-1.5 disabled:opacity-50"
                   >
                     {isRunning ? (
                       <>
