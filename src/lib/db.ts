@@ -366,16 +366,28 @@ class StatementWrapper {
       let u: any = {};
       if (typeof args[0] === 'object' && args[0] !== null) {
         u = args[0];
+      } else if (params.length === 6) {
+        // Handled when query is VALUES (?, ?, ?, ?, 'USER', ?, ?, 0.0)
+        u = {
+          id: params[0],
+          email: params[1],
+          password_hash: params[2],
+          full_name: params[3],
+          role: 'USER',
+          virtual_cash: typeof params[4] === 'number' ? params[4] : 1000000,
+          initial_capital: typeof params[5] === 'number' ? params[5] : 1000000,
+          blocked_margin: 0,
+        };
       } else {
         u = {
           id: params[0],
           email: params[1],
           password_hash: params[2],
           full_name: params[3],
-          role: params[4] || 'TRADER',
-          virtual_cash: params[5] ?? 1000000,
-          initial_capital: params[6] ?? 1000000,
-          blocked_margin: params[7] ?? 0,
+          role: typeof params[4] === 'string' ? params[4] : 'USER',
+          virtual_cash: typeof params[5] === 'number' ? params[5] : 1000000,
+          initial_capital: typeof params[6] === 'number' ? params[6] : 1000000,
+          blocked_margin: typeof params[7] === 'number' ? params[7] : 0,
         };
       }
       if (u.id) {

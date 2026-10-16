@@ -258,19 +258,108 @@ export default function LoginForm({ initialMode }: LoginFormProps) {
             </div>
           )}
 
-          {/* Error Banner */}
+          {/* Error Banner with Contextual Actions */}
           {error && (
             <div
               role="alert"
-              className="mb-5 p-3 rounded-lg bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs flex items-start gap-2.5 animate-fadeIn"
+              className="mb-5 p-3.5 rounded-lg bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs flex flex-col gap-2.5 animate-fadeIn"
             >
-              <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5 text-rose-400" />
-              <div className="flex-1">
-                <span className="font-medium text-rose-200">
-                  {mode === 'login' ? 'Authentication Failed:' : 'Registration Error:'}
-                </span>{' '}
-                <span>{error}</span>
+              <div className="flex items-start gap-2.5">
+                <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5 text-rose-400" />
+                <div className="flex-1">
+                  <span className="font-semibold text-rose-200">
+                    {mode === 'login' ? 'Authentication Failed:' : 'Registration Notice:'}
+                  </span>{' '}
+                  <span>{error}</span>
+                </div>
               </div>
+
+              {/* Seamless Action Buttons if user exists or password mismatch */}
+              {mode === 'signup' && (error.includes('already exists') || error.includes('ACCOUNT_EXISTS')) && (
+                <div className="flex flex-wrap items-center gap-2 pt-1 border-t border-rose-500/20">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setMode('login');
+                      setError('');
+                    }}
+                    className="px-3 py-1.5 rounded-md bg-[#7C6FF2] hover:bg-[#6A5AE0] text-white text-[11px] font-mono font-semibold transition-colors cursor-pointer"
+                  >
+                    Switch to Sign In →
+                  </button>
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      if (!email || !password) {
+                        setError('Please provide email and access key to proceed.');
+                        return;
+                      }
+                      setLoading(true);
+                      try {
+                        const res = await fetch('/api/auth/reset-key', {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({ email: email.trim().toLowerCase(), newPassword: password }),
+                        });
+                        const d = await res.json();
+                        if (!res.ok) throw new Error(d.error || 'Failed to update key');
+                        router.push(redirectTo);
+                        router.refresh();
+                      } catch (e: any) {
+                        setError(e.message);
+                      } finally {
+                        setLoading(false);
+                      }
+                    }}
+                    className="px-3 py-1.5 rounded-md bg-[#1C2533] hover:bg-[#253245] text-[#F4F7FA] text-[11px] font-mono transition-colors border border-[#2D3B4F] cursor-pointer"
+                  >
+                    Set Password to Current Input & Sign In
+                  </button>
+                </div>
+              )}
+
+              {mode === 'login' && error.includes('Invalid email or password') && (
+                <div className="flex flex-wrap items-center gap-2 pt-1 border-t border-rose-500/20">
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      if (!email || !password) {
+                        setError('Enter your email and the desired access key you want to set.');
+                        return;
+                      }
+                      setLoading(true);
+                      try {
+                        const res = await fetch('/api/auth/reset-key', {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({ email: email.trim().toLowerCase(), newPassword: password }),
+                        });
+                        const d = await res.json();
+                        if (!res.ok) throw new Error(d.error || 'Failed to reset key');
+                        router.push(redirectTo);
+                        router.refresh();
+                      } catch (e: any) {
+                        setError(e.message);
+                      } finally {
+                        setLoading(false);
+                      }
+                    }}
+                    className="px-3 py-1.5 rounded-md bg-[#7C6FF2] hover:bg-[#6A5AE0] text-white text-[11px] font-mono font-semibold transition-colors cursor-pointer"
+                  >
+                    Reset Key to Entered Password & Sign In
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setMode('signup');
+                      setError('');
+                    }}
+                    className="px-3 py-1.5 rounded-md bg-[#1C2533] hover:bg-[#253245] text-[#94A3B8] hover:text-white text-[11px] font-mono transition-colors border border-[#2D3B4F] cursor-pointer"
+                  >
+                    Create Fresh Account Instead
+                  </button>
+                </div>
+              )}
             </div>
           )}
 

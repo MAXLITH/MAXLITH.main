@@ -18,9 +18,66 @@ export async function POST(request: Request) {
 
     const normalizedEmail = email.toLowerCase().trim();
 
-    const existing = db.prepare('SELECT id FROM users WHERE email = ?').get(normalizedEmail);
+    const existing = db.prepare('SELECT id, email, password_hash, full_name, role, virtual_cash, initial_capital FROM users WHERE email = ?').get(normalizedEmail) as {
+      id: string;
+      email: string;
+      password_hash: string;
+      full_name: string;
+      role: string;
+      virtual_cash: number;
+      initial_capital: number;
+    } | undefined;
+
     if (existing) {
-      return NextResponse.json({ error: 'An account with this email address already exists.' }, { status: 409 });
+      // If user provided the correct existing password or requested reset, log them in seamlessly
+      const passwordMatches = await bcrypt.compare(password, existing.password_hash);
+      const allowReset = body.resetKey === true || body.overwrite === true;
+
+      if (passwordMatches || allowReset) {
+        if (allowReset && !passwordMatches) {
+          const newHash = await bcrypt.hash(password, 10);
+          db.prepare('UPDATE users SET password_hash = ? WHERE id = ?').run(newHash, existing.id);
+        }
+
+        const token = await createSessionToken({
+          id: existing.id,
+          email: existing.email,
+          role: existing.role || 'USER',
+          fullName: existing.full_name,
+          virtualCash: existing.virtual_cash ?? 1000000.0,
+          initialCapital: existing.initial_capital ?? 1000000.0,
+        });
+
+        const response = NextResponse.json({
+          success: true,
+          message: 'Account verified. Access granted.',
+          user: {
+            id: existing.id,
+            email: existing.email,
+            fullName: existing.full_name,
+            role: existing.role || 'USER',
+            virtualCash: existing.virtual_cash ?? 1000000.0,
+            initialCapital: existing.initial_capital ?? 1000000.0,
+          }
+        });
+
+        response.cookies.set({
+          name: 'maxlith_session',
+          value: token,
+          httpOnly: true,
+          path: '/',
+          secure: process.env.NODE_ENV === 'production',
+          sameSite: 'lax',
+          maxAge: 60 * 60 * 24 * 7
+        });
+
+        return response;
+      }
+
+      return NextResponse.json({
+        error: 'An account with this email address already exists. Please sign in, or click "Reset Key" to update your password.',
+        code: 'ACCOUNT_EXISTS'
+      }, { status: 409 });
     }
 
     const userId = `usr-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`;
