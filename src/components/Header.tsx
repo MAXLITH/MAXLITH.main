@@ -11,16 +11,19 @@ export default function Header({ user }: { user: any }) {
   const [, setIsSearching] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
   const [sessionStatus, setSessionStatus] = useState<any>(null);
-  const [virtualCash, setVirtualCash] = useState<number>(user?.virtualCash || 1000000);
+  const [virtualCash, setVirtualCash] = useState<number>(() => {
+    const cash = Number(user?.virtualCash);
+    return isNaN(cash) || cash <= 0 ? 1000000 : cash;
+  });
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   const fetchStatus = () => {
     fetch('/api/market/status')
       .then((res) => res.json())
       .then((data) => {
-        if (data.data) {
+        if (data?.data) {
           setSessionStatus(data.data);
-        } else if (data.sessionStatus) {
+        } else if (data?.sessionStatus) {
           setSessionStatus(data.sessionStatus);
         }
       })
@@ -31,7 +34,7 @@ export default function Header({ user }: { user: any }) {
     fetch('/api/paper-trading/portfolio')
       .then((res) => res.json())
       .then((data) => {
-        if (data.summary) {
+        if (data?.summary && typeof data.summary.virtualCash === 'number' && !isNaN(data.summary.virtualCash)) {
           setVirtualCash(data.summary.virtualCash);
         }
       })
@@ -68,7 +71,7 @@ export default function Header({ user }: { user: any }) {
       try {
         const res = await fetch(`/api/search?q=${encodeURIComponent(searchQuery.trim())}&limit=6`);
         const data = await res.json();
-        setSearchResults(data.data || []);
+        setSearchResults(data?.data || []);
         setShowDropdown(true);
       } catch (err) {
         console.error(err);
@@ -105,6 +108,11 @@ export default function Header({ user }: { user: any }) {
     router.push(`/dashboard/markets/${encodeURIComponent(sym)}`);
   };
 
+  const safeCash = Number(virtualCash);
+  const formattedCash = !isNaN(safeCash)
+    ? safeCash.toLocaleString('en-IN', { minimumFractionDigits: 2 })
+    : '10,00,000.00';
+
   return (
     <header className="h-14 bg-max-bg-elevated border-b border-max-border px-4 flex items-center justify-between sticky top-0 z-40">
       {/* Quick Instrument Search Bar with Autocomplete Dropdown */}
@@ -134,19 +142,19 @@ export default function Header({ user }: { user: any }) {
                 <div>
                   <div className="flex items-center gap-1.5">
                     <span className="text-xs font-bold text-white">{item.symbol}</span>
-                    <span className="text-[10px] text-max-text-muted uppercase font-sans">({item.exchange})</span>
+                    <span className="text-[10px] text-max-text-muted uppercase font-sans">({item.exchange || 'NSE'})</span>
                   </div>
-                  <div className="text-[11px] text-max-text-secondary font-sans truncate max-w-[180px]">{item.name}</div>
+                  <div className="text-[11px] text-max-text-secondary font-sans truncate max-w-[180px]">{item.name || item.symbol}</div>
                 </div>
                 <div className="text-right">
-                  <div className="text-xs font-bold text-white">₹{Number(item.current_price).toFixed(2)}</div>
+                  <div className="text-xs font-bold text-white">₹{Number(item.current_price ?? 0).toFixed(2)}</div>
                   <div
                     className={`text-[10px] ${
-                      item.percent_change >= 0 ? 'text-max-market-positive' : 'text-max-market-negative'
+                      Number(item.percent_change ?? 0) >= 0 ? 'text-max-market-positive' : 'text-max-market-negative'
                     }`}
                   >
-                    {item.percent_change >= 0 ? '+' : ''}
-                    {Number(item.percent_change).toFixed(2)}%
+                    {Number(item.percent_change ?? 0) >= 0 ? '+' : ''}
+                    {Number(item.percent_change ?? 0).toFixed(2)}%
                   </div>
                 </div>
               </button>
@@ -162,11 +170,13 @@ export default function Header({ user }: { user: any }) {
           <div className="hidden md:flex items-center gap-2 px-2.5 py-1 rounded bg-max-surface border border-max-border text-xs">
             <span className={`w-2 h-2 rounded-full ${sessionStatus.isOpen ? 'bg-max-market-positive animate-pulse' : 'bg-max-warning'}`}></span>
             <span className="font-semibold text-white text-[11px]">
-              NSE/BSE: {sessionStatus.session}
+              NSE/BSE: {sessionStatus.session || 'REGULAR'}
             </span>
-            <span className="text-max-text-muted font-mono text-[10px]">
-              ({sessionStatus.currentTimeIST})
-            </span>
+            {sessionStatus.currentTimeIST && (
+              <span className="text-max-text-muted font-mono text-[10px]">
+                ({sessionStatus.currentTimeIST})
+              </span>
+            )}
           </div>
         )}
 
@@ -176,7 +186,7 @@ export default function Header({ user }: { user: any }) {
           <div className="flex items-center gap-1.5">
             <span className="text-[9px] uppercase tracking-wider text-max-brand-primary font-mono font-semibold">Virtual Cash:</span>
             <span className="font-mono font-bold text-white text-xs">
-              ₹{virtualCash.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+              ₹{formattedCash}
             </span>
           </div>
         </div>
