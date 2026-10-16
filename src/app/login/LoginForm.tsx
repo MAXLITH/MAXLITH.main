@@ -13,10 +13,8 @@ import {
   User,
   Shield,
   ShieldCheck,
-  KeyRound,
   X,
   HelpCircle,
-  CheckCircle2,
   ChevronLeft,
   Terminal,
   Sparkles,
@@ -42,7 +40,6 @@ export default function LoginForm({ initialMode }: LoginFormProps) {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [showRecoveryModal, setShowRecoveryModal] = useState(false);
-  const [demoFilledNotification, setDemoFilledNotification] = useState(false);
 
   // Sync mode with URL if param changes
   useEffect(() => {
@@ -147,14 +144,6 @@ export default function LoginForm({ initialMode }: LoginFormProps) {
         setLoading(false);
       }
     }
-  };
-
-  const handleFillDemoAdmin = () => {
-    setError('');
-    setEmail('admin@maxlith.com');
-    setPassword('AdminSecurePass2026!');
-    setDemoFilledNotification(true);
-    setTimeout(() => setDemoFilledNotification(false), 3000);
   };
 
   return (
@@ -282,17 +271,6 @@ export default function LoginForm({ initialMode }: LoginFormProps) {
                 </span>{' '}
                 <span>{error}</span>
               </div>
-            </div>
-          )}
-
-          {/* Demo Admin Auto-Fill Notification */}
-          {demoFilledNotification && (
-            <div
-              role="status"
-              className="mb-5 p-2.5 rounded-lg bg-[#35D49A]/10 border border-[#35D49A]/30 text-[#35D49A] text-xs flex items-center gap-2 animate-fadeIn"
-            >
-              <CheckCircle2 className="w-4 h-4 flex-shrink-0" />
-              <span>Seeded Administrator credentials populated for local testing.</span>
             </div>
           )}
 
@@ -451,21 +429,6 @@ export default function LoginForm({ initialMode }: LoginFormProps) {
             </button>
           </form>
 
-          {/* Quick Demo Helper for Evaluation (Login Mode) */}
-          {mode === 'login' && (
-            <div className="mt-4 pt-3.5 border-t border-[#1C2533] flex items-center justify-between">
-              <span className="text-[11px] font-mono text-[#64748B]">Evaluation Workspace:</span>
-              <button
-                type="button"
-                onClick={handleFillDemoAdmin}
-                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-[#111720] border border-[#1C2533] hover:border-[#35D49A]/40 text-[11px] font-mono text-[#94A3B8] hover:text-[#35D49A] transition-colors focus:outline-none cursor-pointer"
-              >
-                <KeyRound className="w-3 h-3 text-[#35D49A]" />
-                <span>Fill Seed Admin</span>
-              </button>
-            </div>
-          )}
-
           {/* Alternate Mode Switch Link */}
           <div className="mt-5 p-3 rounded-lg bg-[#111720]/60 border border-[#1C2533] text-center">
             {mode === 'login' ? (
@@ -546,17 +509,6 @@ export default function LoginForm({ initialMode }: LoginFormProps) {
                 In compliance with institutional security standards, automated public password resets are restricted to authorized operational channels.
               </p>
 
-              <div className="p-3 rounded-lg bg-[#080B10] border border-[#1C2533] space-y-2">
-                <div className="font-mono text-[11px] font-semibold text-[#F4F7FA] flex items-center gap-1.5">
-                  <KeyRound className="w-3.5 h-3.5 text-[#35D49A]" />
-                  <span>Local Development &amp; Evaluation Account:</span>
-                </div>
-                <div className="font-mono text-[11px] space-y-1 text-[#A9B4C0]">
-                  <p>User: <span className="text-[#35D49A]">admin@maxlith.com</span></p>
-                  <p>Key: <span className="text-[#35D49A]">AdminSecurePass2026!</span></p>
-                </div>
-              </div>
-
               <div className="space-y-1">
                 <span className="font-mono text-[11px] font-semibold text-[#F4F7FA]">Enterprise Traders:</span>
                 <p className="text-[11px]">
@@ -573,16 +525,6 @@ export default function LoginForm({ initialMode }: LoginFormProps) {
 
             {/* Modal Footer */}
             <div className="pt-4 border-t border-[#1C2533] flex items-center justify-end gap-2.5">
-              <button
-                type="button"
-                onClick={() => {
-                  handleFillDemoAdmin();
-                  setShowRecoveryModal(false);
-                }}
-                className="px-3 py-1.5 rounded-lg bg-[#111720] border border-[#1C2533] hover:border-[#35D49A]/40 text-xs font-mono text-[#35D49A] transition-colors focus:outline-none cursor-pointer"
-              >
-                Use Seed Admin
-              </button>
               <button
                 type="button"
                 onClick={() => setShowRecoveryModal(false)}
