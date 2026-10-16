@@ -130,7 +130,7 @@
   }
 
   @media (prefers-color-scheme: light) {
-    :root {
+    :root:not(.dark) {
       --max-bg: #F7F9FC;
       --max-bg-elevated: #FFFFFF;
       --max-surface: #FFFFFF;
